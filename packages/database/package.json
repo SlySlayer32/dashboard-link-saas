@@ -1,0 +1,9 @@
+{
+  "name": "@dashboard-link/database",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Database migrations and schema for Dashboard Link SaaS",
+  "scripts": {
+    "clean": "echo 'No build artifacts to clean'"
+  }
+}
