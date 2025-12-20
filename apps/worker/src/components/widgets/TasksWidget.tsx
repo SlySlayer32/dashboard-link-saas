@@ -1,4 +1,3 @@
-import React from 'react';
 import type { TaskItem } from '@dashboard-link/shared';
 
 interface TasksWidgetProps {

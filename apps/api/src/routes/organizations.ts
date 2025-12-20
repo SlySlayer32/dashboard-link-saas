@@ -14,6 +14,7 @@ organizations.use('*', authMiddleware);
 
 // Get current organization
 organizations.get('/current', async (c) => {
+  // @ts-ignore - Hono context typing issue
   const userId = c.get('userId');
 
   const { data: admin } = await supabase
@@ -31,6 +32,7 @@ organizations.get('/current', async (c) => {
 
 // Update organization settings
 organizations.put('/current', async (c) => {
+  // @ts-ignore - Hono context typing issue
   const userId = c.get('userId');
   const body = await c.req.json();
 

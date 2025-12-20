@@ -1,4 +1,3 @@
-import React from 'react';
 import { formatTime } from '@dashboard-link/shared';
 import type { ScheduleItem } from '@dashboard-link/shared';
 

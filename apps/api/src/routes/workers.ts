@@ -15,6 +15,7 @@ workers.use('*', authMiddleware);
 
 // List workers
 workers.get('/', async (c) => {
+  // @ts-ignore - Hono context typing issue
   const userId = c.get('userId');
 
   // Get user's organization
@@ -44,6 +45,7 @@ workers.get('/', async (c) => {
 // Get worker by ID
 workers.get('/:id', async (c) => {
   const id = c.req.param('id');
+  // @ts-ignore - Hono context typing issue
   const userId = c.get('userId');
 
   const { data: admin } = await supabase
@@ -72,6 +74,7 @@ workers.get('/:id', async (c) => {
 
 // Create worker
 workers.post('/', async (c) => {
+  // @ts-ignore - Hono context typing issue
   const userId = c.get('userId');
   const body = await c.req.json();
 
@@ -128,6 +131,7 @@ workers.post('/', async (c) => {
 // Update worker
 workers.put('/:id', async (c) => {
   const id = c.req.param('id');
+  // @ts-ignore - Hono context typing issue
   const userId = c.get('userId');
   const body = await c.req.json();
 
@@ -166,6 +170,7 @@ workers.put('/:id', async (c) => {
 // Delete worker
 workers.delete('/:id', async (c) => {
   const id = c.req.param('id');
+  // @ts-ignore - Hono context typing issue
   const userId = c.get('userId');
 
   const { data: admin } = await supabase

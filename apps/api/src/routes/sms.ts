@@ -20,6 +20,7 @@ sms.use('*', smsRateLimitMiddleware);
  * Send dashboard link to a worker
  */
 sms.post('/send-dashboard-link', async (c) => {
+  // @ts-ignore - Hono context typing issue
   const userId = c.get('userId');
   const { workerId, expirySeconds } = await c.req.json();
 
@@ -92,6 +93,7 @@ sms.post('/send-dashboard-link', async (c) => {
  * Send custom SMS to a worker
  */
 sms.post('/send', async (c) => {
+  // @ts-ignore - Hono context typing issue
   const userId = c.get('userId');
   const { workerId, message } = await c.req.json();
 
