@@ -101,7 +101,8 @@ export class TokenService {
    * Generate SMS-friendly short link
    */
   static generateDashboardLink(token: string): string {
-    const appUrl = process.env.APP_URL || 'http://localhost:5173';
+    // Worker dashboard is on port 5174, not 5173 (which is admin)
+    const appUrl = process.env.APP_URL || 'http://localhost:5174';
     return `${appUrl}/dashboard/${token}`;
   }
 }

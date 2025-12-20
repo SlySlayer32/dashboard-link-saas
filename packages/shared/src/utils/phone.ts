@@ -36,8 +36,8 @@ export function formatAustralianPhone(phone: string): string {
 export function validateAustralianPhone(phone: string): boolean {
   try {
     const formatted = formatAustralianPhone(phone);
-    // Check if it's a valid Australian mobile number (+614xx xxx xxx)
-    return /^\+614\d{8}$/.test(formatted);
+    // Check if it's a valid Australian mobile number (+614-9xx xxx xxx)
+    return /^\+61[4-9]\d{8}$/.test(formatted);
   } catch {
     return false;
   }
