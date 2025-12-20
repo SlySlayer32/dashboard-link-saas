@@ -1,0 +1,73 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy-vercel:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+      
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      
+      - name: Build Admin App
+        run: pnpm --filter @dashboard-link/admin build
+      
+      - name: Build Worker App
+        run: pnpm --filter @dashboard-link/worker build
+      
+      - name: Build API
+        run: pnpm --filter @dashboard-link/api build
+      
+      - name: Deploy Admin to Vercel
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} apps/admin
+      
+      - name: Deploy Worker to Vercel
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} apps/worker
+      
+      - name: Deploy API to Vercel
+        run: vercel --prod --token=${{ secrets.VERCEL_TOKEN }} apps/api
+
+  # Database migrations are run manually via Supabase Dashboard
+  # Uncomment below if using Supabase CLI for migrations
+  # 
+  # migrate-database:
+  #   runs-on: ubuntu-latest
+  #   needs: deploy-vercel
+  #   
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #     
+  #     - name: Setup Supabase CLI
+  #       uses: supabase/setup-cli@v1
+  #     
+  #     - name: Run migrations
+  #       run: |
+  #         supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+  #         supabase db push
+  #       env:
+  #         SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
