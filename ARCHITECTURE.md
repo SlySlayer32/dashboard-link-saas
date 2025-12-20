@@ -1,6 +1,7 @@
-# System Architecture
+# System Architecture - CleanConnect
 
-> Detailed technical architecture of the Dashboard Link SaaS platform.
+> Detailed technical architecture of the CleanConnect SaaS platform.
+> **Product:** CleanConnect - "98% open. Zero downloads."
 
 ## Table of Contents
 
@@ -16,7 +17,9 @@
 
 ## System Overview
 
-Dashboard Link is a multi-tenant SaaS platform that delivers personalized daily dashboards to workers via SMS. The system follows a modern, edge-optimized architecture with clear separation of concerns.
+**CleanConnect** is a multi-tenant SaaS platform that delivers personalized daily dashboards to workers via SMS. The system follows a modern, edge-optimized architecture with clear separation of concerns.
+
+The platform solves a real business problem: enabling field service workers to access their daily schedules without app downloads or password management. Workers receive an SMS with a secure, tokenized link to their personalized dashboard.
 
 ### Key Architectural Principles
 

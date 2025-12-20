@@ -1,10 +1,13 @@
-# Tech Stack Research & Decisions
+# Tech Stack Research & Decisions - CleanConnect
 
-> Documentation of technology choices for Dashboard Link SaaS platform, with research backing each decision.
+> Documentation of technology choices for CleanConnect SaaS platform, with research backing each decision.
+> **Product:** CleanConnect - "98% open. Zero downloads."
 
 ## Executive Summary
 
-This document explains why we chose specific technologies for the Dashboard Link SaaS platform. All decisions were made in December 2025 based on current best practices, performance benchmarks, and cost considerations.
+This document explains why we chose specific technologies for the **CleanConnect** SaaS platform. All decisions were made in December 2025 based on current best practices, performance benchmarks, and cost considerations.
+
+CleanConnect enables field service organizations to deliver personalized daily dashboards to workers via SMS - no app downloads, no passwords. This research document showcases the decision-making process behind building a modern, scalable SaaS product.
 
 ---
 
