@@ -11,6 +11,7 @@ import organizations from './routes/organizations';
 import dashboards from './routes/dashboards';
 import sms from './routes/sms';
 import webhooks from './routes/webhooks';
+import manualData from './routes/manual-data';
 
 // Load environment variables
 dotenv.config();
@@ -44,6 +45,7 @@ app.route('/organizations', organizations);
 app.route('/dashboards', dashboards);
 app.route('/sms', sms);
 app.route('/webhooks', webhooks);
+app.route('', manualData); // Manual data routes don't have a prefix
 
 // 404 handler
 app.notFound((c) => {

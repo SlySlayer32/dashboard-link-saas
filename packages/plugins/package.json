@@ -9,7 +9,9 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@dashboard-link/shared": "workspace:*"
+    "@dashboard-link/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.39.0",
+    "supabase": "^2.67.3"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",
