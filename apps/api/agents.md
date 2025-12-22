@@ -5,6 +5,29 @@ When working with files in this directory:
 ## Purpose
 RESTful API for all backend operations, handling authentication, data management, SMS delivery, and plugin orchestration.
 
+## 🚨 Critical Lint Rules (MUST FOLLOW)
+
+### ESLint Errors vs Warnings
+- **ERRORS block commits**: `no-undef`, `no-unused-vars`, parsing errors
+- **WARNINGS don't block commits**: `@typescript-eslint/no-explicit-any`, `no-console`
+- Always run `pnpm run lint` before committing - don't rely on lint-staged alone
+
+### TypeScript Type Practices
+1. **Use `Record<string, unknown>` instead of `any`** for better type safety
+2. **For API responses**: Use proper type definitions, especially for request bodies
+3. **Error handling**: Keep error variables but prefix unused ones with `_`
+
+### Common API Pitfalls
+1. **Console statements**: Use only for debugging (acceptable as warnings)
+2. **Unused imports**: Remove to avoid `no-unused-vars` errors
+3. **Catch blocks**: Either use the error variable or remove the entire catch block
+
+### Pre-commit Checklist
+- [ ] All unused parameters/variables prefixed with `_`
+- [ ] No unused imports
+- [ ] Console statements only for debugging
+- [ ] Run `pnpm run lint` - should show 0 errors
+
 ## Tech Stack
 - Hono.js (web framework)
 - Node.js/Edge runtime

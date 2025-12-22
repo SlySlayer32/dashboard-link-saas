@@ -5,29 +5,29 @@
  */
 export function formatAustralianPhone(phone: string): string {
   // Remove all spaces, dashes, and parentheses
-  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
-  
+  const cleaned = phone.replace(/[\s\-()]/g, '')
+
   // If already in E.164 format with +61
   if (cleaned.startsWith('+61')) {
-    return cleaned;
+    return cleaned
   }
-  
+
   // If starts with 61 (without +)
   if (cleaned.startsWith('61') && cleaned.length === 11) {
-    return `+${cleaned}`;
+    return `+${cleaned}`
   }
-  
+
   // If starts with 0 (Australian format)
   if (cleaned.startsWith('0') && cleaned.length === 10) {
-    return `+61${cleaned.substring(1)}`;
+    return `+61${cleaned.substring(1)}`
   }
-  
+
   // If it's just the number without country code or leading 0
   if (cleaned.length === 9) {
-    return `+61${cleaned}`;
+    return `+61${cleaned}`
   }
-  
-  throw new Error(`Invalid Australian phone number: ${phone}`);
+
+  throw new Error(`Invalid Australian phone number: ${phone}`)
 }
 
 /**
@@ -35,11 +35,11 @@ export function formatAustralianPhone(phone: string): string {
  */
 export function validateAustralianPhone(phone: string): boolean {
   try {
-    const formatted = formatAustralianPhone(phone);
+    const formatted = formatAustralianPhone(phone)
     // Check if it's a valid Australian mobile number (+614-9xx xxx xxx)
-    return /^\+61[4-9]\d{8}$/.test(formatted);
+    return /^\+61[4-9]\d{8}$/.test(formatted)
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -49,10 +49,10 @@ export function validateAustralianPhone(phone: string): boolean {
  */
 export function displayAustralianPhone(phone: string): string {
   try {
-    const formatted = formatAustralianPhone(phone);
-    const number = formatted.replace('+61', '0');
-    return number.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
+    const formatted = formatAustralianPhone(phone)
+    const number = formatted.replace('+61', '0')
+    return number.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3')
   } catch {
-    return phone;
+    return phone
   }
 }

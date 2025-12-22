@@ -1,51 +1,41 @@
-import { BaseAdapter } from '../base/adapter';
-import { ScheduleItem, TaskItem } from '@dashboard-link/shared';
+import { ScheduleItem, TaskItem } from '@dashboard-link/shared'
+import { BaseAdapter } from '../base/adapter'
 
 /**
  * Notion Plugin Adapter
  * Fetches schedule and task data from Notion databases
  */
 export class NotionAdapter extends BaseAdapter {
-  id = 'notion';
-  name = 'Notion';
-  description = 'Sync schedules and tasks from Notion databases';
-  version = '1.0.0';
+  id = 'notion'
+  name = 'Notion'
+  description = 'Sync schedules and tasks from Notion databases'
+  version = '1.0.0'
 
-  async getTodaySchedule(
-    workerId: string,
-    config: Record<string, any>
-  ): Promise<ScheduleItem[]> {
+  async getTodaySchedule(workerId: string, _config: Record<string, any>): Promise<ScheduleItem[]> {
     // TODO: Implement Notion API integration
     // 1. Use integration secret from config
     // 2. Query the specified database for today's items
     // 3. Filter by worker property
     // 4. Transform to ScheduleItem format
-    
-    console.log(`Fetching Notion schedule for worker ${workerId}`);
-    
+
+    console.log(`Fetching Notion schedule for worker ${workerId}`)
+
     // Placeholder implementation
-    return [];
+    return []
   }
 
-  async getTodayTasks(
-    workerId: string,
-    config: Record<string, any>
-  ): Promise<TaskItem[]> {
+  async getTodayTasks(workerId: string, _config: Record<string, any>): Promise<TaskItem[]> {
     // TODO: Implement Notion tasks query
     // Similar to getTodaySchedule but for tasks database
-    
-    console.log(`Fetching Notion tasks for worker ${workerId}`);
-    
+
+    console.log(`Fetching Notion tasks for worker ${workerId}`)
+
     // Placeholder implementation
-    return [];
+    return []
   }
 
-  async validateConfig(config: Record<string, any>): Promise<boolean> {
-    // Validate required fields
-    return !!(
-      config.integration_secret &&
-      config.schedule_database_id &&
-      config.worker_property
-    );
+  async validateConfig(_config: Record<string, any>): Promise<boolean> {
+    // TODO: Implement validation
+    return false
   }
 }

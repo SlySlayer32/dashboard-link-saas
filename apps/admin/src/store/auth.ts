@@ -1,22 +1,21 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import type { StateCreator } from 'zustand';
-import type { LoginCredentials, User } from '../types/auth';
+import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
+import type { LoginCredentials, User } from '../types/auth'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 export interface AuthStore {
-  user: User | null;
-  token: string | null;
-  expiresAt: string | null;
-  isLoading: boolean;
-  error: string | null;
-  isAuthenticated: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => void;
-  refreshToken: () => Promise<void>;
-  clearError: () => void;
-  setLoading: (loading: boolean) => void;
+  user: User | null
+  token: string | null
+  expiresAt: string | null
+  isLoading: boolean
+  error: string | null
+  isAuthenticated: boolean
+  login: (credentials: LoginCredentials) => Promise<void>
+  logout: () => void
+  refreshToken: () => Promise<void>
+  clearError: () => void
+  setLoading: (loading: boolean) => void
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -32,8 +31,8 @@ export const useAuthStore = create<AuthStore>()(
 
       // Login action
       login: async (credentials: LoginCredentials) => {
-        set({ isLoading: true, error: null });
-        
+        set({ isLoading: true, error: null })
+
         try {
           const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
@@ -41,15 +40,15 @@ export const useAuthStore = create<AuthStore>()(
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(credentials),
-          });
+          })
 
           if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Login failed');
+            const errorData = await response.json()
+            throw new Error(errorData.message || 'Login failed')
           }
 
-          const data = await response.json();
-          
+          const data = await response.json()
+
           set({
             user: data.user,
             token: data.token,
@@ -57,14 +56,14 @@ export const useAuthStore = create<AuthStore>()(
             isLoading: false,
             isAuthenticated: true,
             error: null,
-          });
+          })
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Login failed',
             isLoading: false,
             isAuthenticated: false,
-          });
-          throw error;
+          })
+          throw error
         }
       },
 
@@ -77,14 +76,14 @@ export const useAuthStore = create<AuthStore>()(
           isLoading: false,
           error: null,
           isAuthenticated: false,
-        });
+        })
       },
 
       // Refresh token action
       refreshToken: async () => {
-        const { token } = get();
+        const { token } = get()
         if (!token) {
-          throw new Error('No token to refresh');
+          throw new Error('No token to refresh')
         }
 
         try {
@@ -92,34 +91,34 @@ export const useAuthStore = create<AuthStore>()(
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
-          });
+          })
 
           if (!response.ok) {
-            throw new Error('Token refresh failed');
+            throw new Error('Token refresh failed')
           }
 
-          const data = await response.json();
-          
+          const data = await response.json()
+
           set({
             token: data.token,
-          });
+          })
         } catch (error) {
           // If refresh fails, logout the user
-          get().logout();
-          throw error;
+          get().logout()
+          throw error
         }
       },
 
       // Clear error action
       clearError: () => {
-        set({ error: null });
+        set({ error: null })
       },
 
       // Set loading state
       setLoading: (loading: boolean) => {
-        set({ isLoading: loading });
+        set({ isLoading: loading })
       },
     }),
     {
@@ -134,21 +133,22 @@ export const useAuthStore = create<AuthStore>()(
       onRehydrateStorage: () => (state: AuthStore | undefined) => {
         // Check if token is expired on rehydrate
         if (state?.token && state?.expiresAt) {
-          const expiresAt = new Date(state.expiresAt);
+          const expiresAt = new Date(state.expiresAt)
           if (expiresAt < new Date()) {
             // Token expired, clear auth state
-            state.logout();
+            state.logout()
           }
         }
       },
     }
   )
-);
+)
 
 // Export typed selectors for components
-export const useAuth = () => useAuthStore();
-export const useAuthUser = () => useAuthStore((state: AuthStore) => state.user);
-export const useAuthToken = () => useAuthStore((state: AuthStore) => state.token);
-export const useAuthIsLoading = () => useAuthStore((state: AuthStore) => state.isLoading);
-export const useAuthError = () => useAuthStore((state: AuthStore) => state.error);
-export const useAuthIsAuthenticated = () => useAuthStore((state: AuthStore) => state.isAuthenticated);
+export const useAuth = () => useAuthStore()
+export const useAuthUser = () => useAuthStore((state: AuthStore) => state.user)
+export const useAuthToken = () => useAuthStore((state: AuthStore) => state.token)
+export const useAuthIsLoading = () => useAuthStore((state: AuthStore) => state.isLoading)
+export const useAuthError = () => useAuthStore((state: AuthStore) => state.error)
+export const useAuthIsAuthenticated = () =>
+  useAuthStore((state: AuthStore) => state.isAuthenticated)

@@ -5,6 +5,45 @@ When working with files in this directory:
 ## Purpose
 Extensible plugin adapter system for fetching data from various sources like calendars, task managers, and manual entries.
 
+## 🚨 Critical Lint Rules (MUST FOLLOW)
+
+### ESLint Errors vs Warnings
+- **ERRORS block commits**: `no-undef`, `no-unused-vars`, parsing errors
+- **WARNINGS don't block commits**: `@typescript-eslint/no-explicit-any`, `no-console`
+- Always run `pnpm run lint` before committing - don't rely on lint-staged alone
+
+### TypeScript Type Practices
+1. **Use `Record<string, unknown>` instead of `any`** for better type safety
+2. **Never introduce custom shared types** without rebuilding packages first
+3. **Interface Implementation**: When implementing methods from interfaces:
+   ```typescript
+   // ✅ Correct - keep parameter names, prefix unused with _
+   async getTodaySchedule(
+     workerId: string,
+     _config: Record<string, unknown>  // Use _ to indicate unused
+   ): Promise<ScheduleItem[]> {
+   
+   // ❌ Wrong - removes parameter documentation
+   async getTodaySchedule(workerId: string): Promise<ScheduleItem[]>
+   ```
+
+### Variable Naming Conventions
+- **Unused parameters**: Prefix with underscore (`_`)
+- **Never delete parameters** from interface implementations
+- **Keep original parameter names** for documentation purposes
+
+### Common Pitfalls to Avoid
+1. **Orphaned try/catch blocks**: Remove entire try block if catch is unused
+2. **Regex escape characters**: Don't escape special chars in character classes
+3. **Import statements**: Remove unused imports to avoid `no-unused-vars`
+
+### Pre-commit Checklist
+- [ ] All unused parameters prefixed with `_`
+- [ ] No `any` types (use `unknown` instead)
+- [ ] All imports are used
+- [ ] Run `pnpm run lint` - should show 0 errors
+- [ ] Console statements only for debugging (acceptable as warnings)
+
 ## Architecture
 ```
 src/

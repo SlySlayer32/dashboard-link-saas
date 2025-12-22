@@ -9,10 +9,10 @@ const mockUser: User = {
   id: 'test-user-id',
   email: 'test@example.com',
   name: 'Test User',
-  organizationId: 'test-org-id',
+  organization_id: 'test-org-id',
   role: 'admin',
-  createdAt: '2024-01-01T00:00:00Z',
-  updatedAt: '2024-01-01T00:00:00Z',
+  created_at: '2024-01-01T00:00:00Z',
+  updated_at: '2024-01-01T00:00:00Z',
 }
 
 const mockCredentials: LoginCredentials = {
@@ -130,7 +130,7 @@ describe('Auth Store', () => {
 
     it('should set loading state during login', async () => {
       // Create a promise that we control
-      let resolveLogin: (value: any) => void
+      let resolveLogin: (value: any) => void = () => {}
       const loginPromise = new Promise((resolve) => {
         resolveLogin = resolve
       })
