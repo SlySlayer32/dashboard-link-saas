@@ -74,8 +74,9 @@ export default [
       ],
       'prefer-const': 'error',
       'no-var': 'error',
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/ban-ts-comment': 'error',
+      '@typescript-eslint/no-non-null-assertion': 'warn',
     },
     settings: {
       react: {
@@ -95,8 +96,9 @@ export default [
     files: ['apps/api/src/**/*.ts'],
     rules: {
       // Node.js API specific rules
-      '@typescript-eslint/no-explicit-any': 'warn',
-      'no-console': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
+      'no-console': 'error',
+      '@typescript-eslint/no-require-imports': 'error',
     },
   },
   {

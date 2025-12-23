@@ -1,6 +1,6 @@
+import type { Worker } from '@dashboard-link/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import type { Worker } from '@dashboard-link/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -20,7 +20,7 @@ interface UpdateWorkerRequest {
 
 interface CreateWorkerResponse {
   worker: Worker;
-  dashboard: any;
+  dashboard: DashboardStats;
 }
 
 export function useCreateWorker() {

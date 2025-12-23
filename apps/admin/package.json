@@ -18,8 +18,11 @@
     "@dashboard-link/ui": "workspace:*",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.2",
+    "@supabase/supabase-js": "^2.39.0",
     "@tanstack/react-query": "^5.14.2",
     "class-variance-authority": "^0.7.1",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.562.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.69.0",
@@ -29,8 +32,8 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
-    "@testing-library/react": "^14.1.2",
     "@testing-library/jest-dom": "^6.1.6",
+    "@testing-library/react": "^14.1.2",
     "@testing-library/user-event": "^14.5.1",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",

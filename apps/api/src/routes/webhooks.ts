@@ -1,5 +1,6 @@
-import { Hono } from 'hono';
 import { PluginRegistry } from '@dashboard-link/plugins';
+import { Hono } from 'hono';
+import { logger } from '../utils/logger';
 
 const webhooks = new Hono();
 
@@ -28,7 +29,7 @@ webhooks.post('/:pluginId', async (c) => {
 
     return c.json({ success: true });
   } catch (error) {
-    console.error('Webhook error:', error);
+    logger.error('Webhook error', error as Error);
     return c.json({ 
       error: error instanceof Error ? error.message : 'Webhook processing failed' 
     }, 500);

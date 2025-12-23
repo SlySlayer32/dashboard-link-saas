@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
-import { TokenService } from '../services/token.service';
 import { PluginManagerService } from '../services/plugin-manager';
+import { TokenService } from '../services/token.service';
+import { logger } from '../utils/logger';
 
 const dashboards = new Hono();
 
@@ -30,7 +31,7 @@ dashboards.get('/:token', async (c) => {
       tasks: dashboardData.tasks,
     });
   } catch (error) {
-    console.error('Dashboard error:', error);
+    logger.error('Dashboard error', error as Error);
     return c.json({ 
       error: error instanceof Error ? error.message : 'Failed to load dashboard' 
     }, 500);

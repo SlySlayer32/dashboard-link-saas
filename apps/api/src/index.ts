@@ -1,25 +1,34 @@
-import { Hono } from 'hono';
-import { cors } from 'hono/cors';
-import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
 import dotenv from 'dotenv';
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { logger as honoLogger } from 'hono/logger';
+
+// Import middleware and config
+import { validateRuntimeDependencies } from './config/env';
+import { errorHandler } from './middleware/error-handler';
 
 // Import routes
 import auth from './routes/auth';
-import workers from './routes/workers';
-import organizations from './routes/organizations';
+import dashboard from './routes/dashboard';
 import dashboards from './routes/dashboards';
+import manualData from './routes/manual-data';
+import organizations from './routes/organizations';
+import plugins from './routes/plugins';
 import sms from './routes/sms';
 import webhooks from './routes/webhooks';
-import manualData from './routes/manual-data';
+import workers from './routes/workers';
 
 // Load environment variables
 dotenv.config();
 
+// Validate critical environment variables
+validateRuntimeDependencies();
+
 const app = new Hono();
 
 // Middleware
-app.use('*', logger());
+app.use('*', honoLogger());
 app.use('*', cors({
   origin: process.env.APP_URL || 'http://localhost:5173',
   credentials: true,
@@ -42,34 +51,33 @@ app.get('/health', (c) => {
 app.route('/auth', auth);
 app.route('/workers', workers);
 app.route('/organizations', organizations);
+app.route('/plugins', plugins);
 app.route('/dashboards', dashboards);
+app.route('/dashboard', dashboard);
 app.route('/sms', sms);
 app.route('/webhooks', webhooks);
 app.route('', manualData); // Manual data routes don't have a prefix
 
 // 404 handler
 app.notFound((c) => {
-  return c.json({ error: 'Not found' }, 404);
+  return c.json({ 
+    success: false,
+    error: {
+      code: 'NOT_FOUND',
+      message: 'The requested resource was not found'
+    }
+  }, 404);
 });
 
 // Error handler
-app.onError((err, c) => {
-  console.error('Server error:', err);
-  return c.json({ 
-    error: err.message || 'Internal server error' 
-  }, 500);
-});
+app.onError(errorHandler);
 
 // Start server
 const port = parseInt(process.env.PORT || '3000');
-
-console.log(`Starting Dashboard Link API on port ${port}...`);
 
 serve({
   fetch: app.fetch,
   port,
 });
-
-console.log(`✅ API server running at http://localhost:${port}`);
 
 export default app;

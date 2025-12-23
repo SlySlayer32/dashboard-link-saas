@@ -39,7 +39,7 @@ const validateWorker = async (workerId: string, organizationId: string) => {
 // Create schedule item for worker
 manualData.post('/workers/:id/schedule-items', async (c) => {
   const workerId = c.req.param('id')
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Hono context typing issue
   const userId = c.get('userId')
   const body = (await c.req.json()) as CreateScheduleItemRequest
 
@@ -105,7 +105,7 @@ manualData.post('/workers/:id/schedule-items', async (c) => {
 // Get schedule items for worker with date filtering
 manualData.get('/workers/:id/schedule-items', async (c) => {
   const workerId = c.req.param('id')
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Hono context typing issue
   const userId = c.get('userId')
   const startDate = c.req.query('startDate')
   const endDate = c.req.query('endDate')
@@ -171,7 +171,7 @@ manualData.get('/workers/:id/schedule-items', async (c) => {
 // Update schedule item
 manualData.put('/schedule-items/:id', async (c) => {
   const itemId = c.req.param('id')
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Hono context typing issue
   const userId = c.get('userId')
   const body = (await c.req.json()) as UpdateScheduleItemRequest
 
@@ -199,7 +199,7 @@ manualData.put('/schedule-items/:id', async (c) => {
   }
 
   // Build update object
-  const updateData: any = {}
+  const updateData: unknown = {}
   if (body.title !== undefined) updateData.title = body.title
   if (body.startTime !== undefined) updateData.start_time = body.startTime
   if (body.endTime !== undefined) updateData.end_time = body.endTime
@@ -242,7 +242,7 @@ manualData.put('/schedule-items/:id', async (c) => {
 // Delete schedule item
 manualData.delete('/schedule-items/:id', async (c) => {
   const itemId = c.req.param('id')
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Hono context typing issue
   const userId = c.get('userId')
 
   // Get user's organization
@@ -274,7 +274,7 @@ manualData.delete('/schedule-items/:id', async (c) => {
 // Create task item for worker
 manualData.post('/workers/:id/task-items', async (c) => {
   const workerId = c.req.param('id')
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Hono context typing issue
   const userId = c.get('userId')
   const body = (await c.req.json()) as CreateTaskItemRequest
 
@@ -341,7 +341,7 @@ manualData.post('/workers/:id/task-items', async (c) => {
 // Get task items for worker with date filtering
 manualData.get('/workers/:id/task-items', async (c) => {
   const workerId = c.req.param('id')
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Hono context typing issue
   const userId = c.get('userId')
   const startDate = c.req.query('startDate')
   const endDate = c.req.query('endDate')
@@ -408,7 +408,7 @@ manualData.get('/workers/:id/task-items', async (c) => {
 // Update task item
 manualData.put('/task-items/:id', async (c) => {
   const itemId = c.req.param('id')
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Hono context typing issue
   const userId = c.get('userId')
   const body = (await c.req.json()) as UpdateTaskItemRequest
 
@@ -436,7 +436,7 @@ manualData.put('/task-items/:id', async (c) => {
   }
 
   // Build update object
-  const updateData: any = {}
+  const updateData: unknown = {}
   if (body.title !== undefined) updateData.title = body.title
   if (body.description !== undefined) updateData.description = body.description
   if (body.dueDate !== undefined) updateData.due_date = body.dueDate
@@ -480,7 +480,7 @@ manualData.put('/task-items/:id', async (c) => {
 // Delete task item
 manualData.delete('/task-items/:id', async (c) => {
   const itemId = c.req.param('id')
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Hono context typing issue
   const userId = c.get('userId')
 
   // Get user's organization

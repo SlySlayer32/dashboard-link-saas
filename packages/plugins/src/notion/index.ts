@@ -11,7 +11,7 @@ export class NotionAdapter extends BaseAdapter {
   description = 'Sync schedules and tasks from Notion databases'
   version = '1.0.0'
 
-  async getTodaySchedule(workerId: string, _config: Record<string, any>): Promise<ScheduleItem[]> {
+  async getTodaySchedule(workerId: string, _config: Record<string, unknown>): Promise<ScheduleItem[]> {
     // TODO: Implement Notion API integration
     // 1. Use integration secret from config
     // 2. Query the specified database for today's items
@@ -24,7 +24,7 @@ export class NotionAdapter extends BaseAdapter {
     return []
   }
 
-  async getTodayTasks(workerId: string, _config: Record<string, any>): Promise<TaskItem[]> {
+  async getTodayTasks(workerId: string, _config: unknown): Promise<TaskItem[]> {
     // TODO: Implement Notion tasks query
     // Similar to getTodaySchedule but for tasks database
 
@@ -34,7 +34,7 @@ export class NotionAdapter extends BaseAdapter {
     return []
   }
 
-  async validateConfig(_config: Record<string, any>): Promise<boolean> {
+  async validateConfig(_config: unknown): Promise<boolean> {
     // TODO: Implement validation
     return false
   }

@@ -1,5 +1,19 @@
-import { UseFormRegister, RegisterOptions } from 'react-hook-form';
 import type { ChangeEvent } from 'react';
+import { RegisterOptions, UseFormRegister } from 'react-hook-form';
+
+// Define HTMLInputElement type since it's not available in globals
+interface HTMLInputElement {
+  value: string;
+}
+
+// Define a generic form field type
+type FormFieldValues = Record<string, unknown>;
+
+// Define field error interface to match react-hook-form's error shape
+interface FieldError {
+  type: string;
+  message?: string;
+}
 
 interface FormFieldProps {
   label: string;
@@ -8,8 +22,8 @@ interface FormFieldProps {
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
-  error?: any;
-  registration: UseFormRegister<any>;
+  error?: FieldError;
+  registration: UseFormRegister<FormFieldValues>;
   validation?: RegisterOptions;
   className?: string;
   helperText?: string;
@@ -70,8 +84,8 @@ interface FormTextareaProps {
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
-  error?: any;
-  registration: UseFormRegister<any>;
+  error?: FieldError;
+  registration: UseFormRegister<FormFieldValues>;
   validation?: RegisterOptions;
   className?: string;
   helperText?: string;
@@ -128,8 +142,8 @@ interface FormSelectProps {
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
-  error?: any;
-  registration: UseFormRegister<any>;
+  error?: FieldError;
+  registration: UseFormRegister<FormFieldValues>;
   validation?: RegisterOptions;
   className?: string;
   helperText?: string;
@@ -192,8 +206,8 @@ interface FormCheckboxProps {
   name: string;
   required?: boolean;
   disabled?: boolean;
-  error?: any;
-  registration: UseFormRegister<any>;
+  error?: FieldError;
+  registration: UseFormRegister<FormFieldValues>;
   validation?: RegisterOptions;
   className?: string;
   helperText?: string;

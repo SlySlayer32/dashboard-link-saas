@@ -1,13 +1,14 @@
 import {
-  ArrowRightOnRectangleIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  CogIcon,
-  HomeIcon,
-  Bars3Icon as MenuIcon,
-  PuzzlePieceIcon,
-  UserGroupIcon,
-  XMarkIcon,
+    ArrowRightOnRectangleIcon,
+    ChatBubbleLeftRightIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    CogIcon,
+    HomeIcon,
+    Bars3Icon as MenuIcon,
+    PuzzlePieceIcon,
+    UserGroupIcon,
+    XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
@@ -22,6 +23,7 @@ interface NavigationProps {
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Workers', href: '/workers', icon: UserGroupIcon },
+  { name: 'SMS Logs', href: '/sms-logs', icon: ChatBubbleLeftRightIcon },
   { name: 'Plugins', href: '/plugins', icon: PuzzlePieceIcon },
   { name: 'Settings', href: '/settings', icon: CogIcon },
 ]

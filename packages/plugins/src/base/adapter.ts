@@ -14,19 +14,19 @@ export abstract class BaseAdapter implements PluginAdapter {
    * Get today's schedule items for a worker
    * Must be implemented by each plugin
    */
-  abstract getTodaySchedule(workerId: string, config: Record<string, any>): Promise<ScheduleItem[]>
+  abstract getTodaySchedule(workerId: string, config: Record<string, unknown>): Promise<ScheduleItem[]>
 
   /**
    * Get today's tasks for a worker
    * Must be implemented by each plugin
    */
-  abstract getTodayTasks(workerId: string, config: Record<string, any>): Promise<TaskItem[]>
+  abstract getTodayTasks(workerId: string, config: unknown): Promise<TaskItem[]>
 
   /**
    * Optional webhook handler for real-time updates
    * Override this method if your plugin supports webhooks
    */
-  async handleWebhook?(_payload: any, _config: Record<string, any>): Promise<void> {
+  async handleWebhook?(_payload: unknown, _config: unknown): Promise<void> {
     throw new Error(`Webhook not implemented for ${this.name}`)
   }
 
@@ -34,7 +34,7 @@ export abstract class BaseAdapter implements PluginAdapter {
    * Validate plugin configuration
    * Override with plugin-specific validation logic
    */
-  async validateConfig(config: Record<string, any>): Promise<boolean> {
+  async validateConfig(config: unknown): Promise<boolean> {
     return Object.keys(config).length > 0
   }
 

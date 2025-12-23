@@ -1,5 +1,6 @@
 import type { Worker } from '@dashboard-link/shared'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { formatPhoneForDisplay } from '../utils/phoneUtils'
 import { SendSMSButton } from './SendSMSButton'
 import { StatusBadge, Table, TableSkeleton } from './ui/Table'
@@ -36,8 +37,13 @@ export function WorkerList({ workers, isLoading, onEdit, onDelete }: WorkerListP
     {
       key: 'name' as keyof Worker,
       title: 'Name',
-      render: (_value: string, _record: Worker) => (
-        <div className='font-medium text-gray-900'>{_value}</div>
+      render: (value: string, record: Worker) => (
+        <Link 
+          to={`/workers/${record.id}`}
+          className='font-medium text-blue-600 hover:text-blue-900'
+        >
+          {value}
+        </Link>
       ),
     },
     {

@@ -12,7 +12,7 @@ export interface DashboardWidget {
   id: string;
   dashboard_id: string;
   plugin_id: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   order: number;
   active: boolean;
   created_at: string;
@@ -26,7 +26,7 @@ export interface ScheduleItem {
   end_time: string;
   location?: string;
   description?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface TaskItem {
@@ -36,5 +36,5 @@ export interface TaskItem {
   due_date?: string;
   priority?: 'low' | 'medium' | 'high';
   status?: 'pending' | 'in_progress' | 'completed';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }

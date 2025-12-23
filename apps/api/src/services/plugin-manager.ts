@@ -1,6 +1,7 @@
 import { PluginRegistry } from '@dashboard-link/plugins';
-import type { ScheduleItem, TaskItem, PluginAdapter } from '@dashboard-link/shared';
+import type { PluginAdapter, ScheduleItem, TaskItem } from '@dashboard-link/shared';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '../utils/logger';
 
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
@@ -43,54 +44,52 @@ export class PluginManagerService {
     }
 
     // Fetch data from each active widget's plugin
-    const schedulePromises: Promise<ScheduleItem[]>[] = [];
-    const taskPromises: Promise<TaskItem[]>[] = [];
+    const pluginConfigs = await supabase
+      .from('plugin_configs')
+      .select('*')
+      .eq('organization_id', worker.organization_id);
 
-    for (const widget of dashboard.dashboard_widgets) {
-      if (!widget.active) continue;
+    const results = await Promise.allSettled(
+      pluginConfigs.map(async (pluginConfig) => {
+        const adapter = PluginRegistry.get(pluginConfig.plugin_id);
+        if (!adapter) {
+          logger.warn(`Plugin not found: ${pluginConfig.plugin_id}`);
+          return { schedule: [], tasks: [] };
+        }
 
-      const plugin = PluginRegistry.get(widget.plugin_id);
-      if (!plugin) {
-        console.warn(`Plugin ${widget.plugin_id} not found`);
-        continue;
-      }
+        try {
+          const [schedule, tasks] = await Promise.all([
+            adapter.getTodaySchedule(workerId, pluginConfig.config),
+            adapter.getTodayTasks(workerId, pluginConfig.config),
+          ]);
 
-      // Get plugin config from organization
-      const { data: pluginConfig } = await supabase
-        .from('plugin_configs')
-        .select('*')
-        .eq('organization_id', worker.organization_id)
-        .eq('plugin_id', widget.plugin_id)
-        .single();
-
-      const config = { ...pluginConfig?.config, ...widget.config };
-
-      // Fetch data from plugin
-      schedulePromises.push(plugin.getTodaySchedule(workerId, config));
-      taskPromises.push(plugin.getTodayTasks(workerId, config));
-    }
-
-    // Wait for all plugins to respond
-    const scheduleResults = await Promise.allSettled(schedulePromises);
-    const taskResults = await Promise.allSettled(taskPromises);
+          return { schedule, tasks };
+        } catch (error) {
+          logger.error(`Plugin ${pluginConfig.plugin_id} failed:`, error);
+          return { schedule: [], tasks: [] };
+        }
+      })
+    );
 
     // Combine results from all plugins
-    const schedule = scheduleResults
-      .filter((r) => r.status === 'fulfilled')
-      .flatMap((r) => (r as PromiseFulfilledResult<ScheduleItem[]>).value);
+    const allScheduleItems: ScheduleItem[] = [];
+    const allTaskItems: TaskItem[] = [];
 
-    const tasks = taskResults
-      .filter((r) => r.status === 'fulfilled')
-      .flatMap((r) => (r as PromiseFulfilledResult<TaskItem[]>).value);
+    results.forEach((result) => {
+      if (result.status === 'fulfilled') {
+        allScheduleItems.push(...result.value.schedule);
+        allTaskItems.push(...result.value.tasks);
+      }
+    });
 
     // Sort schedule by start time
-    schedule.sort((a, b) => 
+    allScheduleItems.sort((a, b) => 
       new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
     );
 
     // Sort tasks by priority and due date
     const priorityOrder = { high: 0, medium: 1, low: 2 };
-    tasks.sort((a, b) => {
+    allTaskItems.sort((a, b) => {
       const priorityA = priorityOrder[a.priority || 'low'];
       const priorityB = priorityOrder[b.priority || 'low'];
       if (priorityA !== priorityB) return priorityA - priorityB;
@@ -100,7 +99,7 @@ export class PluginManagerService {
       return dateA - dateB;
     });
 
-    return { schedule, tasks };
+    return { schedule: allScheduleItems, tasks: allTaskItems };
   }
 
   /**
@@ -115,7 +114,7 @@ export class PluginManagerService {
    */
   static async validatePluginConfig(
     pluginId: string,
-    config: Record<string, any>
+    config: Record<string, unknown>
   ): Promise<boolean> {
     const plugin = PluginRegistry.get(pluginId);
     if (!plugin) {

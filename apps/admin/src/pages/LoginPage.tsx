@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { useAuth, useAuthIsAuthenticated, useAuthIsLoading, useAuthError } from '../store/auth';
+import { useAuth, useAuthError, useAuthIsAuthenticated, useAuthIsLoading } from '../store/auth';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -29,8 +29,6 @@ export function LoginPage() {
 
     try {
       await login({ email, password });
-    } catch (err) {
-      // Error is handled by the store
     } finally {
       setIsSubmitting(false);
     }

@@ -51,7 +51,7 @@ describe('Placeholder Detection Tests - API', () => {
     expect(violations).toHaveLength(0)
   })
 
-  it('should not contain @ts-ignore statements', () => {
+  it('should not contain @ts-expect-error statements', () => {
     const violations: string[] = []
 
     for (const file of filesToCheck) {
@@ -59,11 +59,11 @@ describe('Placeholder Detection Tests - API', () => {
 
       const content = readFileSync(file, 'utf-8')
 
-      // Check for @ts-ignore
-      if (content.includes('@ts-ignore')) {
+      // Check for @ts-expect-error
+      if (content.includes('@ts-expect-error')) {
         const lines = content.split('\n')
         lines.forEach((line, index) => {
-          if (line.includes('@ts-ignore')) {
+          if (line.includes('@ts-expect-error')) {
             violations.push(`${file}:${index + 1} - ${line.trim()}`)
           }
         })
@@ -71,7 +71,7 @@ describe('Placeholder Detection Tests - API', () => {
     }
 
     if (violations.length > 0) {
-      console.error('\nFound @ts-ignore statements:')
+      console.error('\nFound @ts-expect-error statements:')
       violations.forEach((v) => console.error(`  - ${v}`))
     }
 

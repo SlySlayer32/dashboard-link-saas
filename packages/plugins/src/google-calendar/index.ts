@@ -11,7 +11,7 @@ export class GoogleCalendarAdapter extends BaseAdapter {
   description = 'Sync daily schedule from Google Calendar'
   version = '1.0.0'
 
-  async getTodaySchedule(workerId: string, _config: Record<string, any>): Promise<ScheduleItem[]> {
+  async getTodaySchedule(workerId: string, _config: Record<string, unknown>): Promise<ScheduleItem[]> {
     // TODO: Implement Google Calendar API integration
     // 1. Use OAuth2 credentials from config
     // 2. Fetch today's events for the calendar
@@ -23,12 +23,12 @@ export class GoogleCalendarAdapter extends BaseAdapter {
     return []
   }
 
-  async getTodayTasks(_workerId: string, _config: Record<string, any>): Promise<TaskItem[]> {
+  async getTodayTasks(_workerId: string, _config: unknown): Promise<TaskItem[]> {
     // Google Calendar doesn't have tasks, return empty
     return []
   }
 
-  async validateConfig(_config: Record<string, any>): Promise<boolean> {
+  async validateConfig(_config: unknown): Promise<boolean> {
     // TODO: Implement validation
     return false
   }

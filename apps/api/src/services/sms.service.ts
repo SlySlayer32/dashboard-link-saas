@@ -1,5 +1,6 @@
 import { formatAustralianPhone } from '@dashboard-link/shared';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '../utils/logger';
 
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
@@ -36,6 +37,7 @@ export class SMSService {
    */
   static async sendSMS(options: SendSMSOptions): Promise<SMSResponse> {
     if (!this.username || !this.password) {
+      // @ts-expect-error - MobileMessage API response type is not defined
       throw new Error('MobileMessage credentials not configured');
     }
 
@@ -54,6 +56,7 @@ export class SMSService {
       const credentials = Buffer.from(`${this.username}:${this.password}`).toString('base64');
 
       const response = await fetch(this.API_URL, {
+        // @ts-expect-error - MobileMessage API response type is not defined
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +119,7 @@ export class SMSService {
     phone: string;
     message: string;
     status: string;
-    providerResponse: any;
+    providerResponse: unknown;
   }): Promise<void> {
     if (!data.organizationId) return;
 
@@ -130,7 +133,7 @@ export class SMSService {
         provider_response: data.providerResponse,
       });
     } catch (error) {
-      console.error('Failed to log SMS:', error);
+      logger.error('Failed to log SMS', error as Error);
     }
   }
 

@@ -21,7 +21,7 @@ export class ManualAdapter extends BaseAdapter {
 
   async getTodaySchedule(
     workerId: string,
-    _config: Record<string, unknown>
+    _config: unknown
   ): Promise<ScheduleItem[]> {
     try {
       // Get today's date range in UTC
@@ -45,15 +45,23 @@ export class ManualAdapter extends BaseAdapter {
       }
 
       // Transform database rows to ScheduleItem format
-      return (data || []).map((item: any) => ({
+      return (data || []).map((item: {
+        id: string;
+        title: string;
+        start_time: string;
+        end_time: string;
+        location?: string;
+        description?: string;
+        metadata?: Record<string, unknown>;
+      }) => ({
         id: item.id,
         title: item.title,
         start_time: item.start_time,
         end_time: item.end_time,
         location: item.location,
         description: item.description,
-        type: 'manual',
-        source: 'manual',
+        type: 'manual' as const,
+        source: 'manual' as const,
         metadata: item.metadata || {},
       }))
     } catch (error) {
@@ -62,7 +70,7 @@ export class ManualAdapter extends BaseAdapter {
     }
   }
 
-  async getTodayTasks(_workerId: string, _config: Record<string, unknown>): Promise<TaskItem[]> {
+  async getTodayTasks(_workerId: string, _config: unknown): Promise<TaskItem[]> {
     try {
       // Get today's date range in UTC
       const today = new Date()
@@ -70,8 +78,7 @@ export class ManualAdapter extends BaseAdapter {
       const tomorrow = new Date(today)
       tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
 
-      // Query manual task items
-      // We include tasks without due dates and tasks due today
+      // Query manual task items for worker
       const { data, error } = await supabase
         .from('manual_task_items')
         .select('*')
@@ -88,15 +95,23 @@ export class ManualAdapter extends BaseAdapter {
       }
 
       // Transform database rows to TaskItem format
-      return (data || []).map((item: any) => ({
+      return (data || []).map((item: {
+        id: string;
+        title: string;
+        description?: string;
+        due_date?: string;
+        priority?: string;
+        status?: string;
+        metadata?: Record<string, unknown>;
+      }) => ({
         id: item.id,
         title: item.title,
         description: item.description,
         due_date: item.due_date,
         priority: item.priority || 'medium',
         status: item.status || 'pending',
-        type: 'manual',
-        source: 'manual',
+        type: 'manual' as const,
+        source: 'manual' as const,
         metadata: item.metadata || {},
       }))
     } catch (error) {

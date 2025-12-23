@@ -1,12 +1,13 @@
-import { Hono } from 'hono'
-import { authMiddleware } from '../middleware/auth'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
+import { Hono } from 'hono';
+import { authMiddleware } from '../middleware/auth';
 import type {
-  Organization,
-  UpdateOrganizationRequest,
-  GetOrganizationResponse,
-  UpdateOrganizationResponse,
-} from '../types/organization'
+    GetOrganizationResponse,
+    Organization,
+    UpdateOrganizationRequest,
+    UpdateOrganizationResponse,
+} from '../types/organization';
+import { logger } from '../utils/logger';
 
 const organizations = new Hono()
 
@@ -22,7 +23,7 @@ organizations.use('*', authMiddleware)
  * Get current organization details
  */
 organizations.get('/', async (c) => {
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId')
 
   try {
@@ -78,7 +79,7 @@ organizations.get('/', async (c) => {
 
     return c.json(response)
   } catch (error) {
-    console.error('Get organization error:', error)
+    logger.error('Get organization error', error as Error)
     return c.json(
       {
         success: false,
@@ -96,7 +97,7 @@ organizations.get('/', async (c) => {
  * Update organization settings
  */
 organizations.put('/', async (c) => {
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId')
   const body: UpdateOrganizationRequest = await c.req.json()
 
@@ -142,7 +143,7 @@ organizations.put('/', async (c) => {
     }
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: unknown = {
       updated_at: new Date().toISOString(),
     }
 
@@ -250,7 +251,7 @@ organizations.put('/', async (c) => {
 
     return c.json(response)
   } catch (error) {
-    console.error('Update organization error:', error)
+    logger.error('Update organization error', error as Error)
     return c.json(
       {
         success: false,

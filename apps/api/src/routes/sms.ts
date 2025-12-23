@@ -1,15 +1,16 @@
-import { createClient } from '@supabase/supabase-js'
-import { Hono } from 'hono'
-import { authMiddleware } from '../middleware/auth'
-import { smsRateLimitMiddleware } from '../middleware/rateLimit'
-import { SMSService } from '../services/sms.service'
-import { TokenService } from '../services/token.service'
+import { createClient } from '@supabase/supabase-js';
+import { Hono } from 'hono';
+import { authMiddleware } from '../middleware/auth';
+import { smsRateLimitMiddleware } from '../middleware/rateLimit';
+import { SMSService } from '../services/sms.service';
+import { TokenService } from '../services/token.service';
 import type {
-  SMSDashboardLinkRequest,
-  SMSDashboardLinkResponse,
-  SMSLogsResponse,
-  SendSMSRequest,
-} from '../types/sms'
+    SMSDashboardLinkRequest,
+    SMSDashboardLinkResponse,
+    SMSLogsResponse,
+    SendSMSRequest,
+} from '../types/sms';
+import { logger } from '../utils/logger';
 
 const sms = new Hono()
 
@@ -26,7 +27,7 @@ sms.use('*', smsRateLimitMiddleware)
  * Send dashboard link to a worker
  */
 sms.post('/send-dashboard-link', async (c) => {
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId')
   const { workerId, expiresIn, customMessage }: SMSDashboardLinkRequest = await c.req.json()
 
@@ -173,7 +174,7 @@ sms.post('/send-dashboard-link', async (c) => {
 
     return c.json(response)
   } catch (error) {
-    console.error('Send dashboard link error:', error)
+    logger.error('Send dashboard link error', error as Error)
     return c.json(
       {
         success: false,
@@ -191,7 +192,7 @@ sms.post('/send-dashboard-link', async (c) => {
  * Get SMS logs for the organization
  */
 sms.get('/logs', async (c) => {
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId')
   const { page = '1', limit = '20', workerId }: Record<string, string> = c.req.query()
 
@@ -259,7 +260,7 @@ sms.get('/logs', async (c) => {
 
     return c.json(response)
   } catch (error) {
-    console.error('Get SMS logs error:', error)
+    logger.error('Get SMS logs error', error as Error)
     return c.json(
       {
         success: false,
@@ -277,7 +278,7 @@ sms.get('/logs', async (c) => {
  * Send custom SMS to a worker
  */
 sms.post('/send', async (c) => {
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId')
   const { workerId, message }: SendSMSRequest = await c.req.json()
 
@@ -375,7 +376,7 @@ sms.post('/send', async (c) => {
       },
     })
   } catch (error) {
-    console.error('Send SMS error:', error)
+    logger.error('Send SMS error', error as Error)
     return c.json(
       {
         success: false,

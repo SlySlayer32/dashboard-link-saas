@@ -1,7 +1,7 @@
 export interface OrganizationSettings {
   smsSenderId?: string;
   defaultTokenExpiry?: number; // in hours (1-168)
-  customMetadata?: Record<string, any>;
+  customMetadata?: Record<string, unknown>;
 }
 
 export interface UpdateOrganizationRequest {
@@ -39,6 +39,6 @@ export interface UpdateOrganizationResponse {
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
 }

@@ -5,7 +5,7 @@ export interface SMSLog {
   phone: string;
   message: string;
   status: 'sent' | 'delivered' | 'failed' | 'pending';
-  provider_response?: any;
+  provider_response?: unknown;
   created_at: string;
   updated_at: string;
 }
@@ -59,6 +59,6 @@ export interface SendSMSResponse {
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
 }

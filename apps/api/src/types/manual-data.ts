@@ -41,7 +41,7 @@ export interface ScheduleItem {
   end_time: string; // ISO datetime
   location?: string;
   description?: string;
-  metadata: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -55,7 +55,7 @@ export interface TaskItem {
   due_date?: string; // ISO date
   priority: 'low' | 'medium' | 'high';
   status: 'pending' | 'in_progress' | 'completed';
-  metadata: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }

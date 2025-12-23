@@ -1,7 +1,7 @@
+import { formatAustralianPhone } from '@dashboard-link/shared';
+import { createClient } from '@supabase/supabase-js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
-import { createClient } from '@supabase/supabase-js';
-import { formatAustralianPhone } from '@dashboard-link/shared';
 
 const workers = new Hono();
 
@@ -15,7 +15,7 @@ workers.use('*', authMiddleware);
 
 // List workers
 workers.get('/', async (c) => {
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId');
 
   // Get user's organization
@@ -42,10 +42,75 @@ workers.get('/', async (c) => {
   return c.json(data);
 });
 
+// Get worker by ID with SMS statistics
+workers.get('/:id/stats', async (c) => {
+  const id = c.req.param('id');
+  // @ts-expect-error - Supabase client type issue
+  const userId = c.get('userId');
+
+  const { data: admin } = await supabase
+    .from('admins')
+    .select('organization_id')
+    .eq('auth_user_id', userId)
+    .single();
+
+  if (!admin) {
+    return c.json({ error: 'Not authorized' }, 403);
+  }
+
+  // Get worker details
+  const { data: worker, error: workerError } = await supabase
+    .from('workers')
+    .select('*')
+    .eq('id', id)
+    .eq('organization_id', admin.organization_id)
+    .single();
+
+  if (workerError || !worker) {
+    return c.json({ error: 'Worker not found' }, 404);
+  }
+
+  // Get SMS statistics
+  const { data: smsStats } = await supabase
+    .from('sms_logs')
+    .select('status, created_at')
+    .eq('organization_id', admin.organization_id)
+    .eq('worker_id', id);
+
+  // Calculate statistics
+  const totalSms = smsStats?.length || 0;
+  const sentSms = smsStats?.filter(s => s.status === 'sent').length || 0;
+  const failedSms = smsStats?.filter(s => s.status === 'failed').length || 0;
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const smsToday = smsStats?.filter(s => 
+    new Date(s.created_at) >= today
+  ).length || 0;
+
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  weekAgo.setHours(0, 0, 0, 0);
+  const smsThisWeek = smsStats?.filter(s => 
+    new Date(s.created_at) >= weekAgo
+  ).length || 0;
+
+  return c.json({
+    worker,
+    stats: {
+      totalSms,
+      sentSms,
+      failedSms,
+      smsToday,
+      smsThisWeek,
+    }
+  });
+});
+
 // Get worker by ID
 workers.get('/:id', async (c) => {
   const id = c.req.param('id');
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId');
 
   const { data: admin } = await supabase
@@ -74,7 +139,7 @@ workers.get('/:id', async (c) => {
 
 // Create worker
 workers.post('/', async (c) => {
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId');
   const body = await c.req.json();
 
@@ -131,7 +196,7 @@ workers.post('/', async (c) => {
 // Update worker
 workers.put('/:id', async (c) => {
   const id = c.req.param('id');
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId');
   const body = await c.req.json();
 
@@ -145,7 +210,7 @@ workers.put('/:id', async (c) => {
     return c.json({ error: 'Not authorized' }, 403);
   }
 
-  const updateData: any = {};
+  const updateData: unknown = {};
   if (body.name) updateData.name = body.name;
   if (body.email !== undefined) updateData.email = body.email;
   if (body.active !== undefined) updateData.active = body.active;
@@ -170,7 +235,7 @@ workers.put('/:id', async (c) => {
 // Delete worker
 workers.delete('/:id', async (c) => {
   const id = c.req.param('id');
-  // @ts-ignore - Hono context typing issue
+  // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId');
 
   const { data: admin } = await supabase
@@ -193,7 +258,8 @@ workers.delete('/:id', async (c) => {
     return c.json({ error: error.message }, 400);
   }
 
-  return c.json({ message: 'Worker deleted' });
+  return c.json({ message: 'Worker deleted successfully' });
 });
 
-export default workers;
+export { workers };
+

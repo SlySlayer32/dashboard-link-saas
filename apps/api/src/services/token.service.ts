@@ -53,7 +53,7 @@ export class TokenService {
   static async validateToken(token: string): Promise<{
     valid: boolean;
     workerId?: string;
-    workerData?: any;
+    workerData?: unknown;
   }> {
     const { data: tokenData, error: tokenError } = await supabase
       .from('worker_tokens')
