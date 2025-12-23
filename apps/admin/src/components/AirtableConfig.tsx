@@ -130,7 +130,7 @@ export function AirtableConfig({ config, onChange }: AirtableConfigProps) {
           <li>Navigate to the Developer hub</li>
           <li>Create a new Personal Access Token with scopes: data.records:read and schema.bases:read</li>
           <li>Copy the token as your API Key</li>
-          <li>Open your base and go to Help > API documentation</li>
+          <li>Open your base and go to Help &gt; API documentation</li>
           <li>Copy the Base ID from the authentication section</li>
         </ol>
       </div>

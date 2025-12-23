@@ -1,4 +1,6 @@
-import { Worker } from '@dashboard-link/shared';
+import {
+    Worker
+} from '@dashboard-link/shared';
 import React, { useState } from 'react';
 import {
     useCreateWorker,
@@ -39,7 +41,7 @@ export const WorkerList: React.FC<WorkerListProps> = ({
   const { 
     data, 
     isLoading, 
-    error, 
+    error: _error, 
     refetch 
   } = useWorkers(query);
 
@@ -63,7 +65,7 @@ export const WorkerList: React.FC<WorkerListProps> = ({
     try {
       await createWorkerMutation.mutateAsync(data);
       setIsCreateModalOpen(false);
-    } catch (error) {
+    } catch (_error) {
       // Error is handled in the hook
     }
   };
@@ -78,7 +80,7 @@ export const WorkerList: React.FC<WorkerListProps> = ({
         data
       });
       setSelectedWorker(null);
-    } catch (error) {
+    } catch (_error) {
       // Error is handled in the hook
     }
   };
@@ -88,7 +90,7 @@ export const WorkerList: React.FC<WorkerListProps> = ({
     try {
       await deleteWorkerMutation.mutateAsync(id);
       setDeleteConfirmId(null);
-    } catch (error) {
+    } catch (_error) {
       // Error is handled in the hook
     }
   };
@@ -103,7 +105,7 @@ export const WorkerList: React.FC<WorkerListProps> = ({
   }
 
   // Error state
-  if (error && !data) {
+  if (_error && !data) {
     return (
       <div className="p-6">
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
@@ -111,7 +113,7 @@ export const WorkerList: React.FC<WorkerListProps> = ({
             Failed to load workers
           </h3>
           <p className="mt-2 text-sm text-red-700">
-            {(error as any).message || 'An unexpected error occurred'}
+            {(_error as Error).message || 'An unexpected error occurred'}
           </p>
           <Button
             onClick={() => refetch()}

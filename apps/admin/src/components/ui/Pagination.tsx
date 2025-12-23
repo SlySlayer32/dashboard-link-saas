@@ -16,7 +16,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   totalItems,
   itemsPerPage
 }) => {
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  const _pages = Array.from({ length: totalPages }, (_, i) => i + 1);
   
   // Show limited page numbers with ellipsis
   const getVisiblePages = () => {

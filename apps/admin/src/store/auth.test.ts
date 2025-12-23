@@ -130,7 +130,7 @@ describe('Auth Store', () => {
 
     it('should set loading state during login', async () => {
       // Create a promise that we control
-      let resolveLogin: (value: any) => void = () => {}
+      let resolveLogin: (value: unknown) => void = () => {}
       const loginPromise = new Promise((resolve) => {
         resolveLogin = resolve
       })

@@ -45,7 +45,7 @@ export function useWorkers(
     },
     retry: (failureCount, error) => {
       // Don't retry on 4xx errors
-      if ((error as any).status >= 400 && (error as any).status < 500) return false;
+      if ((error as unknown as { status: number }).status >= 400 && (error as unknown as { status: number }).status < 500) return false;
       return failureCount < 3;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -71,7 +71,7 @@ export function useWorker(
     },
     enabled: !!id,
     retry: (failureCount, error) => {
-      if ((error as any).status >= 400 && (error as any).status < 500) return false;
+      if ((error as unknown as { status: number }).status >= 400 && (error as unknown as { status: number }).status < 500) return false;
       return failureCount < 3;
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -99,12 +99,12 @@ export function useCreateWorker() {
       
       // Add the new worker to the cache
       queryClient.setQueryData(
-        workerKeys.detail(data.data!.id),
+        workerKeys.detail(data.data?.id || ''),
         data
       );
 
       logger.info('Worker created successfully', { 
-        workerId: data.data!.id,
+        workerId: data.data?.id || '',
         workerName: variables.name 
       });
     },

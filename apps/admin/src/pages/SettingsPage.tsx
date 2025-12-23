@@ -9,7 +9,7 @@ import type { UpdateOrganizationRequest } from '../hooks/useOrganization';
 import { useDeleteOrganization, useOrganization, useUpdateOrganization } from '../hooks/useOrganization';
 
 export function SettingsPage() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const { data: organization, isLoading, error } = useOrganization();
   const updateMutation = useUpdateOrganization();
   const deleteMutation = useDeleteOrganization();

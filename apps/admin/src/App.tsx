@@ -53,6 +53,11 @@ function App() {
                     <WorkerDetailPage />
                   </ProtectedRoute>
                 } />
+                <Route path="/tokens" element={
+                  <ProtectedRoute>
+                    <TokensPage />
+                  </ProtectedRoute>
+                } />
                 <Route path="/manual-data" element={
                   <ProtectedRoute>
                     <ManualDataPage />

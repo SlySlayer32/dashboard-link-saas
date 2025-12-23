@@ -55,6 +55,7 @@ app.route('/plugins', plugins);
 app.route('/dashboards', dashboards);
 app.route('/dashboard', dashboard);
 app.route('/sms', sms);
+app.route('/tokens', tokens);
 app.route('/webhooks', webhooks);
 app.route('', manualData); // Manual data routes don't have a prefix
 

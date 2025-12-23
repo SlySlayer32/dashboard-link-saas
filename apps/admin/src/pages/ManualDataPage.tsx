@@ -24,7 +24,7 @@ export function ManualDataPage() {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingItem, setEditingItem] = useState<ScheduleItem | TaskItem | null>(null);
 
-  const { data: workersData, isLoading: workersLoading } = useWorkers();
+  const { data: workersData } = useWorkers();
   
   const getDateRange = () => {
     const now = new Date();

@@ -179,7 +179,7 @@ export function useUpdateTaskItem() {
   return useMutation({
     mutationFn: ({ itemId, data }: { itemId: string; data: UpdateTaskItemRequest }) =>
       updateTaskItem(token || '', itemId, data),
-    onSuccess: (_, { itemId }) => {
+    onSuccess: (_, { _itemId }) => {
       queryClient.invalidateQueries({
         queryKey: ['task-items'],
       });

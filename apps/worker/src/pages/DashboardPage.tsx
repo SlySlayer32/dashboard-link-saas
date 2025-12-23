@@ -1,30 +1,78 @@
-import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { API_URL } from '../lib/config';
+import { useCallback, useEffect, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import ScheduleWidget from '../components/widgets/ScheduleWidget';
 import TasksWidget from '../components/widgets/TasksWidget';
-import type { ScheduleItem, TaskItem, Worker } from '@dashboard-link/shared';
-
-interface DashboardData {
-  worker: Worker;
-  schedule: ScheduleItem[];
-  tasks: TaskItem[];
-}
+import { useDashboardData } from '../hooks/useDashboardData';
 
 function DashboardPage() {
   const { token } = useParams<{ token: string }>();
-
-  const { data, isLoading, error } = useQuery<DashboardData>({
-    queryKey: ['dashboard', token],
-    queryFn: async () => {
-      const response = await fetch(`${API_URL}/dashboards/${token}`);
-      if (!response.ok) {
-        throw new Error('Failed to load dashboard');
+  const navigate = useNavigate();
+  const { data, isLoading, error, refetch } = useDashboardData(token);
+  
+  // Handle different error types
+  useEffect(() => {
+    if (error) {
+      if (error.message.includes('expired')) {
+        const expiredAt = new Date().toISOString();
+        navigate(`/error/expired-token?expiredAt=${expiredAt}`, { replace: true });
+      } else if (error.message.includes('Invalid') || error.message.includes('401')) {
+        navigate('/error/invalid-token', { replace: true });
       }
-      return response.json();
-    },
-    enabled: !!token,
-  });
+    }
+  }, [error, navigate]);
+
+  // Pull-to-refresh functionality
+  const startY = useRef<number | null>(null);
+  const currentY = useRef<number | null>(null);
+  const isPulling = useRef(false);
+  
+  const handleTouchStart = useCallback((e: globalThis.TouchEvent) => {
+    if (window.scrollY === 0) {
+      startY.current = e.touches[0].clientY;
+      isPulling.current = true;
+    }
+  }, []);
+  
+  const handleTouchMove = useCallback((e: globalThis.TouchEvent) => {
+    if (!isPulling.current || startY.current === null) return;
+    
+    currentY.current = e.touches[0].clientY;
+    const pullDistance = (currentY.current - startY.current) / 2;
+    
+    if (pullDistance > 0 && pullDistance < 150) {
+      document.body.style.transform = `translateY(${pullDistance}px)`;
+    }
+  }, []);
+  
+  const handleTouchEnd = useCallback(() => {
+    if (!isPulling.current || startY.current === null || currentY.current === null) return;
+    
+    const pullDistance = (currentY.current - startY.current) / 2;
+    
+    if (pullDistance > 100) {
+      refetch();
+    }
+    
+    document.body.style.transform = '';
+    startY.current = null;
+    currentY.current = null;
+    isPulling.current = false;
+  }, [refetch]);
+  
+  // Add and clean up touch event listeners
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('touchstart', handleTouchStart, { passive: true });
+      window.addEventListener('touchmove', handleTouchMove, { passive: true });
+      window.addEventListener('touchend', handleTouchEnd, { passive: true });
+      
+      return () => {
+        window.removeEventListener('touchstart', handleTouchStart);
+        window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   if (isLoading) {
     return (

@@ -1,4 +1,4 @@
-import type { Worker } from '@dashboard-link/shared';
+import type { DashboardStats, Worker } from '@dashboard-link/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 
