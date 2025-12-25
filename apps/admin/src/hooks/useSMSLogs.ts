@@ -1,18 +1,18 @@
-import type { SMSLog } from '@dashboard-link/shared';
-import { keepPreviousData, useQuery, UseQueryResult } from '@tanstack/react-query';
+import type { SMSLog } from '@dashboard-link/shared'
+import { keepPreviousData, useQuery, UseQueryResult } from '@tanstack/react-query'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 interface SMSLogsParams {
-  page?: number;
-  limit?: number;
-  workerId?: string;
+  page?: number
+  limit?: number
+  workerId?: string
   // Note: status, dateFrom, dateTo, and search filters are not yet supported by the API
   // They are included for future implementation
-  status?: SMSLog['status'];
-  dateFrom?: string;
-  dateTo?: string;
-  search?: string;
+  status?: SMSLog['status']
+  dateFrom?: string
+  dateTo?: string
+  search?: string
 }
 
 export function useSMSLogs(params: SMSLogsParams = {}): UseQueryResult<SMSLogsResponse> {
@@ -25,22 +25,22 @@ export function useSMSLogs(params: SMSLogsParams = {}): UseQueryResult<SMSLogsRe
     dateFrom,
     dateTo,
     search,
-  } = params;
+  } = params
 
   return useQuery({
     queryKey: ['sms-logs', page, limit, workerId, status, dateFrom, dateTo, search],
     queryFn: async (): Promise<SMSLogsResponse> => {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('auth_token')
       if (!token) {
-        throw new Error('No authentication token found');
+        throw new Error('No authentication token found')
       }
 
-      const searchParams = new URLSearchParams();
-      searchParams.set('page', page.toString());
-      searchParams.set('limit', limit.toString());
-      
+      const searchParams = new URLSearchParams()
+      searchParams.set('page', page.toString())
+      searchParams.set('limit', limit.toString())
+
       // Only send workerId filter as it's the only one supported by the API
-      if (workerId) searchParams.set('workerId', workerId);
+      if (workerId) searchParams.set('workerId', workerId)
       // TODO: Add support for these filters in the API
       // if (status) searchParams.set('status', status);
       // if (dateFrom) searchParams.set('dateFrom', dateFrom);
@@ -51,26 +51,30 @@ export function useSMSLogs(params: SMSLogsParams = {}): UseQueryResult<SMSLogsRe
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
+      })
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Failed to fetch SMS logs');
+        const error = await response.json()
+        throw new Error(error.error?.message || 'Failed to fetch SMS logs')
       }
 
-      return response.json();
+      return response.json()
     },
     placeholderData: keepPreviousData,
-  });
+    staleTime: 2 * 60 * 1000, // 2 minutes for logs
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+  })
 }
 
 interface SMSLogsResponse {
-  success: boolean;
-  data: SMSLog[];
+  success: boolean
+  data: SMSLog[]
   pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
 }

@@ -36,11 +36,20 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.7.4",
-    "turbo": "^2.3.3"
+    "rollup-plugin-visualizer": "^6.0.5",
+    "turbo": "^2.3.3",
+    "vite-plugin-pwa": "^1.2.0"
   },
   "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=9.0.0"
+  },
+  "dependencies": {
+    "@tanstack/react-virtual": "^3.13.13",
+    "@types/node": "^20.10.6",
+    "@types/uuid": "^11.0.0",
+    "class-variance-authority": "^0.7.1",
+    "uuid": "^13.0.0"
   }
 }

@@ -1,34 +1,35 @@
-import type { ChangeEvent } from 'react';
-import { RegisterOptions, UseFormRegister } from 'react-hook-form';
+import { Button } from '@dashboard-link/ui'
+import type { ChangeEvent } from 'react'
+import { RegisterOptions, UseFormRegister } from 'react-hook-form'
 
 // Define HTMLInputElement type since it's not available in globals
 interface HTMLInputElement {
-  value: string;
+  value: string
 }
 
 // Define a generic form field type
-type FormFieldValues = Record<string, unknown>;
+type FormFieldValues = Record<string, unknown>
 
 // Define field error interface to match react-hook-form's error shape
 interface FieldError {
-  type: string;
-  message?: string;
+  type: string
+  message?: string
 }
 
 interface FormFieldProps {
-  label: string;
-  name: string;
-  type?: 'text' | 'email' | 'tel' | 'password';
-  placeholder?: string;
-  required?: boolean;
-  disabled?: boolean;
-  error?: FieldError;
-  registration: UseFormRegister<FormFieldValues>;
-  validation?: RegisterOptions;
-  className?: string;
-  helperText?: string;
-  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
-  value?: string;
+  label: string
+  name: string
+  type?: 'text' | 'email' | 'tel' | 'password'
+  placeholder?: string
+  required?: boolean
+  disabled?: boolean
+  error?: FieldError
+  registration: UseFormRegister<FormFieldValues>
+  validation?: RegisterOptions
+  className?: string
+  helperText?: string
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void
+  value?: string
 }
 
 export function FormField({
@@ -48,9 +49,9 @@ export function FormField({
 }: FormFieldProps) {
   return (
     <div className={`mb-4 ${className}`}>
-      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+      <label htmlFor={name} className='block text-sm font-medium text-gray-700 mb-1'>
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className='text-red-500 ml-1'>*</span>}
       </label>
       <input
         id={name}
@@ -67,29 +68,27 @@ export function FormField({
         value={value}
       />
       {error && (
-        <p className="mt-1 text-sm text-red-600" id={`${name}-error`}>
+        <p className='mt-1 text-sm text-red-600' id={`${name}-error`}>
           {error.message}
         </p>
       )}
-      {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
-      )}
+      {helperText && !error && <p className='mt-1 text-sm text-gray-500'>{helperText}</p>}
     </div>
-  );
+  )
 }
 
 interface FormTextareaProps {
-  label: string;
-  name: string;
-  placeholder?: string;
-  required?: boolean;
-  disabled?: boolean;
-  error?: FieldError;
-  registration: UseFormRegister<FormFieldValues>;
-  validation?: RegisterOptions;
-  className?: string;
-  helperText?: string;
-  rows?: number;
+  label: string
+  name: string
+  placeholder?: string
+  required?: boolean
+  disabled?: boolean
+  error?: FieldError
+  registration: UseFormRegister<FormFieldValues>
+  validation?: RegisterOptions
+  className?: string
+  helperText?: string
+  rows?: number
 }
 
 export function FormTextarea({
@@ -107,9 +106,9 @@ export function FormTextarea({
 }: FormTextareaProps) {
   return (
     <div className={`mb-4 ${className}`}>
-      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+      <label htmlFor={name} className='block text-sm font-medium text-gray-700 mb-1'>
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className='text-red-500 ml-1'>*</span>}
       </label>
       <textarea
         id={name}
@@ -124,29 +123,27 @@ export function FormTextarea({
         {...registration(name, validation)}
       />
       {error && (
-        <p className="mt-1 text-sm text-red-600" id={`${name}-error`}>
+        <p className='mt-1 text-sm text-red-600' id={`${name}-error`}>
           {error.message}
         </p>
       )}
-      {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
-      )}
+      {helperText && !error && <p className='mt-1 text-sm text-gray-500'>{helperText}</p>}
     </div>
-  );
+  )
 }
 
 interface FormSelectProps {
-  label: string;
-  name: string;
-  options: { value: string; label: string }[];
-  placeholder?: string;
-  required?: boolean;
-  disabled?: boolean;
-  error?: FieldError;
-  registration: UseFormRegister<FormFieldValues>;
-  validation?: RegisterOptions;
-  className?: string;
-  helperText?: string;
+  label: string
+  name: string
+  options: { value: string; label: string }[]
+  placeholder?: string
+  required?: boolean
+  disabled?: boolean
+  error?: FieldError
+  registration: UseFormRegister<FormFieldValues>
+  validation?: RegisterOptions
+  className?: string
+  helperText?: string
 }
 
 export function FormSelect({
@@ -164,9 +161,9 @@ export function FormSelect({
 }: FormSelectProps) {
   return (
     <div className={`mb-4 ${className}`}>
-      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+      <label htmlFor={name} className='block text-sm font-medium text-gray-700 mb-1'>
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className='text-red-500 ml-1'>*</span>}
       </label>
       <select
         id={name}
@@ -179,7 +176,7 @@ export function FormSelect({
         {...registration(name, validation)}
       >
         {placeholder && (
-          <option value="" disabled>
+          <option value='' disabled>
             {placeholder}
           </option>
         )}
@@ -190,28 +187,26 @@ export function FormSelect({
         ))}
       </select>
       {error && (
-        <p className="mt-1 text-sm text-red-600" id={`${name}-error`}>
+        <p className='mt-1 text-sm text-red-600' id={`${name}-error`}>
           {error.message}
         </p>
       )}
-      {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
-      )}
+      {helperText && !error && <p className='mt-1 text-sm text-gray-500'>{helperText}</p>}
     </div>
-  );
+  )
 }
 
 interface FormCheckboxProps {
-  label: string;
-  name: string;
-  required?: boolean;
-  disabled?: boolean;
-  error?: FieldError;
-  registration: UseFormRegister<FormFieldValues>;
-  validation?: RegisterOptions;
-  className?: string;
-  helperText?: string;
-  description?: string;
+  label: string
+  name: string
+  required?: boolean
+  disabled?: boolean
+  error?: FieldError
+  registration: UseFormRegister<FormFieldValues>
+  validation?: RegisterOptions
+  className?: string
+  helperText?: string
+  description?: string
 }
 
 export function FormCheckbox({
@@ -228,11 +223,11 @@ export function FormCheckbox({
 }: FormCheckboxProps) {
   return (
     <div className={`mb-4 ${className}`}>
-      <div className="flex items-start">
-        <div className="flex items-center h-5">
+      <div className='flex items-start'>
+        <div className='flex items-center h-5'>
           <input
             id={name}
-            type="checkbox"
+            type='checkbox'
             disabled={disabled}
             className={`focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded ${
               error ? 'border-red-300' : ''
@@ -240,35 +235,31 @@ export function FormCheckbox({
             {...registration(name, validation)}
           />
         </div>
-        <div className="ml-3 text-sm">
-          <label htmlFor={name} className="font-medium text-gray-700">
+        <div className='ml-3 text-sm'>
+          <label htmlFor={name} className='font-medium text-gray-700'>
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className='text-red-500 ml-1'>*</span>}
           </label>
-          {description && (
-            <p className="text-gray-500">{description}</p>
-          )}
+          {description && <p className='text-gray-500'>{description}</p>}
         </div>
       </div>
       {error && (
-        <p className="mt-1 text-sm text-red-600" id={`${name}-error`}>
+        <p className='mt-1 text-sm text-red-600' id={`${name}-error`}>
           {error.message}
         </p>
       )}
-      {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
-      )}
+      {helperText && !error && <p className='mt-1 text-sm text-gray-500'>{helperText}</p>}
     </div>
-  );
+  )
 }
 
 interface FormActionsProps {
-  onCancel: () => void;
-  isSubmitting?: boolean;
-  submitText?: string;
-  cancelText?: string;
-  submitDisabled?: boolean;
-  className?: string;
+  onCancel: () => void
+  isSubmitting?: boolean
+  submitText?: string
+  cancelText?: string
+  submitDisabled?: boolean
+  className?: string
 }
 
 export function FormActions({
@@ -281,43 +272,17 @@ export function FormActions({
 }: FormActionsProps) {
   return (
     <div className={`flex justify-end space-x-3 pt-4 border-t ${className}`}>
-      <button
-        type="button"
-        onClick={onCancel}
-        disabled={isSubmitting}
-        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
+      <Button variant='outline' onClick={onCancel} disabled={isSubmitting}>
         {cancelText}
-      </button>
-      <button
-        type="submit"
-        disabled={isSubmitting || submitDisabled}
-        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+      </Button>
+      <Button
+        type='submit'
+        loading={isSubmitting}
+        disabled={submitDisabled}
+        loadingText='Saving...'
       >
-        {isSubmitting && (
-          <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-        )}
         {submitText}
-      </button>
+      </Button>
     </div>
-  );
+  )
 }

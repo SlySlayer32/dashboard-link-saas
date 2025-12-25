@@ -5,7 +5,9 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@dashboard-link/ui": ["../../packages/ui/src/index.ts"],
+      "@dashboard-link/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": ["src"],

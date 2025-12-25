@@ -1,9 +1,10 @@
 import type { Worker } from '@dashboard-link/shared'
+import { SkeletonTable } from '@dashboard-link/ui'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatPhoneForDisplay } from '../utils/phoneUtils'
 import { SendSMSButton } from './SendSMSButton'
-import { StatusBadge, Table, TableSkeleton } from './ui/Table'
+import { StatusBadge, Table } from './ui/Table'
 
 interface WorkerListProps {
   workers: Worker[]
@@ -38,7 +39,7 @@ export function WorkerList({ workers, isLoading, onEdit, onDelete }: WorkerListP
       key: 'name' as keyof Worker,
       title: 'Name',
       render: (value: string, record: Worker) => (
-        <Link 
+        <Link
           to={`/workers/${record.id}`}
           className='font-medium text-blue-600 hover:text-blue-900'
         >
@@ -105,7 +106,7 @@ export function WorkerList({ workers, isLoading, onEdit, onDelete }: WorkerListP
   ]
 
   if (isLoading) {
-    return <TableSkeleton rows={10} columns={6} />
+    return <SkeletonTable rows={10} columns={6} className='bg-white shadow rounded-lg' />
   }
 
   return (
