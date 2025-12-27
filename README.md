@@ -1,6 +1,8 @@
 # 📱 Dashboard Link SaaS Platform
 
-> 🚀 A modern SaaS platform for delivering personalized daily dashboards to workers via SMS. Built with Vite, React, Hono.js, and Supabase.
+> 🚀 The **fastest way** to deliver personalized daily dashboards to your team via SMS.  
+> Built for modern businesses—cleaning companies, construction firms, healthcare agencies, and more.  
+> **Zero app installs required.** Workers tap a link and see their day.
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/SlySlayer32/dashboard-link-saas/ci.yml?branch=main)
 ![License](https://img.shields.io/github/license/SlySlayer32/dashboard-link-saas)
@@ -10,230 +12,196 @@
 ![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
 ![Node.js](https://img.shields.io/badge/Node.js-43853D?logo=node.js&logoColor=white)
 
-## 📸 Live Demo
+---
 
-<!-- Add your demo GIF or screenshot here -->
-![Dashboard Demo](docs/screenshots/demo.gif)
+## 🎯 Why Dashboard Link?
 
-**👉 [View Live Demo](https://dashboard-link-demo.vercel.app)**
+- **📱 No apps, no logins**—Workers receive a simple SMS link. Open, view, done.
+- **⚡ 2-minute setup**—Connect Google Calendar, Airtable, or enter data manually.
+- **� Enterprise-grade security**—Time-limited tokens, organization isolation, encrypted data.
+- **💰 Cost-effective SMS**—Australian rates from 2¢/SMS with MobileMessage.
+- **📊 Real-time updates**—Dashboards refresh automatically; no page reloads.
+
+**Perfect for:**
+- 🧹 Cleaning companies → Daily jobs & locations
+- 🏗️ Construction firms → Site assignments & safety briefs
+- 🏥 Healthcare agencies → Patient visit schedules
+- 📦 Delivery companies → Routes & delivery notes
+- 🎓 Schools → Student timetables & events
 
 ---
 
-## 📋 Overview
+## ✨ What You Get
 
-Dashboard Link allows organizations to create and deliver personalized daily dashboards for their people (workers, contractors, staff) via SMS. Admins configure dashboard widgets powered by plugins that pull data from external systems like Google Calendar, Airtable, or Notion.
-
-### 🎯 Perfect for:
-- 🧹 **Cleaning companies** → Send cleaners their daily jobs/locations
-- 🏗️ **Construction firms** → Send workers their site assignments
-- 🏥 **Healthcare agencies** → Send carers their patient visit schedules
-- 📦 **Delivery companies** → Send drivers their daily routes
-- 🎓 **Educational institutions** → Send students their daily schedules
-
----
-
-## ✨ Key Features
-
-### 🚀 Core Functionality
-- **📱 SMS Delivery** - Workers receive dashboard links via SMS (Australian provider: MobileMessage.com.au)
-- **🔒 Secure Tokens** - Time-limited access tokens (1hr-1day expiry) with single-use security
-- **🔌 Plugin System** - Extensible adapter system for external data sources
-- **⚡ Real-time Updates** - Webhook support for push notifications
-- **🏢 Multi-tenant** - Full organization isolation with Row Level Security
-- **📊 Mobile-first** - Responsive dashboards optimized for mobile devices
+### 🚀 Core Features
+- **SMS Dashboard Delivery** – One-click links sent straight to workers' phones
+- **Secure Access Tokens** – Auto-expiring links (1h–24h), single-use protection
+- **Plugin System** – Pull data from Google Calendar, Airtable, Notion, or manual entry
+- **Multi-tenant by Design** – Each organization is fully isolated (RLS-enabled)
+- **Mobile-First UI** – Looks great on any phone, no zooming needed
 
 ### 🎨 Admin Dashboard
-- **👥 Worker Management** - CRUD operations for workers with phone validation
-- **📈 Dashboard Analytics** - View engagement metrics and usage statistics
-- **🔧 Plugin Configuration** - Easy setup for Google Calendar, Airtable, Notion
-- **💬 SMS Logs** - Track message delivery and engagement
-- **⏰ Token Management** - Generate and manage access tokens with custom expiry
-- **🏢 Organization Settings** - Configure company details and preferences
+- **Worker Management** – Add/edit workers with phone validation
+- **SMS Logs** – Track delivery status and engagement
+- **Plugin Configuration** – OAuth setup for Google, API keys for Airtable/Notion
+- **Token Controls** – Generate links with custom expiry times
+- **Organization Settings** – Configure company details and preferences
 
 ### 📱 Worker Experience
-- **🎯 Clean Interface** - Minimal, distraction-free dashboard view
-- **📅 Today's Schedule** - View upcoming jobs and appointments
-- **✅ Task Management** - Check off completed tasks
-- **🔄 Auto-refresh** - Real-time updates without page reload
-- **⏱️ Time Tracking** - See start times and durations
+- **Clean, focused view** – Only today's schedule and tasks
+- **One-tap refresh** – Always see the latest info
+- **Offline-friendly** – Works even with spotty connections
+- **No training needed** – Intuitive interface for non-technical users
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture at a Glance
 
 ```mermaid
 graph TD
-    A[Admin Setup] --> B[Configure Workers & Plugins]
-    B --> C[Generate SMS Links]
-    C --> D[SMS Service]
-    D --> E[MobileMessage.com.au]
-    E --> F[Worker Receives SMS]
-    F --> G[Clicks Tokenized URL]
-    G --> H[Token Validation]
-    H --> I[Dashboard API]
-    I --> J[Plugin Adapters]
-    J --> K[External APIs]
-    K --> L[Display Dashboard]
+    A[Admin Config] --> B[Workers + Plugins]
+    B --> C[Generate Token Link]
+    C --> D[SMS Provider]
+    D --> E[Worker Gets SMS]
+    E --> F[Clicks Link]
+    F --> G[Token Validation]
+    G --> H[Dashboard API]
+    H --> I[Plugin Adapters]
+    I --> J[External APIs]
+    J --> K[Display Dashboard]
     
     style A fill:#e1f5fe
     style F fill:#f3e5f5
-    style L fill:#e8f5e9
+    style K fill:#e8f5e9
 ```
 
 ### 🛠️ Tech Stack
 
-#### Frontend
-- **[Vite](https://vitejs.dev/)** ⚡ - Lightning-fast build tool
-- **[React 18](https://reactjs.org/)** ⚛️ - UI library with hooks
-- **[TanStack Query](https://tanstack.com/query)** 🔄 - Data fetching & caching
-- **[Tailwind CSS](https://tailwindcss.com/)** 🎨 - Utility-first CSS
-- **[Zustand](https://github.com/pmndrs/zustand)** 📦 - Lightweight state management
-- **[React Hook Form](https://react-hook-form.com/)** 📝 - Form handling
-- **[Zod](https://zod.dev/)** ✅ - Schema validation
-
-#### Backend
-- **[Hono.js](https://hono.dev/)** 🚀 - Ultra-fast web framework (edge-ready)
-- **[Supabase](https://supabase.com/)** 🗄️ - PostgreSQL database + Auth + Storage
-- **[MobileMessage.com.au](https://mobilemessage.com.au/)** 📧 - Australian SMS provider (2-3¢/SMS)
-
-#### Development Tools
-- **[Turborepo](https://turbo.build/)** 🏗️ - High-performance build system
-- **[pnpm](https://pnpm.io/)** 📦 - Fast, disk space efficient package manager
-- **[TypeScript](https://www.typescriptlang.org/)** 🔷 - Type-safe development
-- **[Vitest](https://vitest.dev/)** 🧪 - Unit testing framework
-- **[ESLint](https://eslint.org/)** 🔍 - Code linting
-- **[Prettier](https://prettier.io/)** 💅 - Code formatting
+- **Frontend**: Vite + React 18 + TanStack Query + Tailwind + Zustand
+- **Backend**: Hono.js + Supabase (PostgreSQL + Auth)
+- **SMS**: MobileMessage.com.au (Australia)
+- **Tooling**: Turborepo + pnpm + TypeScript + Vitest
 
 ---
 
-## 📸 UI Showcase
-
-### Admin Dashboard
-<table>
-  <tr>
-    <td width="50%">
-      <img src="docs/screenshots/admin-dashboard.png" alt="Admin Dashboard Overview">
-      <p align="center"><strong>Dashboard Overview</strong></p>
-    </td>
-    <td width="50%">
-      <img src="docs/screenshots/worker-management.png" alt="Worker Management">
-      <p align="center"><strong>Worker Management</strong></p>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%">
-      <img src="docs/screenshots/plugin-config.png" alt="Plugin Configuration">
-      <p align="center"><strong>Plugin Configuration</strong></p>
-    </td>
-    <td width="50%">
-      <img src="docs/screenshots/sms-logs.png" alt="SMS Logs">
-      <p align="center"><strong>SMS Delivery Logs</strong></p>
-    </td>
-  </tr>
-</table>
-
-### Worker Mobile Dashboard
-<table>
-  <tr>
-    <td width="50%">
-      <img src="docs/screenshots/worker-dashboard.png" alt="Worker Dashboard">
-      <p align="center"><strong>Mobile Dashboard View</strong></p>
-    </td>
-    <td width="50%">
-      <img src="docs/screenshots/token-expired.png" alt="Token Expired">
-      <p align="center"><strong>Token Expired Page</strong></p>
-    </td>
-  </tr>
-</table>
-
----
-
-## 🚀 Quick Start
+## � Quick Start (5 minutes)
 
 ### Prerequisites
+- Node.js 18+
+- pnpm 9+
+- Supabase account (free tier works)
+- MobileMessage.com.au account (for SMS)
 
-- **Node.js** 18+ 
-- **pnpm** 9+
-- **Supabase account** (free tier available)
-- **MobileMessage.com.au account** (for SMS)
-
-### One-Click Setup
+### 🚀 One-Click Setup
 
 ```bash
-# Clone and setup in one command
 bash <(curl -s https://raw.githubusercontent.com/SlySlayer32/dashboard-link-saas/main/scripts/setup.sh)
 ```
 
-### Manual Installation
+### 📋 Manual Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/SlySlayer32/dashboard-link-saas.git
-   cd dashboard-link-saas
-   ```
+#### 1️⃣ Clone & Install
+```bash
+git clone https://github.com/SlySlayer32/dashboard-link-saas.git
+cd dashboard-link-saas
+pnpm install
+```
 
-2. **Install dependencies**
-   ```bash
-   pnpm install
-   ```
+#### 2️⃣ Environment Variables
+```bash
+cp .env.example .env
+```
 
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your credentials
-   ```
+Edit `.env` with your keys:
+```env
+# Supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_KEY=your_service_key
 
-4. **Set up Supabase**
-   ```bash
-   # Run migrations
-   pnpm db:migrate
-   # Seed with sample data (optional)
-   pnpm db:seed
-   ```
+# SMS (MobileMessage.com.au)
+MOBILEMESSAGE_USERNAME=your_username
+MOBILEMESSAGE_PASSWORD=your_password
 
-5. **Start development servers**
-   ```bash
-   pnpm dev
-   ```
+# Optional plugins
+GOOGLE_CLIENT_ID=your_google_client_id
+AIRTABLE_API_KEY=your_airtable_key
+NOTION_INTEGRATION_SECRET=your_notion_secret
+```
 
-   🎉 Your apps are now running:
-   - Admin app: http://localhost:5173
-   - Worker app: http://localhost:5174
-   - API server: http://localhost:3000
+#### 3️⃣ Database Setup
+```bash
+# Run migrations
+pnpm db:migrate
+
+# (Optional) Seed sample data
+pnpm db:seed
+```
+
+#### 4️⃣ Start Everything
+```bash
+pnpm dev
+```
+
+🎉 **Your apps are live:**
+- Admin: http://localhost:5173
+- Worker: http://localhost:5174
+- API: http://localhost:3000
+
+---
+
+## 🧪 Testing & Quality
+
+```bash
+# Run all tests
+pnpm test
+
+# Run with coverage
+pnpm test:coverage
+
+# Lint and format
+pnpm lint
+pnpm format
+
+# Type check (build)
+pnpm build
+```
+
+**Test coverage targets:**
+- API routes: 90%+
+- React components: 85%+
+- Utils/validators: 95%+
 
 ---
 
 ## 🔌 Plugin System
 
-Dashboard Link uses a plugin adapter system to fetch data from external sources:
+Connect your existing tools in minutes.
 
-### Built-in Plugins
+| Plugin | What it does | Setup time |
+|--------|--------------|------------|
+| **Manual Entry** | Type schedules/tasks directly | 30s |
+| **Google Calendar** | Sync events from calendars | 2m |
+| **Airtable** | Pull from any base | 2m |
+| **Notion** | Fetch from databases | 2m |
 
-| Plugin | Description | Status |
-|--------|-------------|--------|
-| **Manual Entry** | Direct data entry (no external API) | ✅ Available |
-| **Google Calendar** | Sync schedule from Google Calendar | ✅ Available |
-| **Airtable** | Pull data from Airtable bases | ✅ Available |
-| **Notion** | Fetch from Notion databases | ✅ Available |
-
-### Creating Custom Plugins
+### Create Your Own Plugin
 
 ```typescript
 import { BaseAdapter } from '@dashboard-link/plugins';
 
-export class MyCustomAdapter extends BaseAdapter {
-  id = 'my-custom-plugin';
+export class MyAdapter extends BaseAdapter {
+  id = 'my-plugin';
   name = 'My Custom Plugin';
-  description = 'Description here';
   version = '1.0.0';
 
   async getTodaySchedule(workerId: string, config: any) {
-    // Fetch and return schedule items
+    // Fetch schedule from your API
     return [];
   }
 
   async getTodayTasks(workerId: string, config: any) {
-    // Fetch and return task items
+    // Fetch tasks from your API
     return [];
   }
 }
@@ -241,137 +209,112 @@ export class MyCustomAdapter extends BaseAdapter {
 
 ---
 
-## 📱 SMS Integration
+## 📱 SMS Integration Details
 
-We use **MobileMessage.com.au** for SMS delivery:
+We use **MobileMessage.com.au** for unbeatable Australian rates:
 
-| Feature | Details |
-|---------|---------|
-| **Pricing** | 2¢/SMS intro, 3¢ ongoing (vs Twilio AU at 5.15¢) |
-| **Monthly Fees** | None |
-| **Credits** | Never expire |
-| **Virtual Number** | Free for 2-way SMS |
-| **Coverage** | Australian-based with local support |
+| Feature | Detail |
+|---------|--------|
+| **Cost** | 2¢/SMS intro, 3¢ ongoing |
+| **Fees** | None |
+| **Number** | Free virtual number for replies |
+| **Support** | Australian-based |
 
-Example SMS sent to workers:
+**Example SMS to a worker:**
 ```
-Hi John! Your daily dashboard is ready: https://app.dashlink.com/dashboard/abc123xyz
-```
-
----
-
-## 🧪 Testing
-
-```bash
-# Run tests across all packages
-pnpm test
-
-# Run tests with coverage
-pnpm test:coverage
-
-# Lint code
-pnpm lint
-
-# Type check
-pnpm build
-
-# Format code
-pnpm format
+Hi Sarah! Your daily dashboard is ready: https://dash.yourco.com/dashboard/7x9k2m
 ```
 
 ---
 
-## 📚 Documentation
-
-- **[📖 Architecture Guide](./docs/ARCHITECTURE.md)** - System design and architecture
-- **[🔧 Development Guide](./docs/DEVELOPMENT_ENVIRONMENT.md)** - Development setup
-- **[🔌 Plugin Development](./docs/PLUGIN_DEVELOPMENT.md)** - Create custom plugins
-- **[📊 API Documentation](./docs/API.md)** - API endpoints and usage
-- **[🚀 Deployment Guide](./docs/DEPLOYMENT.md)** - Production deployment
-
----
-
-## 🚢 Deployment
+## 🚀 Deploy to Production
 
 ### Vercel (Recommended)
 
 ```bash
-# Deploy frontend and API
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
 vercel --prod
 
-# Deploy with custom domain
+# Custom domain
 vercel --prod --domains dashboard.yourcompany.com
 ```
 
 ### Docker
 
 ```bash
-# Build Docker image
+# Build
 docker build -t dashboard-link .
 
-# Run with Docker Compose
+# Run with compose
 docker-compose up -d
 ```
 
-### Environment Variables
+### Environment Checklist for Production
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `SUPABASE_URL` | Supabase project URL | ✅ |
-| `SUPABASE_ANON_KEY` | Supabase anonymous key | ✅ |
-| `SUPABASE_SERVICE_KEY` | Supabase service key | ✅ |
-| `MOBILEMESSAGE_USERNAME` | SMS provider username | ✅ |
-| `MOBILEMESSAGE_PASSWORD` | SMS provider password | ✅ |
-| `GOOGLE_CLIENT_ID` | Google Calendar OAuth | ❌ |
-| `AIRTABLE_API_KEY` | Airtable API key | ❌ |
-| `NOTION_INTEGRATION_SECRET` | Notion integration secret | ❌ |
+- [ ] Supabase URL & keys
+- [ ] MobileMessage credentials
+- [ ] Plugin API keys (if used)
+- [ ] CORS allowed origins
+- [ ] Custom domain (optional)
+
+---
+
+## 📚 Documentation
+
+- **[Architecture](./docs/ARCHITECTURE.md)** – System design
+- **[Development Guide](./docs/DEVELOPMENT_ENVIRONMENT.md)** – Local setup
+- **[Plugin Development](./docs/PLUGIN_DEVELOPMENT.md)** – Build adapters
+- **[API Reference](./docs/API.md)** – Endpoints & examples
+- **[Deployment](./docs/DEPLOYMENT.md)** – Production guide
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
+We love contributions! Here's how:
 
-### Quick Start for Contributors
+1. Fork this repo
+2. Create a feature branch: `git checkout -b feature/amazing`
+3. Make changes and test: `pnpm test`
+4. Commit: `git commit -m 'Add amazing feature'`
+5. Push: `git push origin feature/amazing`
+6. Open a Pull Request
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run tests (`pnpm test`)
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
+Read our [Contributing Guide](./CONTRIBUTING.md) for details.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License — see [LICENSE](LICENSE) for full details.
 
 ---
 
-## 🙏 Acknowledgments
+## 🙏 Made Possible By
 
-- Built with ❤️ using [Hono.js](https://hono.dev/)
-- Powered by [Supabase](https://supabase.com)
-- UI components inspired by [shadcn/ui](https://ui.shadcn.com/)
-- SMS delivery by [MobileMessage.com.au](https://mobilemessage.com.au)
-- Icons by [Lucide](https://lucide.dev/)
+- [Hono.js](https://hono.dev) – Blazing-fast web framework
+- [Supabase](https://supabase.com) – Backend-as-a-Service
+- [Vite](https://vitejs.dev) – Instant dev server
+- [MobileMessage.com.au](https://mobilemessage.com.au) – SMS delivery
+- [Tailwind CSS](https://tailwindcss.com) – Utility-first styling
 
 ---
 
-## 📞 Support
+## 📞 Need Help?
 
 - 📧 Email: support@dashboardlink.com
 - 💬 Discord: [Join our community](https://discord.gg/dashboardlink)
-- 🐛 Issues: [Open an issue on GitHub](https://github.com/SlySlayer32/dashboard-link-saas/issues)
-- 📖 Docs: [Full documentation](https://docs.dashboardlink.com)
+- 🐛 Report issues: [GitHub Issues](https://github.com/SlySlayer32/dashboard-link-saas/issues)
+- 📖 Docs: [docs.dashboardlink.com](https://docs.dashboardlink.com)
 
 ---
 
 <div align="center">
 
-**⭐ Star this repo if it helped you!**
+**⭐ Star us if Dashboard Link saves you time!**
 
 Made with ❤️ in Australia 🇦🇺
 
