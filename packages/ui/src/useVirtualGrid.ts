@@ -22,6 +22,7 @@ export function useVirtualGrid({
     return (containerWidth - gap * (columnCount - 1)) / columnCount
   }, [containerWidth, columnCount, gap, estimateSize])
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: Math.ceil(count / columnCount),
     getScrollElement: () => parentRef.current,

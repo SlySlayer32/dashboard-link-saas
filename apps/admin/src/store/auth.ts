@@ -2,18 +2,19 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import type { LoginCredentials, User } from '../types/auth'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_BASE_URL = (import.meta.env?.VITE_API_URL as string) || 'http://localhost:3000'
 
 export interface AuthStore {
   user: User | null
   token: string | null
+  refreshToken: string | null
   expiresAt: string | null
   isLoading: boolean
   error: string | null
   isAuthenticated: boolean
   login: (credentials: LoginCredentials) => Promise<void>
   logout: () => void
-  refreshToken: () => Promise<void>
+  refreshAuthToken: () => Promise<void>
   clearError: () => void
   setLoading: (loading: boolean) => void
 }
@@ -24,6 +25,7 @@ export const useAuthStore = create<AuthStore>()(
       // Initial state
       user: null,
       token: null,
+      refreshToken: null,
       expiresAt: null,
       isLoading: false,
       error: null,
@@ -52,6 +54,7 @@ export const useAuthStore = create<AuthStore>()(
           set({
             user: data.user,
             token: data.token,
+            refreshToken: data.refresh_token,
             expiresAt: data.expires_at,
             isLoading: false,
             isAuthenticated: true,
@@ -72,6 +75,7 @@ export const useAuthStore = create<AuthStore>()(
         set({
           user: null,
           token: null,
+          refreshToken: null,
           expiresAt: null,
           isLoading: false,
           error: null,
@@ -80,10 +84,10 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       // Refresh token action
-      refreshToken: async () => {
-        const { token } = get()
-        if (!token) {
-          throw new Error('No token to refresh')
+      refreshAuthToken: async () => {
+        const { refreshToken } = get()
+        if (!refreshToken) {
+          throw new Error('No refresh token available')
         }
 
         try {
@@ -91,8 +95,8 @@ export const useAuthStore = create<AuthStore>()(
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
             },
+            body: JSON.stringify({ refresh_token: refreshToken }),
           })
 
           if (!response.ok) {
@@ -103,6 +107,8 @@ export const useAuthStore = create<AuthStore>()(
 
           set({
             token: data.token,
+            refreshToken: data.refresh_token,
+            expiresAt: data.expires_at,
           })
         } catch (error) {
           // If refresh fails, logout the user
@@ -127,6 +133,7 @@ export const useAuthStore = create<AuthStore>()(
       partialize: (state: AuthStore) => ({
         user: state.user,
         token: state.token,
+        refreshToken: state.refreshToken,
         expiresAt: state.expiresAt,
         isAuthenticated: state.isAuthenticated,
       }),

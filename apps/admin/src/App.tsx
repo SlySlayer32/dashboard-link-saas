@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import { Navigation } from './components/Navigation'
 import { PageSkeleton } from './components/PageSkeleton'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { useAutoRefresh } from './hooks/useAutoRefresh'
 import { LoginPage } from './pages/LoginPage'
 import { useAuthStore } from './store/auth'
 
@@ -18,6 +19,9 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 
 function App() {
   const { user } = useAuthStore()
+
+  // Enable auto-refresh for authenticated users
+  useAutoRefresh()
 
   return (
     <div className='min-h-screen bg-gray-50 flex'>

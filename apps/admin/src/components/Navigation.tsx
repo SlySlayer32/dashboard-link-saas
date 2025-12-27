@@ -1,14 +1,15 @@
 import {
-    ArrowRightOnRectangleIcon,
-    ChatBubbleLeftRightIcon,
-    ChevronLeftIcon,
-    ChevronRightIcon,
-    CogIcon,
-    HomeIcon,
-    Bars3Icon as MenuIcon,
-    PuzzlePieceIcon,
-    UserGroupIcon,
-    XMarkIcon
+  ArrowRightOnRectangleIcon,
+  ChatBubbleLeftRightIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CogIcon,
+  HomeIcon,
+  KeyIcon,
+  Bars3Icon as MenuIcon,
+  PuzzlePieceIcon,
+  UserGroupIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'

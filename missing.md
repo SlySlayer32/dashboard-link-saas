@@ -74,6 +74,23 @@ These need to be imported from `@dashboard-link/shared`
 - **DashboardPreviewPage.tsx**: After refactoring, `isLoading` and `error` are unused
   - These variables are now handled internally by the DashboardPreview component
 
+### Project Audit Findings (2025-12-26)
+
+**High Priority Items**:
+1. Webhook authentication middleware missing for event listing endpoints (`/events`, `/events/:id`)
+2. Core worker CRUD operations not implemented in API routes
+3. Plugin adapters need proper API integrations (Google Calendar, Airtable, Notion)
+
+**Medium Priority Items**:
+1. SMS history component using mock data - needs real API integration
+2. Worker action modals not implemented (edit, SMS send)
+3. Missing pagination/filter support in SMS logs API
+
+**Low Priority/Enhancements**:
+1. Webhook rate limiting could use Redis instead of in-memory store
+2. Additional test coverage for auth middleware
+3. Better error handling for plugin adapter failures
+
 ### Recommendations for Future Tasks
 1. Consider creating a shared API client utility to avoid duplicating axios setup
 2. Standardize component export patterns (prefer default exports for page components)

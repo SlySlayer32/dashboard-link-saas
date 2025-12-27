@@ -34,6 +34,7 @@ describe('Auth Store', () => {
     useAuthStore.setState({
       user: null,
       token: null,
+      refreshToken: null,
       expiresAt: null,
       isLoading: false,
       error: null,
@@ -208,7 +209,7 @@ describe('Auth Store', () => {
 
       const state = useAuthStore.getState()
 
-      await expect(state.refreshToken()).resolves.not.toThrow()
+      await expect(state.refreshAuthToken()).resolves.not.toThrow()
 
       const currentState = useAuthStore.getState()
       expect(currentState.token).toBe('new-token')
@@ -232,7 +233,7 @@ describe('Auth Store', () => {
 
       const state = useAuthStore.getState()
 
-      await expect(state.refreshToken()).rejects.toThrow('Token refresh failed')
+      await expect(state.refreshAuthToken()).rejects.toThrow('Token refresh failed')
 
       // Should logout on refresh failure
       const currentState = useAuthStore.getState()
@@ -244,7 +245,7 @@ describe('Auth Store', () => {
     it('should throw error when no token to refresh', async () => {
       const state = useAuthStore.getState()
 
-      await expect(state.refreshToken()).rejects.toThrow('No token to refresh')
+      await expect(state.refreshAuthToken()).rejects.toThrow('No refresh token available')
     })
   })
 

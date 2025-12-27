@@ -1,6 +1,5 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import React, { useMemo, useRef } from 'react'
-import { useVirtualGrid } from './useVirtualGrid'
 
 interface VirtualListProps<T> {
   items: T[]
@@ -21,6 +20,7 @@ export function VirtualList<T>({
 }: VirtualListProps<T>) {
   const parentRef = useRef<HTMLDivElement>(null)
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => parentRef.current,
@@ -58,6 +58,3 @@ export function VirtualList<T>({
     </div>
   )
 }
-
-// Re-export the virtual grid hook
-export { useVirtualGrid }

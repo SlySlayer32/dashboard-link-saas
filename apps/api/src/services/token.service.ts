@@ -67,6 +67,7 @@ export class TokenService {
     valid: boolean
     workerId?: string
     workerData?: unknown
+    reason?: 'not_found' | 'expired'
   }> {
     const { data: tokenData, error: tokenError } = await supabase
       .from('worker_tokens')
@@ -76,13 +77,13 @@ export class TokenService {
       .single()
 
     if (tokenError || !tokenData) {
-      return { valid: false }
+      return { valid: false, reason: 'not_found' }
     }
 
     // Check if token is expired
     const expiresAt = new Date(tokenData.expires_at)
     if (expiresAt < new Date()) {
-      return { valid: false }
+      return { valid: false, reason: 'expired' }
     }
 
     // Mark token as used (first time only)
