@@ -8,6 +8,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Complete onboarding flow with plugin selection and configuration
+- SMS modal component for enhanced messaging capabilities  
+- Development login button for easier testing workflows
+- Project rules system for architectural consistency (.windsurf/rules/)
+- Comprehensive TypeScript type definitions across all packages
+- Enhanced API middleware with improved authentication and error handling
+- New admin dashboard components and hooks for better UX
+- Improved logging system with proper TypeScript typing
+- VS Code launch configuration for better debugging experience
+
+### Changed
+- Refactored shared package structure and removed compiled artifacts
+- Updated API middleware and services for improved authentication
+- Enhanced plugin architecture with better type safety
+- Improved package configurations and build settings
+- Updated TanStack Query hooks for better performance
+- Streamlined error handling across all services
+
+### Fixed
+- TypeScript typing issues in plugin adapters
+- Linting errors across admin, API, and plugin packages
+- HTMLTextAreaElement type definitions in UI components
+- Authentication middleware context typing
+- Logger utility TypeScript compliance
+
+---
+
+## [0.2.0] - 2025-12-31
+
+### Added
 - README overhaul with marketing copy and clear 5‑minute setup
 - Environment variable examples inline in README
 - Production deployment checklist
