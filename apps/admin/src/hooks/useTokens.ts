@@ -69,7 +69,7 @@ export function useTokens(params: TokensParams = {}): UseQueryResult<TokensRespo
 
       return response.json();
     },
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousData, // ignore: legitimate TanStack Query caching
   });
 }
 

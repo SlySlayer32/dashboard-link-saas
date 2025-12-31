@@ -1,6 +1,14 @@
-import { logger, type ErrorContext } from '@dashboard-link/shared';
 import { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
+import { logger } from '../utils/logger.js';
+
+interface ErrorContext extends Record<string, unknown> {
+  requestId: string;
+  userId?: string;
+  organizationId?: string;
+  action: string;
+  resource?: string;
+}
 
 /**
  * Global error handler middleware
@@ -25,7 +33,7 @@ export const errorHandler = (error: unknown, c: Context) => {
     const status = error.status;
     const message = error.message || 'An error occurred';
     
-    logger.warn('HTTP Exception', error, errorContext);
+    logger.warn('HTTP Exception', { error, ...errorContext });
     
     // Use the custom response if provided
     if (error.res) {
@@ -52,7 +60,7 @@ export const errorHandler = (error: unknown, c: Context) => {
 
   // Handle validation errors (Zod)
   if (error.name === 'ZodError') {
-    logger.warn('Validation error', error, errorContext);
+    logger.warn('Validation error', { error, ...errorContext });
     
     const errorResponse = {
       success: false,
@@ -72,7 +80,7 @@ export const errorHandler = (error: unknown, c: Context) => {
 
   // Handle JWT errors
   if (error.name === 'JwtError' || error.message.includes('jwt')) {
-    logger.warn('JWT error', error, errorContext);
+    logger.warn('JWT error', { error, ...errorContext });
     
     const errorResponse = {
       success: false,
@@ -88,7 +96,7 @@ export const errorHandler = (error: unknown, c: Context) => {
 
   // Handle database errors
   if (error.message.includes('duplicate key') || error.message.includes('unique constraint')) {
-    logger.warn('Duplicate entry error', error, errorContext);
+    logger.warn('Duplicate entry error', { error, ...errorContext });
     
     const errorResponse = {
       success: false,
@@ -104,7 +112,7 @@ export const errorHandler = (error: unknown, c: Context) => {
 
   // Handle rate limiting errors
   if (error.message.includes('rate limit')) {
-    logger.warn('Rate limit exceeded', error, errorContext);
+    logger.warn('Rate limit exceeded', { error, ...errorContext });
     
     const errorResponse = {
       success: false,
@@ -119,7 +127,7 @@ export const errorHandler = (error: unknown, c: Context) => {
   }
 
   // Handle all other errors
-  logger.error('Unhandled error', error, errorContext);
+  logger.error('Unhandled error', error as Error, errorContext);
   
   const errorResponse = {
     success: false,

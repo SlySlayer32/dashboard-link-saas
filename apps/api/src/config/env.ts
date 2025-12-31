@@ -1,5 +1,5 @@
-import { logger } from '@dashboard-link/shared';
 import { z } from 'zod';
+import { logger } from '../utils/logger.js';
 
 // Environment variable schema
 const envSchema = z.object({

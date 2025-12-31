@@ -1,11 +1,11 @@
-import { PluginRegistry } from '@dashboard-link/plugins'
-import type { PluginTestResult, PluginsConfig } from '@dashboard-link/shared'
-import { zValidator } from '@hono/zod-validator'
-import { createClient } from '@supabase/supabase-js'
-import { Hono } from 'hono'
-import { z } from 'zod'
-import { authMiddleware } from '../middleware/auth'
-import { logger } from '../utils/logger'
+import { PluginRegistry } from '@dashboard-link/plugins';
+import type { PluginTestResult, PluginsConfig } from '@dashboard-link/shared';
+import { logger } from '../utils/logger.js';
+import { zValidator } from '@hono/zod-validator';
+import { createClient } from '@supabase/supabase-js';
+import { Hono } from 'hono';
+import { z } from 'zod';
+import { authMiddleware } from '../middleware/auth';
 
 const plugins = new Hono()
 

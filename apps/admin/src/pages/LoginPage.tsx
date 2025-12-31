@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { useAuth, useAuthError, useAuthIsAuthenticated, useAuthIsLoading } from '../store/auth';
+import { useAuth, useAuthError, useAuthIsAuthenticated, useAuthIsLoading, useAuthStore } from '../store/auth';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -21,6 +21,32 @@ export function LoginPage() {
       navigate(intendedDestination, { replace: true });
     }
   }, [isAuthenticated, navigate]);
+
+  const handleDevBypass = () => {
+    // Set mock user for development
+    const mockUser = {
+      id: 'dev-user-123',
+      email: 'dev@example.com',
+      name: 'Development User',
+      role: 'admin' as const,
+      organization_id: 'dev-org-123',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    // Directly set auth state for development
+    const authStore = useAuthStore.getState();
+    authStore.setLoading(false);
+    authStore.clearError();
+    authStore.user = mockUser;
+    authStore.token = 'dev-token-123';
+    authStore.refreshToken = 'dev-refresh-token-123';
+    authStore.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours from now
+    authStore.isAuthenticated = true;
+    
+    // Navigate to dashboard
+    navigate('/', { replace: true });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,6 +142,18 @@ export function LoginPage() {
               )}
             </button>
           </div>
+
+          {import.meta.env.DEV && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={handleDevBypass}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-green-600 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                🚀 Dev Bypass (Development Only)
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>

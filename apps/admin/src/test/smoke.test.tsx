@@ -1,4 +1,6 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import React from 'react'
 import { MemoryRouter, RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProtectedRoute } from '../components/ProtectedRoute'
@@ -20,11 +22,54 @@ const mockAuthStore = {
   setLoading: vi.fn(),
 }
 
+// Create a test QueryClient
+const createTestQueryClient = () => new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      gcTime: 0,
+    },
+  },
+})
+
+// Test wrapper component
+const TestWrapper = ({ children }: { children: React.ReactNode }) => {
+  const queryClient = createTestQueryClient()
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  )
+}
+
 vi.mock('../store/auth', () => ({
   useAuth: () => mockAuthStore,
   useAuthIsAuthenticated: () => mockAuthStore.isAuthenticated,
   useAuthIsLoading: () => mockAuthStore.isLoading,
   useAuthError: () => mockAuthStore.error,
+}))
+
+// Mock the workers hooks
+vi.mock('../hooks/useWorkers', () => ({
+  useWorkers: () => ({
+    workers: [],
+    pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
+  useDebouncedSearch: () => ({
+    searchValue: '',
+    setSearchValue: vi.fn(),
+  }),
+}))
+
+// Mock the worker mutation hooks
+vi.mock('../hooks/useWorkerMutation', () => ({
+  useDeleteWorker: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
 }))
 
 // Mock fetch
@@ -111,7 +156,7 @@ describe('Smoke Tests - End-to-End Auth Flow', () => {
         expires_at: '2024-12-31T23:59:59Z',
       }
 
-      vi.mocked(fetch).mockResolvedValueOnce({
+      ;(fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       } as Response)
@@ -169,7 +214,7 @@ describe('Smoke Tests - End-to-End Auth Flow', () => {
     })
 
     it('should show error message on login failure', async () => {
-      mockAuthStore.login.mockRejectedValue(new Error('Invalid credentials'))
+      mockAuthStore.login.mockImplementation(() => Promise.reject(new Error('Invalid credentials')))
       mockAuthStore.error = 'Invalid credentials'
 
       render(
@@ -185,7 +230,13 @@ describe('Smoke Tests - End-to-End Auth Flow', () => {
 
       fireEvent.change(emailInput, { target: { value: 'wrong@example.com' } })
       fireEvent.change(passwordInput, { target: { value: 'wrongpassword' } })
-      fireEvent.click(loginButton)
+      
+      // Handle the promise rejection properly
+      try {
+        await fireEvent.click(loginButton)
+      } catch {
+        // Expected error
+      }
 
       // Error should be displayed
       expect(screen.getByText('Invalid credentials')).toBeInTheDocument()
@@ -232,10 +283,14 @@ describe('Smoke Tests - End-to-End Auth Flow', () => {
         }
       )
 
-      render(<RouterProvider router={router} />)
+      render(
+        <TestWrapper>
+          <RouterProvider router={router} />
+        </TestWrapper>
+      )
 
       // Should see protected content
-      expect(screen.getByText(/workers/i)).toBeInTheDocument()
+      expect(screen.getByText('Workers')).toBeInTheDocument()
     })
 
     it('should handle logout', async () => {
@@ -279,7 +334,7 @@ describe('Smoke Tests - End-to-End Auth Flow', () => {
         expires_at: '2024-12-31T23:59:59Z',
       }
 
-      vi.mocked(fetch).mockResolvedValueOnce({
+      ;(fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => newTokenResponse,
       } as Response)

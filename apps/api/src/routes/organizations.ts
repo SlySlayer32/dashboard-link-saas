@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger.js';
 import { createClient } from '@supabase/supabase-js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
@@ -7,7 +8,6 @@ import type {
     UpdateOrganizationRequest,
     UpdateOrganizationResponse,
 } from '../types/organization';
-import { logger } from '../utils/logger';
 
 const organizations = new Hono()
 

@@ -36,5 +36,22 @@
     "**/build/**": true,
     "**/.turbo/**": true,
     "**/coverage/**": true
-  }
+  },
+  "testing.automaticallyOpenPeekView": "failureInVisibleDocument",
+  "testing.followRunningTest": true,
+  "testing.gutterEnabled": true,
+  "testing.showCoverageIndicator": true,
+  "testExplorer.useNativeTesting": true,
+  "testExplorer.useTestDiscovery": true,
+  "testExplorer.exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.turbo/**",
+    "**/coverage/**"
+  ],
+  "testExplorer.testMatch": [
+    "**/*.{test,spec}.{js,jsx,ts,tsx}",
+    "**/__tests__/**/*.{js,jsx,ts,tsx}"
+  ]
 }

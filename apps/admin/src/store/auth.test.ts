@@ -23,9 +23,9 @@ const mockCredentials: LoginCredentials = {
 describe('Auth Store', () => {
   beforeEach(() => {
     // Clear localStorage mock
-    vi.mocked(localStorage.getItem).mockReturnValue(null)
-    vi.mocked(localStorage.setItem).mockImplementation(() => {})
-    vi.mocked(localStorage.removeItem).mockImplementation(() => {})
+    ;(localStorage.getItem as any).mockReturnValue(null)
+    ;(localStorage.setItem as any).mockImplementation(() => {})
+    ;(localStorage.removeItem as any).mockImplementation(() => {})
     vi.clearAllMocks()
   })
 
@@ -70,7 +70,7 @@ describe('Auth Store', () => {
         expires_at: '2024-12-31T23:59:59Z',
       }
 
-      vi.mocked(fetch).mockResolvedValueOnce({
+      ;(fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       } as Response)
@@ -99,7 +99,7 @@ describe('Auth Store', () => {
         message: 'Invalid credentials',
       }
 
-      vi.mocked(fetch).mockResolvedValueOnce({
+      ;(fetch as any).mockResolvedValueOnce({
         ok: false,
         json: async () => errorResponse,
       } as Response)
@@ -117,7 +117,7 @@ describe('Auth Store', () => {
     })
 
     it('should handle network errors during login', async () => {
-      vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'))
+      ;(fetch as any).mockRejectedValueOnce(new Error('Network error'))
 
       const state = useAuthStore.getState()
 
@@ -136,7 +136,7 @@ describe('Auth Store', () => {
         resolveLogin = resolve
       })
 
-      vi.mocked(fetch).mockReturnValueOnce(loginPromise as any)
+      ;(fetch as any).mockReturnValueOnce(loginPromise as any)
 
       const state = useAuthStore.getState()
 
@@ -193,6 +193,7 @@ describe('Auth Store', () => {
       useAuthStore.setState({
         user: mockUser,
         token: 'old-token',
+        refreshToken: 'refresh-token',
         expiresAt: '2024-12-31T23:59:59Z',
         isAuthenticated: true,
       })
@@ -202,7 +203,7 @@ describe('Auth Store', () => {
         expires_at: '2025-12-31T23:59:59Z',
       }
 
-      vi.mocked(fetch).mockResolvedValueOnce({
+      ;(fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       } as Response)
@@ -222,11 +223,12 @@ describe('Auth Store', () => {
       useAuthStore.setState({
         user: mockUser,
         token: 'old-token',
+        refreshToken: 'refresh-token',
         expiresAt: '2024-12-31T23:59:59Z',
         isAuthenticated: true,
       })
 
-      vi.mocked(fetch).mockResolvedValueOnce({
+      ;(fetch as any).mockResolvedValueOnce({
         ok: false,
         json: async () => ({ message: 'Token refresh failed' }),
       } as Response)

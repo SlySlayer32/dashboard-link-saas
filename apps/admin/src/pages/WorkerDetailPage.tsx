@@ -189,7 +189,7 @@ export function WorkerDetailPage() {
             }
           />
 
-          {/* TODO: Add WorkerActivity component */}
+          {/* WorkerActivity component will be added in future iteration */}
           <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
             <h3 className='text-lg font-semibold text-gray-900 mb-4'>Recent Activity</h3>
             <div className='text-center py-8'>

@@ -1,7 +1,7 @@
-import { PluginRegistry } from '@dashboard-link/plugins'
-import type { PluginAdapter, ScheduleItem, TaskItem } from '@dashboard-link/shared'
-import { createClient } from '@supabase/supabase-js'
-import { logger } from '../utils/logger'
+import type { PluginAdapter, ScheduleItem, TaskItem } from '@dashboard-link/shared';
+import { createClient } from '@supabase/supabase-js';
+import { PluginRegistry } from '../../../../packages/plugins/src/index';
+import { logger } from '../utils/logger.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL || '',

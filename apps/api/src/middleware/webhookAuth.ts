@@ -1,4 +1,4 @@
-import { logger } from '@dashboard-link/shared';
+import { logger } from '../utils/logger.js';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { Context, Next } from 'hono';

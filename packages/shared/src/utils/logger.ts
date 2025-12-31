@@ -79,7 +79,13 @@ export class Logger {
 
   // Create a child logger with additional context
   child(context: Partial<RequestContext>): Logger {
-    return new Logger({ ...this.context, ...context });
+    return new Logger({ 
+      requestId: this.context?.requestId || 'unknown',
+      method: this.context?.method || 'unknown',
+      url: this.context?.url || 'unknown',
+      ...this.context,
+      ...context 
+    });
   }
 }
 

@@ -1,12 +1,20 @@
 import { BarChart3, MessageSquare, Plus, Users } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { DashboardStats } from '../components/DashboardStats'
+import { OnboardingFlow } from '../components/OnboardingFlow'
 import { RecentActivity } from '../components/RecentActivity'
 import { useDashboard } from '../hooks/useDashboard'
+import { useOnboardingStore } from '../store/onboarding'
 
 function DashboardPage() {
   const navigate = useNavigate()
   const { data, isLoading, error } = useDashboard()
+  const { isCompleted } = useOnboardingStore()
+
+  // Show onboarding flow if not completed
+  if (!isCompleted) {
+    return <OnboardingFlow />
+  }
 
   const handleAddWorker = () => {
     navigate('/workers/new')

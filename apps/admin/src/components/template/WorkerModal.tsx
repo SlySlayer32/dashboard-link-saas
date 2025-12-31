@@ -13,7 +13,7 @@ const workerFormSchema = z.object({
   phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number'),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   active: z.boolean(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
 type WorkerFormData = z.infer<typeof workerFormSchema>
@@ -206,7 +206,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
               <Button
                 type='submit'
                 disabled={!isDirty || isLoading}
-                isLoading={isLoading}
+                loading={isLoading}
                 className='w-full sm:ml-3 sm:w-auto'
               >
                 {initialData ? 'Update' : 'Create'} Worker

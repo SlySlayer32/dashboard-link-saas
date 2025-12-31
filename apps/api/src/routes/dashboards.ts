@@ -1,7 +1,7 @@
-import { logger } from '@dashboard-link/shared'
-import { Hono } from 'hono'
-import { PluginManagerService } from '../services/plugin-manager'
-import { TokenService } from '../services/token.service'
+import { logger } from '../utils/logger.js';
+import { Hono } from 'hono';
+import { PluginManagerService } from '../services/plugin-manager';
+import { TokenService } from '../services/token.service';
 
 const dashboards = new Hono()
 

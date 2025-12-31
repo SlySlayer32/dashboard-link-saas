@@ -1,9 +1,9 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Edit, MessageSquare, Power, PowerOff, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/auth';
+import { useSMS } from '../hooks/useSMS';
+import { useWorkerMutation } from '../hooks/useWorkerMutation';
+import { SMSModal } from './SMSModal';
+import { WorkerModal } from './template/WorkerModal';
 
 interface WorkerData {
   id: string;
@@ -17,89 +17,42 @@ interface WorkerActionsProps {
   worker: WorkerData;
 }
 
-interface DeactivateResponse {
-  success: boolean;
-  message: string;
-}
-
-async function toggleWorkerStatus(token: string, workerId: string, active: boolean): Promise<DeactivateResponse> {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/workers/${workerId}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ active }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to update worker status');
-  }
-
-  return response.json();
-}
-
-async function deleteWorker(token: string, workerId: string): Promise<{ message: string }> {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/workers/${workerId}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to delete worker');
-  }
-
-  return response.json();
-}
-
 export function WorkerActions({ worker }: WorkerActionsProps) {
-  const navigate = useNavigate();
-  const { token } = useAuthStore();
-  const queryClient = useQueryClient();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showSMSModal, setShowSMSModal] = useState(false);
 
-  const toggleStatusMutation = useMutation({
-    mutationFn: (active: boolean) => toggleWorkerStatus(token || '', worker.id, active),
-    onSuccess: () => {
-      toast.success(`Worker ${worker.active ? 'deactivated' : 'activated'} successfully`);
-      queryClient.invalidateQueries({ queryKey: ['worker', 'detail', worker.id] });
-      queryClient.invalidateQueries({ queryKey: ['workers'] });
-    },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to update worker');
-    },
-  });
+  const { updateMutation, deleteMutation } = useWorkerMutation();
+  const { sendDashboardLinkMutation } = useSMS();
 
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteWorker(token || '', worker.id),
-    onSuccess: () => {
-      toast.success('Worker deleted successfully');
-      navigate('/workers');
-    },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete worker');
-    },
-  });
-
-  const handleSendSMS = () => {
-    // TODO: Open SMS modal or navigate to SMS page
-    navigate(`/sms/send?workerId=${worker.id}`);
+  const handleSendSMS = async (data: { message: string; expiresIn: string; customMessage?: string }) => {
+    try {
+      await sendDashboardLinkMutation.mutateAsync({
+        workerId: worker.id,
+        expiresIn: data.expiresIn,
+        customMessage: data.customMessage || undefined,
+      });
+      setShowSMSModal(false);
+    } catch {
+      // Error is handled by the mutation
+    }
   };
 
-  const handleEdit = () => {
-    // TODO: Open edit modal or navigate to edit page
-    navigate(`/workers/${worker.id}/edit`);
+  const handleEdit = async (data: unknown) => {
+    try {
+      await updateMutation.mutateAsync({ workerId: worker.id, data });
+      setShowEditModal(false);
+    } catch {
+      // Error is handled by the mutation
+    }
   };
 
   const handleToggleStatus = () => {
-    toggleStatusMutation.mutate(!worker.active);
+    updateMutation.mutate({ workerId: worker.id, data: { active: !worker.active } });
   };
 
   const handleDelete = () => {
-    deleteMutation.mutate();
+    deleteMutation.mutate(worker.id);
   };
 
   return (
@@ -108,7 +61,7 @@ export function WorkerActions({ worker }: WorkerActionsProps) {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
         <div className="space-y-3">
           <button
-            onClick={handleSendSMS}
+            onClick={() => setShowSMSModal(true)}
             className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
             disabled={!worker.active}
           >
@@ -118,7 +71,7 @@ export function WorkerActions({ worker }: WorkerActionsProps) {
           
           <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={handleEdit}
+              onClick={() => setShowEditModal(true)}
               className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
             >
               <Edit className="h-4 w-4 mr-2" />
@@ -132,7 +85,7 @@ export function WorkerActions({ worker }: WorkerActionsProps) {
                   ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' 
                   : 'bg-green-100 text-green-700 hover:bg-green-200'
               }`}
-              disabled={toggleStatusMutation.isPending}
+              disabled={updateMutation.isPending}
             >
               {worker.active ? (
                 <>
@@ -165,6 +118,26 @@ export function WorkerActions({ worker }: WorkerActionsProps) {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      <WorkerModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSubmit={handleEdit}
+        isLoading={updateMutation.isPending}
+        title="Edit Worker"
+        initialData={worker}
+      />
+
+      {/* SMS Modal */}
+      <SMSModal
+        isOpen={showSMSModal}
+        onClose={() => setShowSMSModal(false)}
+        onSubmit={handleSendSMS}
+        isLoading={sendDashboardLinkMutation.isPending}
+        workerName={worker.name}
+        workerPhone={worker.phone}
+      />
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (

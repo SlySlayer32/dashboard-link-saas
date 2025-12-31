@@ -13,7 +13,12 @@
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "test": "turbo run test",
     "clean": "turbo run clean && rm -rf node_modules",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:migrate": "npx supabase db push",
+    "db:seed": "npx supabase db reset",
+    "db:reset": "npx supabase db reset",
+    "db:start": "npx supabase start",
+    "db:stop": "npx supabase stop"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

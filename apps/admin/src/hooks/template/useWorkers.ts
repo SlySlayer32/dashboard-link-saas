@@ -39,7 +39,7 @@ const workerKeys = {
 export function useWorkers(
   query: WorkerQuerySchema,
   options?: Omit<UseQueryOptions<WorkersResponse>, 'queryKey' | 'queryFn'>
-) {
+): ReturnType<typeof useQuery<WorkersResponse>> {
   return useQuery({
     queryKey: workerKeys.list(query),
     queryFn: async (): Promise<WorkersResponse> => {
@@ -77,7 +77,7 @@ export function useWorkers(
 export function useWorker(
   id: string,
   options?: Omit<UseQueryOptions<WorkerResponse>, 'queryKey' | 'queryFn'>
-) {
+): ReturnType<typeof useQuery<WorkerResponse>> {
   return useQuery({
     queryKey: workerKeys.detail(id),
     queryFn: async (): Promise<WorkerResponse> => {
@@ -104,7 +104,7 @@ export function useWorker(
 }
 
 // Create worker mutation
-export function useCreateWorker() {
+export function useCreateWorker(): ReturnType<typeof useMutation<WorkerResponse, unknown, CreateWorkerSchema>> {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -138,7 +138,7 @@ export function useCreateWorker() {
 }
 
 // Update worker mutation
-export function useUpdateWorker() {
+export function useUpdateWorker(): ReturnType<typeof useMutation<WorkerResponse, unknown, { id: string; data: UpdateWorkerSchema }>> {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -194,7 +194,7 @@ export function useUpdateWorker() {
 }
 
 // Delete worker mutation
-export function useDeleteWorker() {
+export function useDeleteWorker(): ReturnType<typeof useMutation<void, unknown, string>> {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -222,7 +222,7 @@ export function useDeleteWorker() {
 }
 
 // Bulk operations
-export function useBulkUpdateWorkers() {
+export function useBulkUpdateWorkers(): ReturnType<typeof useMutation<Worker[], unknown, { ids: string[]; data: UpdateWorkerSchema }>> {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -254,3 +254,4 @@ export function useBulkUpdateWorkers() {
 
 // Export query keys for external use
 export { workerKeys }
+

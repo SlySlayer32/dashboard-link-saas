@@ -10,7 +10,7 @@ import type {
     SMSLogsResponse,
     SendSMSRequest,
 } from '../types/sms';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logger.js';
 
 const sms = new Hono()
 
@@ -194,7 +194,15 @@ sms.post('/send-dashboard-link', async (c) => {
 sms.get('/logs', async (c) => {
   // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId')
-  const { page = '1', limit = '20', workerId }: Record<string, string> = c.req.query()
+  const { 
+    page = '1', 
+    limit = '20', 
+    workerId, 
+    status,
+    dateFrom,
+    dateTo,
+    search
+  }: Record<string, string> = c.req.query()
 
   try {
     // Parse pagination parameters
@@ -232,6 +240,24 @@ sms.get('/logs', async (c) => {
     // Add worker filter if provided
     if (workerId) {
       query = query.eq('worker_id', workerId)
+    }
+
+    // Add status filter if provided
+    if (status) {
+      query = query.eq('status', status)
+    }
+
+    // Add date range filters if provided
+    if (dateFrom) {
+      query = query.gte('created_at', dateFrom)
+    }
+    if (dateTo) {
+      query = query.lte('created_at', dateTo)
+    }
+
+    // Add search filter if provided (search in message and worker phone)
+    if (search) {
+      query = query.or(`message.ilike.%${search}%,phone.ilike.%${search}%`)
     }
 
     // Apply pagination

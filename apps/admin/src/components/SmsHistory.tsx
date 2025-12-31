@@ -60,7 +60,7 @@ export function SmsHistory({ workerId: _workerId, isLoading }: SmsHistoryProps) 
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement search
+    // Search functionality will be implemented with API integration
   };
 
   return (

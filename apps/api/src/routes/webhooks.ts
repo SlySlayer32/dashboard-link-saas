@@ -1,15 +1,16 @@
-import { logger } from '@dashboard-link/shared';
 import type { Context } from 'hono';
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { authMiddleware, type AuthContext } from '../middleware/auth';
 import { getIdempotencyKey, webhookAuth } from '../middleware/webhookAuth';
 import {
     queueWebhookEvent,
     storeWebhookEvent,
 } from '../services/webhookService';
 import { WebhookProvider } from '../types/webhooks';
+import { logger } from '../utils/logger.js';
 
-const webhooks = new Hono();
+const webhooks = new Hono<AuthContext>();
 
 // Webhook event schema for validation
 const WebhookEventSchema = z.object({
@@ -144,58 +145,72 @@ async function handleWebhook(c: Context, pluginId: WebhookProvider): Promise<Res
  * List webhook events for an organization
  * Requires authentication
  */
-webhooks.get('/events', async (c) => {
-  // TODO: Add authentication middleware
-  // const organizationId = c.get('organizationId');
-  
-  // For now, return empty list
-  return c.json({ 
-    success: true,
-    data: [],
-    total: 0
-  });
-});
+webhooks.get('/events', 
+  authMiddleware,
+  async (c) => {
+    const organizationId = c.get('organizationId');
+    
+    // TODO: Implement actual event listing with pagination
+    // For now, return empty list
+    return c.json({ 
+      success: true,
+      data: [],
+      total: 0,
+      organization_id: organizationId
+    });
+  }
+);
 
 /**
  * Get a specific webhook event
  * Requires authentication
  */
-webhooks.get('/events/:eventId', async (c) => {
-  // TODO: Add authentication middleware
-  void c.req.param('eventId');
-  
-  // const event = await getWebhookEvent(eventId);
-  // if (!event || event.organization_id !== organizationId) {
-  //   return c.json({ success: false, error: 'Event not found' }, 404);
-  // }
-  
-  return c.json({ 
-    success: true,
-    data: null // event
-  });
-});
+webhooks.get('/events/:eventId', 
+  authMiddleware,
+  async (c) => {
+    const organizationId = c.get('organizationId');
+    
+    // TODO: Implement actual event retrieval
+    // const event = await getWebhookEvent(eventId);
+    // if (!event || event.organization_id !== organizationId) {
+    //   return c.json({ success: false, error: 'Event not found' }, 404);
+    // }
+    
+    return c.json({ 
+      success: true,
+      data: null, // event
+      organization_id: organizationId
+    });
+  }
+);
 
 /**
  * Replay a failed webhook event
  * Requires authentication
  */
-webhooks.post('/events/:eventId/replay', async (c) => {
-  // TODO: Add authentication middleware
-  void c.req.param('eventId');
-  
-  // const success = await replayWebhookEvent(eventId);
-  // if (!success) {
-  //   return c.json({ 
-  //     success: false, 
-  //     error: 'Event not found or not in failed status' 
-  //   }, 404);
-  // }
-  
-  return c.json({ 
-    success: true,
-    message: 'Event queued for replay'
-  });
-});
+webhooks.post('/events/:eventId/replay', 
+  authMiddleware,
+  async (c) => {
+    const eventId = c.req.param('eventId');
+    const organizationId = c.get('organizationId');
+    
+    // TODO: Implement actual event replay
+    // const success = await replayWebhookEvent(eventId);
+    // if (!success) {
+    //   return c.json({ 
+    //     success: false, 
+    //     error: 'Event not found or not in failed status' 
+    //   }, 404);
+    // }
+    
+    return c.json({ 
+      success: true,
+      message: 'Event queued for replay',
+      event_id: eventId,
+      organization_id: organizationId
+    });
+  }
+);
 
 /**
  * Health check for webhook endpoints

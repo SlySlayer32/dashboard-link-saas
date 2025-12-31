@@ -35,7 +35,7 @@ export abstract class BaseAdapter implements PluginAdapter {
    * Override with plugin-specific validation logic
    */
   async validateConfig(config: unknown): Promise<boolean> {
-    return Object.keys(config).length > 0
+    return typeof config === 'object' && config !== null && Object.keys(config).length > 0
   }
 
   /**

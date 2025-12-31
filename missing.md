@@ -97,3 +97,18 @@ These need to be imported from `@dashboard-link/shared`
 3. Add proper error boundaries for API failures
 4. Consider adding loading skeleton components for better UX
 5. Document the admin route pattern for future admin features
+
+Missing routes:
+
+/signup or /register
+/forgot-password
+/reset-password
+/onboarding
+/verify-email
+Recommendations
+To complete the authentication flow, you would need to create:
+
+Signup Page - Form for new admin registration
+Password Recovery Flow - Forgot password → email → reset password
+Onboarding Pages - Welcome/setup flow for new users
+Email Verification - UI for verifying email addresses

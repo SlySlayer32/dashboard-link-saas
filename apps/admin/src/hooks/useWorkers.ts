@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const DEV_MODE = import.meta.env.MODE === 'development'
 
 interface WorkersResponse {
   data: Worker[]
@@ -46,6 +47,73 @@ export function useWorkers(options: UseWorkersOptions = {}) {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['workers', queryString],
     queryFn: async (): Promise<WorkersResponse> => {
+      // Development mode mock data
+      if (DEV_MODE) {
+        const mockWorkers: Worker[] = [
+          {
+            id: 'worker-1',
+            name: 'John Doe',
+            phone: '+1234567890',
+            email: 'john.doe@example.com',
+            active: true,
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z',
+            organization_id: 'dev-org-id',
+          },
+          {
+            id: 'worker-2',
+            name: 'Jane Smith',
+            phone: '+0987654321',
+            email: 'jane.smith@example.com',
+            active: true,
+            created_at: '2024-01-02T00:00:00Z',
+            updated_at: '2024-01-02T00:00:00Z',
+            organization_id: 'dev-org-id',
+          },
+          {
+            id: 'worker-3',
+            name: 'Mike Johnson',
+            phone: '+1122334455',
+            email: 'mike.johnson@example.com',
+            active: false,
+            created_at: '2024-01-03T00:00:00Z',
+            updated_at: '2024-01-03T00:00:00Z',
+            organization_id: 'dev-org-id',
+          },
+        ]
+
+        // Filter based on search and status
+        let filteredWorkers = mockWorkers
+        if (status === 'active') {
+          filteredWorkers = mockWorkers.filter(w => w.active)
+        } else if (status === 'inactive') {
+          filteredWorkers = mockWorkers.filter(w => !w.active)
+        }
+
+        if (search.trim()) {
+          filteredWorkers = filteredWorkers.filter(w => 
+            w.name.toLowerCase().includes(search.toLowerCase()) ||
+            (w.email && w.email.toLowerCase().includes(search.toLowerCase())) ||
+            w.phone.includes(search)
+          )
+        }
+
+        const total = filteredWorkers.length
+        const startIndex = (page - 1) * limit
+        const endIndex = startIndex + limit
+        const paginatedWorkers = filteredWorkers.slice(startIndex, endIndex)
+
+        return {
+          data: paginatedWorkers,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+          },
+        }
+      }
+
       const token = localStorage.getItem('auth_token')
       if (!token) {
         throw new Error('No authentication token found')

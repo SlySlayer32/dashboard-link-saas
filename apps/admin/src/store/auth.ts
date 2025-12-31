@@ -3,6 +3,18 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import type { LoginCredentials, User } from '../types/auth'
 
 const API_BASE_URL = (import.meta.env?.VITE_API_URL as string) || 'http://localhost:3000'
+const DEV_MODE = import.meta.env.MODE === 'development'
+
+// Development mock user
+const mockDevUser: User = {
+  id: 'dev-user-id',
+  email: 'dev@example.com',
+  name: 'Development User',
+  organization_id: 'dev-org-id',
+  role: 'admin',
+  created_at: '2024-01-01T00:00:00Z',
+  updated_at: '2024-01-01T00:00:00Z',
+}
 
 export interface AuthStore {
   user: User | null
@@ -17,6 +29,7 @@ export interface AuthStore {
   refreshAuthToken: () => Promise<void>
   clearError: () => void
   setLoading: (loading: boolean) => void
+  devLogin: () => void // Development mode login bypass
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -34,6 +47,20 @@ export const useAuthStore = create<AuthStore>()(
       // Login action
       login: async (credentials: LoginCredentials) => {
         set({ isLoading: true, error: null })
+
+        // Development mode bypass
+        if (DEV_MODE) {
+          set({
+            user: mockDevUser,
+            token: 'dev-token',
+            refreshToken: 'dev-refresh-token',
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
+            isLoading: false,
+            isAuthenticated: true,
+            error: null,
+          })
+          return
+        }
 
         try {
           const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -126,6 +153,21 @@ export const useAuthStore = create<AuthStore>()(
       setLoading: (loading: boolean) => {
         set({ isLoading: loading })
       },
+
+      // Development mode login bypass
+      devLogin: () => {
+        if (DEV_MODE) {
+          set({
+            user: mockDevUser,
+            token: 'dev-token',
+            refreshToken: 'dev-refresh-token',
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
+            isLoading: false,
+            isAuthenticated: true,
+            error: null,
+          })
+        }
+      },
     }),
     {
       name: 'auth-storage',
@@ -138,6 +180,12 @@ export const useAuthStore = create<AuthStore>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state: AuthStore | undefined) => {
+        // Auto-login in development mode if not authenticated
+        if (DEV_MODE && (!state?.isAuthenticated || !state?.user)) {
+          state?.devLogin()
+          return
+        }
+
         // Check if token is expired on rehydrate
         if (state?.token && state?.expiresAt) {
           const expiresAt = new Date(state.expiresAt)
@@ -159,3 +207,4 @@ export const useAuthIsLoading = () => useAuthStore((state: AuthStore) => state.i
 export const useAuthError = () => useAuthStore((state: AuthStore) => state.error)
 export const useAuthIsAuthenticated = () =>
   useAuthStore((state: AuthStore) => state.isAuthenticated)
+export const useDevLogin = () => useAuthStore((state: AuthStore) => state.devLogin)

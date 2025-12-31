@@ -30,6 +30,7 @@ type ScheduleItemFormData = z.infer<typeof scheduleItemSchema>
 
 interface ScheduleItemFormProps {
   workerId?: string
+  _workerId?: string
   initialData?: {
     title?: string
     startTime?: string

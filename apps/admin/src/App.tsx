@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react'
 import { Route, Routes } from 'react-router-dom'
+import { DevLoginButton } from './components/DevLoginButton'
 import { Navigation } from './components/Navigation'
 import { PageSkeleton } from './components/PageSkeleton'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -25,6 +26,7 @@ function App() {
 
   return (
     <div className='min-h-screen bg-gray-50 flex'>
+      <DevLoginButton />
       {!user ? (
         // Login page - full screen without navigation
         <div className='flex-1'>

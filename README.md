@@ -92,13 +92,7 @@ graph TD
 - Supabase account (free tier works)
 - MobileMessage.com.au account (for SMS)
 
-### 🚀 One-Click Setup
-
-```bash
-bash <(curl -s https://raw.githubusercontent.com/SlySlayer32/dashboard-link-saas/main/scripts/setup.sh)
-```
-
-### 📋 Manual Setup
+###  Manual Setup
 
 #### 1️⃣ Clone & Install
 ```bash
@@ -114,28 +108,35 @@ cp .env.example .env
 
 Edit `.env` with your keys:
 ```env
-# Supabase
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_KEY=your_service_key
+# App
+APP_URL=http://localhost:5173
+API_URL=http://localhost:3000
 
-# SMS (MobileMessage.com.au)
-MOBILEMESSAGE_USERNAME=your_username
-MOBILEMESSAGE_PASSWORD=your_password
+# Supabase (get from https://supabase.com/dashboard/project/_/settings/api)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_KEY=your-service-key
+
+# MobileMessage.com.au SMS
+MOBILEMESSAGE_USERNAME=your-username
+MOBILEMESSAGE_PASSWORD=your-password
+MOBILEMESSAGE_SENDER_ID=DashLink
 
 # Optional plugins
-GOOGLE_CLIENT_ID=your_google_client_id
-AIRTABLE_API_KEY=your_airtable_key
-NOTION_INTEGRATION_SECRET=your_notion_secret
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-client-secret
+AIRTABLE_API_KEY=your-api-key
+NOTION_INTEGRATION_SECRET=your-integration-secret
 ```
 
 #### 3️⃣ Database Setup
 ```bash
-# Run migrations
-pnpm db:migrate
+# Apply migrations to your online Supabase project
+npx supabase link --project-ref your-project-ref
+npx supabase db push
 
 # (Optional) Seed sample data
-pnpm db:seed
+npx supabase db reset
 ```
 
 #### 4️⃣ Start Everything

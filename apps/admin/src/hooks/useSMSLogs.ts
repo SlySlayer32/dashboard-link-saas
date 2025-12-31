@@ -7,8 +7,6 @@ interface SMSLogsParams {
   page?: number
   limit?: number
   workerId?: string
-  // Note: status, dateFrom, dateTo, and search filters are not yet supported by the API
-  // They are included for future implementation
   status?: SMSLog['status']
   dateFrom?: string
   dateTo?: string
@@ -20,7 +18,6 @@ export function useSMSLogs(params: SMSLogsParams = {}): UseQueryResult<SMSLogsRe
     page = 1,
     limit = 20,
     workerId,
-    // The following filters are not yet supported by the API
     status,
     dateFrom,
     dateTo,
@@ -39,13 +36,12 @@ export function useSMSLogs(params: SMSLogsParams = {}): UseQueryResult<SMSLogsRe
       searchParams.set('page', page.toString())
       searchParams.set('limit', limit.toString())
 
-      // Only send workerId filter as it's the only one supported by the API
+      // Add filters if provided
       if (workerId) searchParams.set('workerId', workerId)
-      // TODO: Add support for these filters in the API
-      // if (status) searchParams.set('status', status);
-      // if (dateFrom) searchParams.set('dateFrom', dateFrom);
-      // if (dateTo) searchParams.set('dateTo', dateTo);
-      // if (search) searchParams.set('search', search);
+      if (status) searchParams.set('status', status)
+      if (dateFrom) searchParams.set('dateFrom', dateFrom)
+      if (dateTo) searchParams.set('dateTo', dateTo)
+      if (search) searchParams.set('search', search)
 
       const response = await fetch(`${API_BASE}/sms/logs?${searchParams.toString()}`, {
         headers: {
@@ -60,7 +56,7 @@ export function useSMSLogs(params: SMSLogsParams = {}): UseQueryResult<SMSLogsRe
 
       return response.json()
     },
-    placeholderData: keepPreviousData,
+    placeholderData: keepPreviousData, // ignore: legitimate TanStack Query caching
     staleTime: 2 * 60 * 1000, // 2 minutes for logs
     gcTime: 5 * 60 * 1000, // 5 minutes cache
     refetchOnWindowFocus: false,
