@@ -1,7 +1,17 @@
-import { logger } from '../utils/logger.js';
+import { createTokenManager } from '@dashboard-link/tokens';
 import { Hono } from 'hono';
 import { PluginManagerService } from '../services/plugin-manager';
-import { TokenService } from '../services/token.service';
+import { logger } from '../utils/logger.js';
+
+// Initialize token manager with environment configuration
+const tokenManager = createTokenManager({
+  provider: 'database',
+  tableName: 'worker_tokens',
+  hashTokens: true,
+  cleanupExpired: true,
+  defaultExpiry: 86400, // 1 day for worker tokens
+  refreshExpiry: 2592000 // 30 days
+});
 
 const dashboards = new Hono()
 
@@ -14,23 +24,26 @@ dashboards.get('/:token', async (c) => {
 
   try {
     // Validate token
-    const validation = await TokenService.validateToken(token)
+    const validation = await tokenManager.validateToken(token)
 
-    if (!validation.valid || !validation.workerId) {
+    if (!validation.valid || !validation.payload) {
       return c.json(
         {
           error: 'Invalid or expired link',
-          reason: validation.reason || 'not_found',
+          reason: validation.error || 'not_found',
         },
         401
       )
     }
 
+    // Get worker ID from token metadata
+    const workerId = validation.payload.metadata?.workerId || validation.payload.userId
+
     // Get dashboard data from all configured plugins
-    const dashboardData = await PluginManagerService.getDashboardData(validation.workerId)
+    const dashboardData = await PluginManagerService.getDashboardData(workerId)
 
     return c.json({
-      worker: validation.workerData,
+      worker: validation.payload,
       schedule: dashboardData.schedule,
       tasks: dashboardData.tasks,
     })

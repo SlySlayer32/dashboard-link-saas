@@ -1,17 +1,6 @@
+import type { TaskItem } from '@dashboard-link/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../store/auth';
-
-interface TaskItem {
-  id: string;
-  worker_id: string;
-  title: string;
-  description?: string;
-  due_date?: string;
-  priority: 'low' | 'medium' | 'high';
-  status: 'pending' | 'in_progress' | 'completed';
-  created_at: string;
-  updated_at: string;
-}
 
 interface CreateTaskItemRequest {
   title: string;
@@ -179,7 +168,7 @@ export function useUpdateTaskItem() {
   return useMutation({
     mutationFn: ({ itemId, data }: { itemId: string; data: UpdateTaskItemRequest }) =>
       updateTaskItem(token || '', itemId, data),
-    onSuccess: (_, { _itemId }) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['task-items'],
       });

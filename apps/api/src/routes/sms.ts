@@ -1,9 +1,9 @@
+import { createTokenManager } from '@dashboard-link/tokens';
 import { createClient } from '@supabase/supabase-js';
 import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
 import { smsRateLimitMiddleware } from '../middleware/rateLimit';
 import { SMSService } from '../services/sms.service';
-import { TokenService } from '../services/token.service';
 import type {
     SMSDashboardLinkRequest,
     SMSDashboardLinkResponse,
@@ -11,6 +11,16 @@ import type {
     SendSMSRequest,
 } from '../types/sms';
 import { logger } from '../utils/logger.js';
+
+// Initialize token manager with environment configuration
+const tokenManager = createTokenManager({
+  provider: 'database',
+  tableName: 'worker_tokens',
+  hashTokens: true,
+  cleanupExpired: true,
+  defaultExpiry: 86400, // 1 day for worker tokens
+  refreshExpiry: 2592000 // 30 days
+});
 
 const sms = new Hono()
 
@@ -125,13 +135,16 @@ sms.post('/send-dashboard-link', async (c) => {
     const expirySeconds = expiryMap[expiresIn]
 
     // Generate token
-    const tokenData = await TokenService.generateToken({
-      workerId,
-      expirySeconds,
+    const tokenData = await tokenManager.generateWorkerToken(workerId, admin.organization_id, {
+      permissions: ['worker:access', 'sms:receive'],
+      metadata: {
+        expiresIn,
+        generatedFor: 'sms_dashboard_link'
+      }
     })
 
     // Generate dashboard link
-    const dashboardUrl = TokenService.generateDashboardLink(tokenData.token)
+    const dashboardUrl = tokenData.dashboardUrl
 
     // Prepare message
     const message =

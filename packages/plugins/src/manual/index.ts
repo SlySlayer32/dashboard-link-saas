@@ -1,6 +1,6 @@
-import { ScheduleItem, TaskItem } from '@dashboard-link/shared'
+import { DateRange, PluginConfig, StandardScheduleItem, StandardTaskItem, ValidationResult } from '@dashboard-link/shared'
 import { createClient } from '@supabase/supabase-js'
-import { BaseAdapter } from '../base/adapter'
+import { BasePluginAdapter } from '../base/adapter'
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -13,120 +13,110 @@ const supabase = createClient(
  * Allows admins to manually enter schedule and task data
  * No external API integration - data stored directly in the database
  */
-export class ManualAdapter extends BaseAdapter {
-  id = 'manual'
-  name = 'Manual Entry'
-  description = 'Manually entered schedules and tasks (no external API)'
-  version = '1.0.0'
+export class ManualAdapter extends BasePluginAdapter {
+  readonly id = 'manual'
+  readonly name = 'Manual Entry'
+  readonly version = '1.0.0'
 
-  async getTodaySchedule(
+  protected async fetchExternalSchedule(
     workerId: string,
-    _config: unknown
-  ): Promise<ScheduleItem[]> {
-    try {
-      // Get today's date range in UTC
-      const today = new Date()
-      today.setUTCHours(0, 0, 0, 0)
-      const tomorrow = new Date(today)
-      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+    dateRange: DateRange,
+    _config: PluginConfig
+  ): Promise<unknown[]> {
+    const { data, error } = await supabase
+      .from('manual_schedule_items')
+      .select('*')
+      .eq('worker_id', workerId)
+      .gte('start_time', dateRange.start)
+      .lt('start_time', dateRange.end)
+      .order('start_time', { ascending: true })
 
-      // Query manual schedule items for today
-      const { data, error } = await supabase
-        .from('manual_schedule_items')
-        .select('*')
-        .eq('worker_id', workerId)
-        .gte('start_time', today.toISOString())
-        .lt('start_time', tomorrow.toISOString())
-        .order('start_time', { ascending: true })
+    if (error) throw error
+    return data || []
+  }
 
-      if (error) {
-        console.error('Error fetching manual schedule:', error)
-        return []
-      }
+  protected async fetchExternalTasks(
+    workerId: string,
+    _config: PluginConfig
+  ): Promise<unknown[]> {
+    // Get today's date range
+    const today = new Date()
+    today.setUTCHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
 
-      // Transform database rows to ScheduleItem format
-      return (data || []).map((item: {
-        id: string;
-        title: string;
-        start_time: string;
-        end_time: string;
-        location?: string;
-        description?: string;
-        metadata?: Record<string, unknown>;
-      }) => ({
-        id: item.id,
-        title: item.title,
-        start_time: item.start_time,
-        end_time: item.end_time,
-        location: item.location,
-        description: item.description,
-        type: 'manual' as const,
-        source: 'manual' as const,
-        metadata: item.metadata || {},
-      }))
-    } catch (error) {
-      console.error('Error in ManualAdapter.getTodaySchedule:', error)
-      return []
+    const { data, error } = await supabase
+      .from('manual_task_items')
+      .select('*')
+      .eq('worker_id', workerId)
+      .or(
+        `due_date.is.null,due_date.gte.${today.toISOString()},due_date.lt.${tomorrow.toISOString()}`
+      )
+      .order('priority', { ascending: false }) // High priority first
+      .order('due_date', { ascending: true }) // Earlier due dates first
+
+    if (error) throw error
+    return data || []
+  }
+
+  protected transformScheduleItem(externalItem: unknown): StandardScheduleItem | null {
+    const item = externalItem as {
+      id: string;
+      title: string;
+      start_time: string;
+      end_time: string;
+      location?: string;
+      description?: string;
+      metadata?: Record<string, unknown>;
+    }
+
+    if (!item.start_time || !item.end_time) {
+      return null
+    }
+
+    return {
+      id: item.id,
+      title: item.title,
+      startTime: item.start_time,
+      endTime: item.end_time,
+      location: item.location,
+      description: item.description,
+      metadata: {
+        source: 'manual',
+        createdAt: new Date().toISOString(),
+        ...item.metadata,
+      },
     }
   }
 
-  async getTodayTasks(_workerId: string, _config: unknown): Promise<TaskItem[]> {
-    try {
-      // Get today's date range in UTC
-      const today = new Date()
-      today.setUTCHours(0, 0, 0, 0)
-      const tomorrow = new Date(today)
-      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+  protected transformTaskItem(externalItem: unknown): StandardTaskItem | null {
+    const item = externalItem as {
+      id: string;
+      title: string;
+      description?: string;
+      due_date?: string;
+      priority?: 'low' | 'medium' | 'high';
+      status?: 'pending' | 'in_progress' | 'completed';
+      metadata?: Record<string, unknown>;
+    }
 
-      // Query manual task items for worker
-      const { data, error } = await supabase
-        .from('manual_task_items')
-        .select('*')
-        .eq('worker_id', _workerId)
-        .or(
-          `due_date.is.null,due_date.gte.${today.toISOString()},due_date.lt.${tomorrow.toISOString()}`
-        )
-        .order('priority', { ascending: false }) // High priority first
-        .order('due_date', { ascending: true }) // Earlier due dates first
-
-      if (error) {
-        console.error('Error fetching manual tasks:', error)
-        return []
-      }
-
-      // Transform database rows to TaskItem format
-      return (data || []).map((item: {
-        id: string;
-        title: string;
-        description?: string;
-        due_date?: string;
-        priority?: string;
-        status?: string;
-        metadata?: Record<string, unknown>;
-      }) => ({
-        id: item.id,
-        title: item.title,
-        description: item.description,
-        due_date: item.due_date,
-        priority: (item.priority as 'high' | 'medium' | 'low') || 'medium',
-        status: (item.status as 'pending' | 'in_progress' | 'completed') || 'pending',
-        type: 'manual' as const,
-        source: 'manual' as const,
-        metadata: item.metadata || {},
-      }))
-    } catch (error) {
-      console.error('Error in ManualAdapter.getTodayTasks:', error)
-      return []
+    return {
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      dueDate: item.due_date,
+      priority: item.priority || 'medium',
+      status: item.status || 'pending',
+      metadata: {
+        source: 'manual',
+        createdAt: new Date().toISOString(),
+        ...item.metadata,
+      },
     }
   }
 
-  async validateConfig(_config: Record<string, unknown>): Promise<boolean> {
+  async validateConfig(_config: PluginConfig): Promise<ValidationResult> {
     // Manual adapter doesn't require external configuration
-    return true
-  }
-
-  async handleWebhook(_payload: unknown, _config: Record<string, unknown>): Promise<void> {
-    // Manual adapter doesn't support webhooks
-    throw new Error('Manual adapter does not support webhooks')
+    return { valid: true }
   }
 }

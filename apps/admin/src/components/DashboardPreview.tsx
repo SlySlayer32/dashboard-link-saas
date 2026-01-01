@@ -1,36 +1,10 @@
+import type { ScheduleItem, TaskItem } from '@dashboard-link/shared'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { AlertCircle, Calendar as CalendarIcon, Clock, Info } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '../../packages/ui/components/ui/alert'
 import { Skeleton } from '../../packages/ui/components/ui/skeleton'
 import { api } from '../lib/api'
-
-// Move interfaces to the top level
-type ScheduleItem = {
-  id: string
-  title: string
-  start_time: string
-  end_time: string
-  location?: string
-  description?: string
-  metadata?: {
-    source?: string
-    [key: string]: unknown
-  }
-}
-
-type TaskItem = {
-  id: string
-  title: string
-  description?: string
-  due_date?: string
-  priority?: 'low' | 'medium' | 'high'
-  status?: 'pending' | 'in_progress' | 'completed'
-  metadata?: {
-    source?: string
-    [key: string]: unknown
-  }
-}
 
 interface DashboardData {
   worker: {
@@ -166,7 +140,7 @@ function DashboardPreview({
                 <div key={item.id} className='px-6 py-4 hover:bg-gray-50'>
                   <div className='flex items-start'>
                     <div className='flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-full bg-blue-100 text-blue-600 font-medium'>
-                      {formatTime(item.start_time).replace(':', '')}
+                      {formatTime(item.startTime).replace(':', '')}
                     </div>
                     <div className='ml-4 flex-1 min-w-0'>
                       <div className='flex justify-between items-start'>
@@ -178,7 +152,7 @@ function DashboardPreview({
                         )}
                       </div>
                       <p className='mt-1 text-sm text-gray-600'>
-                        {formatTime(item.start_time)} - {formatTime(item.end_time)}
+                        {formatTime(item.startTime)} - {formatTime(item.endTime)}
                         {item.location && ` • ${item.location}`}
                       </p>
                       {item.description && (
@@ -238,10 +212,10 @@ function DashboardPreview({
                         <p className='mt-1 text-sm text-gray-600'>{task.description}</p>
                       )}
 
-                      {task.due_date && (
+                      {task.dueDate && (
                         <div className='mt-2 flex items-center text-sm text-gray-500'>
                           <Clock className='h-4 w-4 mr-1' />
-                          Due: {format(new Date(task.due_date), 'MMM d, yyyy h:mma')}
+                          Due: {format(new Date(task.dueDate), 'MMM d, yyyy h:mma')}
                         </div>
                       )}
                     </div>

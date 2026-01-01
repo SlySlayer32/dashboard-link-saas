@@ -19,9 +19,9 @@ function ScheduleWidget({ schedule }: ScheduleWidgetProps) {
     );
   }
 
-  // Sort schedule items chronologically by start_time
+  // Sort schedule items chronologically by startTime
   const sortedSchedule = [...schedule].sort((a, b) => 
-    new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
   );
 
   return (
@@ -35,13 +35,13 @@ function ScheduleWidget({ schedule }: ScheduleWidgetProps) {
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <div className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100 text-blue-600 font-semibold">
-                  {formatTime(item.start_time).split(':')[0]}
+                  {formatTime(item.startTime).split(':')[0]}
                 </div>
               </div>
               <div className="ml-4 flex-1">
                 <h3 className="text-base font-medium text-gray-900">{item.title}</h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  {formatTime(item.start_time)} - {formatTime(item.end_time)}
+                  {formatTime(item.startTime)} - {formatTime(item.endTime)}
                 </p>
                 {item.location && (
                   <p className="text-sm text-gray-600 mt-1">

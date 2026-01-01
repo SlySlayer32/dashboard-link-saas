@@ -1,112 +1,345 @@
-import { createClient } from '@supabase/supabase-js';
+/**
+ * Dashboard Route (Repository-Based)
+ * 
+ * API endpoints for dashboard management using the repository pattern
+ * Replaces direct Supabase queries with service layer abstraction
+ */
+
+import { getDashboardRepository } from '@dashboard-link/database';
+import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
+import { z } from 'zod';
 import { authMiddleware } from '../middleware/auth';
 
 const dashboard = new Hono();
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_KEY || ''
-);
+// Initialize repository
+const dashboardRepository = getDashboardRepository();
 
 // All routes require authentication
 dashboard.use('*', authMiddleware);
 
-// Get dashboard statistics
+// Validation schemas
+const createDashboardSchema = z.object({
+  name: z.string().min(1, 'Dashboard name is required'),
+  description: z.string().optional(),
+  config: z.object({
+    layout: z.string().optional(),
+    theme: z.string().optional(),
+    widgets: z.array(z.object({
+      id: z.string(),
+      type: z.string(),
+      position: z.object({
+        x: z.number(),
+        y: z.number(),
+        width: z.number(),
+        height: z.number()
+      }),
+      config: z.record(z.any()).optional()
+    })).optional()
+  }).optional()
+});
+
+const updateDashboardSchema = createDashboardSchema.partial().extend({
+  isActive: z.boolean().optional()
+});
+
+/**
+ * Get dashboard statistics
+ */
 dashboard.get('/stats', async (c) => {
-  // @ts-expect-error - Hono context typing issue
   const userId = c.get('userId');
-
+  const organizationId = c.get('organizationId');
+  
   try {
-    // Get user's organization
-    const { data: admin, error: adminError } = await supabase
-      .from('admins')
-      .select('organization_id')
-      .eq('auth_user_id', userId)
-      .single();
-
-    if (adminError || !admin) {
-      return c.json({ error: 'Not authorized' }, 403);
-    }
-
-    const orgId = admin.organization_id;
-
-    // Get worker stats
-    const { data: workers, error: workersError } = await supabase
-      .from('workers')
-      .select('active')
-      .eq('organization_id', orgId);
-
-    if (workersError) throw workersError;
-
-    const totalWorkers = workers?.length || 0;
-    const activeWorkers = workers?.filter(w => w.active).length || 0;
-    const inactiveWorkers = totalWorkers - activeWorkers;
-
-    // Get SMS stats for today
-    const today = new Date().toISOString().split('T')[0];
-    const { data: todaySms, error: todaySmsError } = await supabase
-      .from('sms_logs')
-      .select('id')
-      .eq('organization_id', orgId)
-      .gte('created_at', today);
-
-    if (todaySmsError) throw todaySmsError;
-
-    const smsToday = todaySms?.length || 0;
-
-    // Get SMS stats for this week
-    const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-    weekStart.setHours(0, 0, 0, 0);
-    const weekStartIso = weekStart.toISOString();
-
-    const { data: weekSms, error: weekSmsError } = await supabase
-      .from('sms_logs')
-      .select('id')
-      .eq('organization_id', orgId)
-      .gte('created_at', weekStartIso);
-
-    if (weekSmsError) throw weekSmsError;
-
-    const smsThisWeek = weekSms?.length || 0;
-
-    // Get recent SMS activity (last 10)
-    const { data: recentSms, error: recentSmsError } = await supabase
-      .from('sms_logs')
-      .select(`
-        id,
-        message,
-        status,
-        created_at,
-        worker_id,
-        workers (
-          name,
-          phone
-        )
-      `)
-      .eq('organization_id', orgId)
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    if (recentSmsError) throw recentSmsError;
+    // Get dashboard statistics for the organization
+    const stats = await dashboardRepository.getDashboardStats(organizationId);
 
     return c.json({
-      stats: {
-        totalWorkers,
-        activeWorkers,
-        inactiveWorkers,
-        smsToday,
-        smsThisWeek,
-      },
-      recentActivity: recentSms || [],
+      success: true,
+      data: stats
     });
   } catch (error) {
-  return c.json(
-    { error: error instanceof Error ? error.message : 'Failed to fetch dashboard stats' },
-    500
-  );
-}
+    console.error('Get dashboard stats error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to retrieve dashboard statistics'
+    }, 500);
+  }
+});
+
+/**
+ * List all dashboards for the organization
+ */
+dashboard.get('/', async (c) => {
+  const userId = c.get('userId');
+  const organizationId = c.get('organizationId');
+  
+  try {
+    const dashboards = await dashboardRepository.findMany({
+      where: { organizationId },
+      orderBy: [{ field: 'createdAt', direction: 'desc' }]
+    });
+
+    return c.json({
+      success: true,
+      data: dashboards
+    });
+  } catch (error) {
+    console.error('List dashboards error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to retrieve dashboards'
+    }, 500);
+  }
+});
+
+/**
+ * Get a specific dashboard by ID
+ */
+dashboard.get('/:id', async (c) => {
+  const dashboardId = c.req.param('id');
+  const organizationId = c.get('organizationId');
+  
+  try {
+    const dashboard = await dashboardRepository.findById(dashboardId);
+
+    if (!dashboard) {
+      return c.json({
+        success: false,
+        error: 'Dashboard not found'
+      }, 404);
+    }
+
+    // Ensure the dashboard belongs to the user's organization
+    if (dashboard.organizationId !== organizationId) {
+      return c.json({
+        success: false,
+        error: 'Access denied'
+      }, 403);
+    }
+
+    return c.json({
+      success: true,
+      data: dashboard
+    });
+  } catch (error) {
+    console.error('Get dashboard error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to retrieve dashboard'
+    }, 500);
+  }
+});
+
+/**
+ * Create a new dashboard
+ */
+dashboard.post('/', zValidator('json', createDashboardSchema), async (c) => {
+  const userId = c.get('userId');
+  const organizationId = c.get('organizationId');
+  const dashboardData = c.req.valid('json');
+  
+  try {
+    const newDashboard = await dashboardRepository.create({
+      ...dashboardData,
+      organizationId,
+      createdBy: userId,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    return c.json({
+      success: true,
+      data: newDashboard
+    }, 201);
+  } catch (error) {
+    console.error('Create dashboard error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to create dashboard'
+    }, 500);
+  }
+});
+
+/**
+ * Update a dashboard
+ */
+dashboard.put('/:id', zValidator('json', updateDashboardSchema), async (c) => {
+  const dashboardId = c.req.param('id');
+  const organizationId = c.get('organizationId');
+  const updateData = c.req.valid('json');
+  
+  try {
+    // First check if dashboard exists and belongs to organization
+    const existingDashboard = await dashboardRepository.findById(dashboardId);
+    
+    if (!existingDashboard) {
+      return c.json({
+        success: false,
+        error: 'Dashboard not found'
+      }, 404);
+    }
+
+    if (existingDashboard.organizationId !== organizationId) {
+      return c.json({
+        success: false,
+        error: 'Access denied'
+      }, 403);
+    }
+
+    const updatedDashboard = await dashboardRepository.update(dashboardId, {
+      ...updateData,
+      updatedAt: new Date()
+    });
+
+    return c.json({
+      success: true,
+      data: updatedDashboard
+    });
+  } catch (error) {
+    console.error('Update dashboard error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to update dashboard'
+    }, 500);
+  }
+});
+
+/**
+ * Delete a dashboard
+ */
+dashboard.delete('/:id', async (c) => {
+  const dashboardId = c.req.param('id');
+  const organizationId = c.get('organizationId');
+  
+  try {
+    // First check if dashboard exists and belongs to organization
+    const existingDashboard = await dashboardRepository.findById(dashboardId);
+    
+    if (!existingDashboard) {
+      return c.json({
+        success: false,
+        error: 'Dashboard not found'
+      }, 404);
+    }
+
+    if (existingDashboard.organizationId !== organizationId) {
+      return c.json({
+        success: false,
+        error: 'Access denied'
+      }, 403);
+    }
+
+    await dashboardRepository.delete(dashboardId);
+
+    return c.json({
+      success: true,
+      message: 'Dashboard deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete dashboard error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to delete dashboard'
+    }, 500);
+  }
+});
+
+/**
+ * Duplicate a dashboard
+ */
+dashboard.post('/:id/duplicate', async (c) => {
+  const dashboardId = c.req.param('id');
+  const organizationId = c.get('organizationId');
+  const userId = c.get('userId');
+  const { name } = await c.req.json();
+  
+  try {
+    // First check if dashboard exists and belongs to organization
+    const existingDashboard = await dashboardRepository.findById(dashboardId);
+    
+    if (!existingDashboard) {
+      return c.json({
+        success: false,
+        error: 'Dashboard not found'
+      }, 404);
+    }
+
+    if (existingDashboard.organizationId !== organizationId) {
+      return c.json({
+        success: false,
+        error: 'Access denied'
+      }, 403);
+    }
+
+    // Create a copy of the dashboard
+    const duplicatedDashboard = await dashboardRepository.create({
+      name: name || `${existingDashboard.name} (Copy)`,
+      description: existingDashboard.description,
+      config: existingDashboard.config,
+      organizationId,
+      createdBy: userId,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    return c.json({
+      success: true,
+      data: duplicatedDashboard
+    }, 201);
+  } catch (error) {
+    console.error('Duplicate dashboard error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to duplicate dashboard'
+    }, 500);
+  }
+});
+
+/**
+ * Get dashboard activity logs
+ */
+dashboard.get('/:id/activity', async (c) => {
+  const dashboardId = c.req.param('id');
+  const organizationId = c.get('organizationId');
+  const limit = parseInt(c.req.query('limit') || '50');
+  
+  try {
+    // First check if dashboard exists and belongs to organization
+    const existingDashboard = await dashboardRepository.findById(dashboardId);
+    
+    if (!existingDashboard) {
+      return c.json({
+        success: false,
+        error: 'Dashboard not found'
+      }, 404);
+    }
+
+    if (existingDashboard.organizationId !== organizationId) {
+      return c.json({
+        success: false,
+        error: 'Access denied'
+      }, 403);
+    }
+
+    // This would typically use an activity log repository
+    // For now, we'll return a placeholder
+    const activity = await dashboardRepository.getDashboardActivity(dashboardId, limit);
+
+    return c.json({
+      success: true,
+      data: activity
+    });
+  } catch (error) {
+    console.error('Get dashboard activity error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to retrieve dashboard activity'
+    }, 500);
+  }
 });
 
 export default dashboard;

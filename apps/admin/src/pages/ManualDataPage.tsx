@@ -7,17 +7,17 @@ import { ScheduleItemForm } from '../components/ScheduleItemForm'
 import { TaskItemForm } from '../components/TaskItemForm'
 import type { ScheduleItem } from '../hooks/useScheduleItems'
 import {
-  useCreateScheduleItem,
-  useDeleteScheduleItem,
-  useScheduleItems,
-  useUpdateScheduleItem,
+    useCreateScheduleItem,
+    useDeleteScheduleItem,
+    useScheduleItems,
+    useUpdateScheduleItem,
 } from '../hooks/useScheduleItems'
 import type { TaskItem } from '../hooks/useTaskItems'
 import {
-  useCreateTaskItem,
-  useDeleteTaskItem,
-  useTaskItems,
-  useUpdateTaskItem,
+    useCreateTaskItem,
+    useDeleteTaskItem,
+    useTaskItems,
+    useUpdateTaskItem,
 } from '../hooks/useTaskItems'
 import { useWorkers } from '../hooks/useWorkers'
 
@@ -296,8 +296,8 @@ export function ManualDataPage() {
           workerId={selectedWorkerId}
           initialData={{
             title: (editingItem as ScheduleItem).title,
-            startTime: (editingItem as ScheduleItem).start_time,
-            endTime: (editingItem as ScheduleItem).end_time,
+            startTime: (editingItem as ScheduleItem).startTime,
+            endTime: (editingItem as ScheduleItem).endTime,
             location: (editingItem as ScheduleItem).location,
             description: (editingItem as ScheduleItem).description,
           }}
@@ -313,7 +313,7 @@ export function ManualDataPage() {
           initialData={{
             title: (editingItem as TaskItem).title,
             description: (editingItem as TaskItem).description,
-            dueDate: (editingItem as TaskItem).due_date,
+            dueDate: (editingItem as TaskItem).dueDate,
             priority: (editingItem as TaskItem).priority,
             status: (editingItem as TaskItem).status,
           }}

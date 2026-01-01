@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createAuthService, type AuthService } from '@dashboard-link/auth';
 import { createMiddleware } from 'hono/factory';
 import { HTTPException } from 'hono/http-exception';
 import { logger } from '../utils/logger.js';
@@ -9,53 +9,71 @@ type Variables = {
   userRole: string;
   organizationId: string;
   requestId?: string;
+  authService: AuthService;
 };
 
 export type AuthContext = {
   Variables: Variables;
 };
 
-// Create Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_KEY || ''
-);
+// Initialize auth service
+const authService = createAuthService('supabase', {
+  providerConfig: {
+    supabaseUrl: process.env.SUPABASE_URL || '',
+    supabaseKey: process.env.SUPABASE_SERVICE_KEY || ''
+  },
+  jwtSecret: process.env.JWT_SECRET || 'default-secret',
+  tokenExpiry: 3600,
+  refreshTokenExpiry: 2592000,
+  passwordPolicy: {
+    minLength: 8,
+    requireUppercase: true,
+    requireLowercase: true,
+    requireNumbers: true,
+    requireSpecialChars: true,
+    maxAge: 90
+  },
+  sessionConfig: {
+    maxSessions: 5,
+    idleTimeout: 30,
+    absoluteTimeout: 480,
+    secureCookies: true,
+    sameSite: 'strict'
+  }
+});
 
 /**
  * Authentication middleware
- * Validates Supabase JWT token from Authorization header
+ * Validates JWT token using auth abstraction layer
  */
 export const authMiddleware = createMiddleware(async (c, next) => {
   const authHeader = c.req.header('Authorization');
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new HTTPException(401, { message: 'Authorization token required' });
+    throw new HTTPException(401, { message: 'Missing or invalid authorization header' });
   }
 
-  const token = authHeader.substring(7);
+  const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    // Validate token using auth service
+    const validation = await authService.validateToken(token);
 
-    if (error || !user) {
-      logger.warn('Authentication failed', { 
-        error: error?.message,
-        token: token.substring(0, 10) + '...' 
-      });
-      throw new HTTPException(401, { message: 'Invalid token' });
-    }
-
-    // Get user's organization from user_metadata
-    const organizationId = user.user_metadata?.organization_id;
-    if (!organizationId) {
-      logger.error('User missing organization_id', undefined, { userId: user.id });
-      throw new HTTPException(403, { message: 'User not associated with an organization' });
+    if (!validation.valid || !validation.user) {
+      throw new HTTPException(401, { message: 'Invalid or expired token' });
     }
 
     // Set user context
-    c.set('userId', user.id);
-    c.set('userRole', user.user_metadata?.role || 'worker');
-    c.set('organizationId', organizationId);
+    c.set('userId', validation.user.id);
+    c.set('userRole', validation.user.role || 'user');
+    c.set('organizationId', validation.user.organizationId || '');
+    c.set('authService', authService);
+
+    logger.info('User authenticated', {
+      userId: validation.user.id,
+      organizationId: validation.user.organizationId,
+      requestId: c.get('requestId')
+    });
 
     await next();
   } catch (error) {
@@ -64,57 +82,50 @@ export const authMiddleware = createMiddleware(async (c, next) => {
     }
 
     logger.error('Authentication error', error as Error);
-    throw new HTTPException(500, { message: 'Authentication failed' });
+    throw new HTTPException(401, { message: 'Authentication failed' });
   }
 });
 
 /**
- * Optional auth middleware
- * Doesn't fail if no token, but validates if present
+ * Role-based authorization middleware
  */
-export const optionalAuthMiddleware = createMiddleware(
-  async (c, next) => {
-    const authHeader = c.req.header('Authorization');
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser(token);
-        if (user) {
-          const organizationId = user.user_metadata?.organization_id;
-          if (organizationId) {
-            c.set('userId', user.id);
-            c.set('userRole', user.user_metadata?.role || 'worker');
-            c.set('organizationId', organizationId);
-          }
-        }
-      } catch (error) {
-        logger.warn('Optional auth failed', { error: (error as Error).message });
-      }
-    }
-
-    await next();
-  }
-);
-
-/**
- * Role-based access control middleware
- */
-export const requireRole = (role: 'admin' | 'worker') =>
-  createMiddleware(async (c, next) => {
+export const requireRole = (roles: string[]) => {
+  return createMiddleware(async (c, next) => {
     const userRole = c.get('userRole');
-    
-    if (!userRole || (userRole !== role && userRole !== 'admin')) {
+
+    if (!roles.includes(userRole)) {
       throw new HTTPException(403, { 
-        message: `Access denied. Required role: ${role}` 
+        message: `Access denied. Required roles: ${roles.join(', ')}` 
       });
     }
 
     await next();
   });
+};
 
 /**
- * Admin-only middleware
+ * Organization-based authorization middleware
  */
-export const requireAdmin = requireRole('admin');
+export const requireOrganization = (organizationId: string) => {
+  return createMiddleware(async (c, next) => {
+    const userOrganizationId = c.get('organizationId');
+
+    if (userOrganizationId !== organizationId) {
+      throw new HTTPException(403, { 
+        message: 'Access denied. Organization access required' 
+      });
+    }
+
+    await next();
+  });
+};
+
+/**
+ * Admin authorization middleware
+ */
+export const requireAdmin = requireRole(['admin', 'super_admin']);
+
+/**
+ * Super admin authorization middleware
+ */
+export const requireSuperAdmin = requireRole(['super_admin']);

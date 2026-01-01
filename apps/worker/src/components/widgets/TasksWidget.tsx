@@ -50,12 +50,12 @@ function TasksWidget({ tasks }: TasksWidgetProps) {
     return acc;
   }, {} as Record<string, TaskItem[]>);
 
-  // Sort tasks within each priority group by due_date
+  // Sort tasks within each priority group by dueDate
   Object.keys(groupedTasks).forEach(priority => {
     groupedTasks[priority].sort((a, b) => {
-      if (!a.due_date) return 1;
-      if (!b.due_date) return -1;
-      return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     });
   });
 
@@ -100,9 +100,9 @@ function TasksWidget({ tasks }: TasksWidgetProps) {
                     {task.description && (
                       <p className="text-sm text-gray-600 mt-1">{task.description}</p>
                     )}
-                    {task.due_date && (
+                    {task.dueDate && (
                       <p className="text-xs text-gray-500 mt-2">
-                        Due: {new Date(task.due_date).toLocaleString('en-AU', {
+                        Due: {new Date(task.dueDate).toLocaleString('en-AU', {
                           month: 'short',
                           day: 'numeric',
                           hour: '2-digit',

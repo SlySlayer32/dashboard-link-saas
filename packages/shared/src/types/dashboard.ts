@@ -19,22 +19,5 @@ export interface DashboardWidget {
   updated_at: string;
 }
 
-export interface ScheduleItem {
-  id: string;
-  title: string;
-  start_time: string;
-  end_time: string;
-  location?: string;
-  description?: string;
-  metadata?: Record<string, unknown>;
-}
-
-export interface TaskItem {
-  id: string;
-  title: string;
-  description?: string;
-  due_date?: string;
-  priority?: 'low' | 'medium' | 'high';
-  status?: 'pending' | 'in_progress' | 'completed';
-  metadata?: Record<string, unknown>;
-}
+// Re-export standardized plugin types for frontend compatibility
+export { StandardScheduleItem as ScheduleItem, StandardTaskItem as TaskItem } from './plugin';

@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { MagicLinkAuth } from '@dashboard-link/ui';
+import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth, useAuthError, useAuthIsAuthenticated, useAuthIsLoading, useAuthStore } from '../store/auth';
 
 export function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { login, clearError } = useAuth();
@@ -21,6 +21,53 @@ export function LoginPage() {
       navigate(intendedDestination, { replace: true });
     }
   }, [isAuthenticated, navigate]);
+
+  // Auto-open modal on page load
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      setIsModalOpen(true);
+    }
+  }, [isAuthenticated, isLoading]);
+
+  const handleLogin = async (data: { email: string; password: string }) => {
+    setIsSubmitting(true);
+    clearError();
+    
+    try {
+      await login({ email: data.email, password: data.password });
+      setIsModalOpen(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleMagicLink = async (data: { email: string }) => {
+    setIsSubmitting(true);
+    clearError();
+    
+    try {
+      // TODO: Implement magic link API call
+      console.log('Magic link requested for:', data.email);
+      // For now, just simulate success
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSignup = async (data: { organization: string; email: string; password: string; confirmPassword: string }) => {
+    setIsSubmitting(true);
+    clearError();
+    
+    try {
+      // TODO: Implement signup API call
+      console.log('Signup requested for:', data);
+      // For now, just simulate success
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleDevBypass = () => {
     // Set mock user for development
@@ -48,18 +95,6 @@ export function LoginPage() {
     navigate('/', { replace: true });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    clearError();
-
-    try {
-      await login({ email, password });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   // Show loading while checking initial auth state
   if (isLoading) {
     return (
@@ -75,86 +110,68 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Dashboard Link Admin Portal
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email-address" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isSubmitting}
-              />
+    <div className="min-h-screen bg-gray-50">
+      {/* Background pattern */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 opacity-50"></div>
+      
+      {/* Main content */}
+      <div className="relative min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          {/* Logo/Brand */}
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
             </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isSubmitting}
-              />
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard Link</h1>
+            <p className="mt-2 text-sm text-gray-600">Enterprise workflow automation platform</p>
+          </div>
+        </div>
+
+        {/* Feature highlights */}
+        <div className="sm:mx-auto sm:w-full sm:max-w-md mb-8">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Admin Portal Access</h2>
+            <div className="space-y-3">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                <span className="text-sm text-gray-600">Passwordless login with magic links</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                <span className="text-sm text-gray-600">Secure token-based worker access</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                <span className="text-sm text-gray-600">Enterprise-grade security</span>
+              </div>
             </div>
           </div>
+        </div>
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-800">{error}</div>
-            </div>
-          )}
+        {/* Magic Link Auth Modal */}
+        <MagicLinkAuth
+          isOpen={isModalOpen}
+          onClose={() => navigate('/')}
+          onLogin={handleLogin}
+          onMagicLink={handleMagicLink}
+          onSignup={handleSignup}
+          isLoading={isSubmitting}
+          error={error || undefined}
+        />
 
-          <div>
+        {/* Development bypass */}
+        {import.meta.env.DEV && (
+          <div className="fixed bottom-4 right-4">
             <button
-              type="submit"
-              disabled={isSubmitting}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleDevBypass}
+              className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
             >
-              {isSubmitting ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              ) : (
-                'Sign in'
-              )}
+              🚀 Dev Bypass
             </button>
           </div>
-
-          {import.meta.env.DEV && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={handleDevBypass}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-green-600 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              >
-                🚀 Dev Bypass (Development Only)
-              </button>
-            </div>
-          )}
-        </form>
+        )}
       </div>
     </div>
   );

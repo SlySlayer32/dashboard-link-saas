@@ -1,33 +1,119 @@
-import { ScheduleItem, TaskItem } from './dashboard';
+/**
+ * Standardized Plugin Data Contracts
+ * These are YOUR data shapes - they never change
+ * External services must adapt to these
+ */
+
+// ============================================
+// STANDARDIZED DATA SHAPES (Never Change)
+// ============================================
+
+export interface StandardScheduleItem {
+  id: string;
+  title: string;
+  startTime: string; // ISO 8601
+  endTime: string; // ISO 8601
+  location?: string;
+  description?: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface StandardTaskItem {
+  id: string;
+  title: string;
+  description?: string;
+  dueDate?: string; // ISO 8601
+  priority: 'low' | 'medium' | 'high';
+  status: 'pending' | 'in_progress' | 'completed';
+  metadata: Record<string, unknown>;
+}
+
+// ============================================
+// PLUGIN RESPONSE ENVELOPE
+// ============================================
+
+export interface PluginResponse<T> {
+  success: boolean;
+  data: T[];
+  errors?: PluginError[];
+  metadata: PluginMetadata;
+}
+
+export interface PluginError {
+  code: string;
+  message: string;
+  recoverable: boolean;
+}
+
+export interface PluginMetadata {
+  source: string; // Plugin ID
+  timestamp: string;
+  version: string;
+  hasMore?: boolean;
+}
+
+// ============================================
+// PLUGIN INTERFACE (Your Contract)
+// ============================================
 
 export interface PluginAdapter {
-  id: string;
-  name: string;
-  description: string;
-  version: string;
+  // Identity
+  readonly id: string;
+  readonly name: string;
+  readonly version: string;
+
+  // Core methods - only deal with YOUR data shapes
+  getSchedule(
+    workerId: string,
+    dateRange: DateRange,
+    config: PluginConfig
+  ): Promise<PluginResponse<StandardScheduleItem>>;
+
+  getTasks(
+    workerId: string,
+    config: PluginConfig
+  ): Promise<PluginResponse<StandardTaskItem>>;
+
+  // Configuration
+  validateConfig(config: PluginConfig): Promise<ValidationResult>;
   
-  /**
-   * Get today's schedule items for a worker
-   */
-  getTodaySchedule(workerId: string, config: Record<string, unknown>): Promise<ScheduleItem[]>;
-  
-  /**
-   * Get today's tasks for a worker
-   */
-  getTodayTasks(workerId: string, config: Record<string, unknown>): Promise<TaskItem[]>;
-  
-  /**
-   * Optional webhook handler for real-time updates
-   */
-  handleWebhook?(payload: unknown, config: Record<string, unknown>): Promise<void>;
-  
-  /**
-   * Validate plugin configuration
-   */
-  validateConfig(config: Record<string, unknown>): Promise<boolean>;
+  // Optional: webhooks for real-time updates
+  handleWebhook?(
+    payload: unknown,
+    config: PluginConfig
+  ): Promise<WebhookResponse>;
+}
+
+// ============================================
+// SUPPORTING TYPES
+// ============================================
+
+export interface DateRange {
+  start: string; // ISO 8601
+  end: string; // ISO 8601
 }
 
 export interface PluginConfig {
+  enabled: boolean;
+  settings: Record<string, unknown>; // Plugin-specific config
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  errors?: string[];
+}
+
+export interface WebhookResponse {
+  processed: boolean;
+  shouldRefresh: boolean;
+}
+
+// ============================================
+// LEGACY TYPES (For Migration)
+// ============================================
+
+// Keep existing types for backward compatibility during migration
+export interface LegacyPluginConfig {
   id: string;
   organization_id: string;
   plugin_id: string;
@@ -99,4 +185,66 @@ export interface OAuthConfig {
   scope: string[];
   clientId: string;
   redirectUri: string;
+}
+
+// ============================================
+// MIGRATION HELPERS
+// ============================================
+
+/**
+ * Transform legacy ScheduleItem to StandardScheduleItem
+ */
+export function toStandardScheduleItem(item: {
+  id: string;
+  title: string;
+  start_time: string;
+  end_time: string;
+  location?: string;
+  description?: string;
+  type?: string;
+  source?: string;
+  metadata?: Record<string, unknown>;
+}): StandardScheduleItem {
+  return {
+    id: item.id,
+    title: item.title,
+    startTime: item.start_time,
+    endTime: item.end_time,
+    location: item.location,
+    description: item.description,
+    metadata: {
+      ...item.metadata,
+      type: item.type,
+      source: item.source,
+    },
+  };
+}
+
+/**
+ * Transform legacy TaskItem to StandardTaskItem
+ */
+export function toStandardTaskItem(item: {
+  id: string;
+  title: string;
+  description?: string;
+  due_date?: string;
+  priority?: 'low' | 'medium' | 'high';
+  status?: 'pending' | 'in_progress' | 'completed';
+  type?: string;
+  source?: string;
+  metadata?: Record<string, unknown>;
+}): StandardTaskItem {
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    dueDate: item.due_date,
+    priority: item.priority || 'medium',
+    status: item.status || 'pending',
+    metadata: {
+      ...item.metadata,
+      type: item.type,
+      source: item.source,
+    },
+  };
 }

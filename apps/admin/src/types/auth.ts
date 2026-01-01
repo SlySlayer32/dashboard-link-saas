@@ -1,38 +1,44 @@
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'admin' | 'user';
-  organization_id: string;
-  created_at: string;
-  updated_at: string;
+// Re-export auth types from shared package
+export type {
+    AuthConfig, AuthCredentials, AuthError,
+    AuthErrorCode, AuthResult, AuthSession, AuthUser, AuthValidationResult, CookieOptions, PasswordPolicy,
+    SessionConfig, TokenPayload,
+    TokenResult,
+    UserRole
+} from '@dashboard-link/shared'
+
+// Additional frontend-specific types
+export interface AuthState {
+  user: AuthUser | null
+  token: string | null
+  refreshToken: string | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  error: string | null
 }
 
 export interface LoginCredentials {
-  email: string;
-  password: string;
+  email: string
+  password: string
 }
 
-export interface LoginResponse {
-  user: User;
-  token: string;
-  expires_at: string;
+export interface RegisterData {
+  email: string
+  password: string
+  name: string
+  organizationName: string
 }
 
-export interface AuthState {
-  user: User | null;
-  token: string | null;
-  isLoading: boolean;
-  error: string | null;
-  isAuthenticated: boolean;
+export interface AuthResponse {
+  success: boolean
+  user?: AuthUser
+  token?: string
+  refreshToken?: string
+  error?: string
 }
 
-export interface AuthActions {
-  login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => void;
-  refreshToken: () => Promise<void>;
-  clearError: () => void;
-  setLoading: (loading: boolean) => void;
+export interface ProfileResponse {
+  success: boolean
+  user?: AuthUser
+  error?: string
 }
-
-export type AuthStore = AuthState & AuthActions;

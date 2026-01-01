@@ -1,17 +1,6 @@
+import type { ScheduleItem } from '@dashboard-link/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../store/auth';
-
-interface ScheduleItem {
-  id: string;
-  worker_id: string;
-  title: string;
-  start_time: string;
-  end_time: string;
-  location?: string;
-  description?: string;
-  created_at: string;
-  updated_at: string;
-}
 
 interface CreateScheduleItemRequest {
   title: string;

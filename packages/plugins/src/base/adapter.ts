@@ -1,55 +1,145 @@
-import { PluginAdapter, ScheduleItem, TaskItem } from '@dashboard-link/shared'
+import {
+    DateRange,
+    PluginConfig,
+    PluginError,
+    PluginResponse,
+    StandardScheduleItem,
+    StandardTaskItem,
+    ValidationResult,
+    WebhookResponse
+} from '@dashboard-link/shared'
 
 /**
- * Base adapter class that all plugins should extend
- * Provides common functionality and enforces the plugin interface
+ * Base adapter class that handles common concerns
+ * All plugin adapters extend this - provides separation of concerns
  */
-export abstract class BaseAdapter implements PluginAdapter {
-  abstract id: string
-  abstract name: string
-  abstract description: string
-  abstract version: string
+export abstract class BasePluginAdapter {
+  abstract readonly id: string
+  abstract readonly name: string
+  abstract readonly version: string
 
-  /**
-   * Get today's schedule items for a worker
-   * Must be implemented by each plugin
-   */
-  abstract getTodaySchedule(workerId: string, config: Record<string, unknown>): Promise<ScheduleItem[]>
+  // Each plugin implements these - they do the API-specific work
+  protected abstract fetchExternalSchedule(
+    workerId: string,
+    dateRange: DateRange,
+    config: PluginConfig
+  ): Promise<unknown[]>
 
-  /**
-   * Get today's tasks for a worker
-   * Must be implemented by each plugin
-   */
-  abstract getTodayTasks(workerId: string, config: unknown): Promise<TaskItem[]>
+  protected abstract fetchExternalTasks(
+    workerId: string,
+    config: PluginConfig
+  ): Promise<unknown[]>
 
-  /**
-   * Optional webhook handler for real-time updates
-   * Override this method if your plugin supports webhooks
-   */
-  async handleWebhook?(_payload: unknown, _config: unknown): Promise<void> {
+  protected abstract transformScheduleItem(
+    externalItem: unknown
+  ): StandardScheduleItem | null
+
+  protected abstract transformTaskItem(
+    externalItem: unknown
+  ): StandardTaskItem | null
+
+  // Public methods your app calls - these never change
+  async getSchedule(
+    workerId: string,
+    dateRange: DateRange,
+    config: PluginConfig
+  ): Promise<PluginResponse<StandardScheduleItem>> {
+    try {
+      const externalItems = await this.fetchExternalSchedule(
+        workerId,
+        dateRange,
+        config
+      )
+
+      const standardItems = externalItems
+        .map(item => this.transformScheduleItem(item))
+        .filter((item): item is StandardScheduleItem => item !== null)
+
+      return this.createSuccessResponse(standardItems)
+    } catch (error) {
+      return this.createErrorResponse(error)
+    }
+  }
+
+  async getTasks(
+    workerId: string,
+    config: PluginConfig
+  ): Promise<PluginResponse<StandardTaskItem>> {
+    try {
+      const externalItems = await this.fetchExternalTasks(workerId, config)
+
+      const standardItems = externalItems
+        .map(item => this.transformTaskItem(item))
+        .filter((item): item is StandardTaskItem => item !== null)
+
+      return this.createSuccessResponse(standardItems)
+    } catch (error) {
+      return this.createErrorResponse(error)
+    }
+  }
+
+  // Optional webhook handler - override if supported
+  async handleWebhook(
+    _payload: unknown,
+    _config: PluginConfig
+  ): Promise<WebhookResponse> {
     throw new Error(`Webhook not implemented for ${this.name}`)
   }
 
-  /**
-   * Validate plugin configuration
-   * Override with plugin-specific validation logic
-   */
-  async validateConfig(config: unknown): Promise<boolean> {
-    return typeof config === 'object' && config !== null && Object.keys(config).length > 0
+  // Configuration validation - must be implemented by plugins
+  abstract validateConfig(config: PluginConfig): Promise<ValidationResult>
+
+  // Helper methods for creating standardized responses
+  protected createSuccessResponse<T>(
+    data: T[]
+  ): PluginResponse<T> {
+    return {
+      success: true,
+      data,
+      metadata: {
+        source: this.id,
+        timestamp: new Date().toISOString(),
+        version: this.version
+      }
+    }
   }
 
-  /**
-   * Helper method to filter items for today
-   */
-  protected filterToday<T extends { start_time?: string; due_date?: string }>(items: T[]): T[] {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
+  protected createErrorResponse(error: unknown): PluginResponse<never> {
+    const pluginError: PluginError = {
+      code: 'PLUGIN_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      recoverable: true
+    }
 
-    return items.filter((item) => {
-      const date = new Date(item.start_time || item.due_date || '')
-      return date >= today && date < tomorrow
-    })
+    return {
+      success: false,
+      data: [],
+      errors: [pluginError],
+      metadata: {
+        source: this.id,
+        timestamp: new Date().toISOString(),
+        version: this.version
+      }
+    }
   }
-}
+
+  protected createValidationErrorResponse(errors: string[]): PluginResponse<never> {
+    const pluginError: PluginError = {
+      code: 'VALIDATION_ERROR',
+      message: errors.join(', '),
+      recoverable: false
+    }
+
+    return {
+      success: false,
+      data: [],
+      errors: [pluginError],
+      metadata: {
+        source: this.id,
+        timestamp: new Date().toISOString(),
+        version: this.version
+      }
+    }
+  }
+
+  }

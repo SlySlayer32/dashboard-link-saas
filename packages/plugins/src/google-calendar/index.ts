@@ -1,100 +1,151 @@
-import { ScheduleItem, TaskItem } from '@dashboard-link/shared'
-import { BaseAdapter } from '../base/adapter'
+import { DateRange, PluginConfig, StandardScheduleItem, StandardTaskItem, ValidationResult } from '@dashboard-link/shared'
+import { BasePluginAdapter } from '../base/adapter'
 
 /**
  * Google Calendar Plugin Adapter
  * Fetches schedule data from Google Calendar API
  */
-export class GoogleCalendarAdapter extends BaseAdapter {
-  id = 'google-calendar'
-  name = 'Google Calendar'
-  description = 'Sync daily schedule from Google Calendar'
-  version = '1.0.0'
+export class GoogleCalendarAdapter extends BasePluginAdapter {
+  readonly id = 'google-calendar'
+  readonly name = 'Google Calendar'
+  readonly version = '1.0.0'
 
-  async getTodaySchedule(workerId: string, config: Record<string, unknown>): Promise<ScheduleItem[]> {
+  protected async fetchExternalSchedule(
+    _workerId: string,
+    dateRange: DateRange,
+    config: PluginConfig
+  ): Promise<unknown[]> {
+    const { settings } = config
+    const { calendarId = 'primary', accessToken } = settings as {
+      calendarId?: string
+      accessToken?: string
+    }
+
+    if (!accessToken) {
+      throw new Error('Google Calendar access token is required')
+    }
+
+    // Fetch events from Google Calendar API
+    const response = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?` +
+      new URLSearchParams({
+        timeMin: dateRange.start,
+        timeMax: dateRange.end,
+        singleEvents: 'true',
+        orderBy: 'startTime',
+      }),
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`Google Calendar API error: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return data.items || []
+  }
+
+  protected async fetchExternalTasks(
+    _workerId: string,
+    _config: PluginConfig
+  ): Promise<unknown[]> {
+    // Google Calendar doesn't have tasks, return empty
+    return []
+  }
+
+  protected transformScheduleItem(externalItem: unknown): StandardScheduleItem | null {
+    const event = externalItem as {
+      id?: string
+      summary?: string
+      start?: {
+        dateTime?: string
+        date?: string
+      }
+      end?: {
+        dateTime?: string
+        date?: string
+      }
+      location?: string
+      description?: string
+      htmlLink?: string
+      attendees?: Array<{
+        email?: string
+        responseStatus?: string
+      }>
+      status?: string
+    }
+
+    // Skip events without proper time data
+    if (!event.start || !event.end) {
+      return null
+    }
+
+    return {
+      id: event.id || '',
+      title: event.summary || 'Untitled Event',
+      startTime: event.start.dateTime || event.start.date || '',
+      endTime: event.end.dateTime || event.end.date || '',
+      location: event.location,
+      description: event.description,
+      metadata: {
+        source: 'google-calendar',
+        googleEventId: event.id,
+        htmlLink: event.htmlLink,
+        attendees: event.attendees,
+        status: event.status,
+        // Store any Google-specific data here
+      },
+    }
+  }
+
+  protected transformTaskItem(_externalItem: unknown): StandardTaskItem | null {
+    // Google Calendar doesn't have tasks
+    return null
+  }
+
+  async validateConfig(config: PluginConfig): Promise<ValidationResult> {
+    const { settings } = config
+    const { calendarId, accessToken } = settings as {
+      calendarId?: string
+      accessToken?: string
+    }
+
+    if (!calendarId || !accessToken) {
+      return {
+        valid: false,
+        errors: ['Calendar ID and Access Token are required']
+      }
+    }
+
     try {
-      const { accessToken, calendarId = 'primary' } = config as {
-        accessToken: string
-        calendarId?: string
-      }
-
-      if (!accessToken) {
-        throw new Error('Google Calendar access token is required')
-      }
-
-      // Get today's date range
-      const today = new Date()
-      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
-
-      // Fetch events from Google Calendar API
+      // Test the access token by making a simple API call
       const response = await fetch(
-        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?` +
-        new URLSearchParams({
-          timeMin: startOfDay.toISOString(),
-          timeMax: endOfDay.toISOString(),
-          singleEvents: 'true',
-          orderBy: 'startTime',
-        }),
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
           },
         }
       )
 
       if (!response.ok) {
-        throw new Error(`Google Calendar API error: ${response.statusText}`)
+        return {
+          valid: false,
+          errors: ['Failed to connect to Google Calendar']
+        }
       }
 
-      const data = await response.json()
-      
-      // Transform events to ScheduleItem format
-      return (data.items || []).map((event: Record<string, unknown>) => ({
-        id: (event.id as string) || '',
-        title: (event.summary as string) || 'Untitled Event',
-        startTime: ((event.start as Record<string, unknown>)?.dateTime as string) || ((event.start as Record<string, unknown>)?.date as string),
-        endTime: ((event.end as Record<string, unknown>)?.dateTime as string) || ((event.end as Record<string, unknown>)?.date as string),
-        location: event.location as string,
-        description: event.description as string,
-        type: 'calendar',
-        source: 'google-calendar',
-        metadata: {
-          eventId: event.id as string,
-          calendarId,
-          workerId,
-        },
-      }))
+      return { valid: true }
     } catch (error) {
-      console.error(`Error fetching Google Calendar for worker ${workerId}:`, error)
-      return []
-    }
-  }
-
-  async getTodayTasks(_workerId: string, _config: unknown): Promise<TaskItem[]> {
-    // Google Calendar doesn't have tasks, return empty
-    return []
-  }
-
-  async validateConfig(config: unknown): Promise<boolean> {
-    try {
-      const { accessToken } = config as { accessToken?: string }
-      
-      if (!accessToken) {
-        return false
+      return {
+        valid: false,
+        errors: [error instanceof Error ? error.message : 'Connection failed']
       }
-
-      // Test the access token by making a simple API call
-      const response = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      })
-
-      return response.ok
-    } catch {
-      return false
     }
   }
 }

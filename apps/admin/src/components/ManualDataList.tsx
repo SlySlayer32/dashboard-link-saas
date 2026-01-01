@@ -132,8 +132,8 @@ export function ManualDataList({
                   <div className="space-y-1">
                     <div className="flex items-center text-sm text-gray-600">
                       <Clock className="h-4 w-4 mr-2" />
-                      {formatDateTime((item as ScheduleItem).start_time)} -{' '}
-                      {formatDateTime((item as ScheduleItem).end_time)}
+                      {formatDateTime((item as ScheduleItem).startTime)} -{' '}
+                      {formatDateTime((item as ScheduleItem).endTime)}
                     </div>
                     {(item as ScheduleItem).location && (
                       <div className="flex items-center text-sm text-gray-600">
@@ -144,10 +144,10 @@ export function ManualDataList({
                   </div>
                 ) : (
                   <div className="space-y-1">
-                    {(item as TaskItem).due_date && (
+                    {(item as TaskItem).dueDate && (
                       <div className="flex items-center text-sm text-gray-600">
                         <Calendar className="h-4 w-4 mr-2" />
-                        Due: {formatDate((item as TaskItem).due_date)}
+                        Due: {formatDate((item as TaskItem).dueDate || '')}
                       </div>
                     )}
                   </div>

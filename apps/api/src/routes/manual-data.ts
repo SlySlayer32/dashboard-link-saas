@@ -1,510 +1,465 @@
-import { createClient } from '@supabase/supabase-js'
-import { Hono } from 'hono'
-import { authMiddleware } from '../middleware/auth'
-import type {
-  CreateScheduleItemRequest,
-  CreateTaskItemRequest,
-  UpdateScheduleItemRequest,
-  UpdateTaskItemRequest,
-} from '../types/manual-data'
+/**
+ * Manual Data Route (Repository-Based)
+ * 
+ * API endpoints for manual data management using the repository pattern
+ * Replaces direct Supabase queries with service layer abstraction
+ */
 
-const manualData = new Hono()
+import { getDashboardRepository, getWorkerRepository } from '@dashboard-link/database';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+import { z } from 'zod';
+import { authMiddleware } from '../middleware/auth';
+import { WorkerService } from '../services/WorkerService';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_KEY || ''
-)
+const manualData = new Hono();
+
+// Initialize repositories and services
+const workerRepository = getWorkerRepository();
+const dashboardRepository = getDashboardRepository();
+const workerService = new WorkerService(workerRepository);
 
 // All routes require authentication
-manualData.use('*', authMiddleware)
+manualData.use('*', authMiddleware);
 
-// Middleware to validate worker belongs to organization
-const validateWorker = async (workerId: string, organizationId: string) => {
-  const { data: worker, error } = await supabase
-    .from('workers')
-    .select('id')
-    .eq('id', workerId)
-    .eq('organization_id', organizationId)
-    .single()
+// Validation schemas
+const createScheduleItemSchema = z.object({
+  workerId: z.string().min(1, 'Worker ID is required'),
+  startTime: z.string().datetime('Start time must be a valid datetime'),
+  endTime: z.string().datetime('End time must be a valid datetime'),
+  type: z.enum(['shift', 'break', 'meeting', 'training']),
+  notes: z.string().optional(),
+  metadata: z.record(z.any()).optional()
+});
 
-  if (error || !worker) {
-    return null
-  }
+const createTaskItemSchema = z.object({
+  workerId: z.string().min(1, 'Worker ID is required'),
+  title: z.string().min(1, 'Task title is required'),
+  description: z.string().optional(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']),
+  dueDate: z.string().datetime('Due date must be a valid datetime').optional(),
+  status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']),
+  assignedBy: z.string().optional(),
+  metadata: z.record(z.any()).optional()
+});
 
-  return worker
-}
+const updateScheduleItemSchema = createScheduleItemSchema.partial();
+const updateTaskItemSchema = createTaskItemSchema.partial();
 
-// SCHEDULE ITEMS ENDPOINTS
-
-// Create schedule item for worker
-manualData.post('/workers/:id/schedule-items', async (c) => {
-  const workerId = c.req.param('id')
-  // @ts-expect-error - Hono context typing issue
-  const userId = c.get('userId')
-  const body = (await c.req.json()) as CreateScheduleItemRequest
-
-  // Get user's organization
-  const { data: admin } = await supabase
-    .from('admins')
-    .select('organization_id')
-    .eq('auth_user_id', userId)
-    .single()
-
-  if (!admin) {
-    return c.json({ error: 'Not authorized' }, 403)
-  }
-
-  // Validate worker belongs to organization
-  const worker = await validateWorker(workerId, admin.organization_id)
-  if (!worker) {
-    return c.json({ error: 'Worker not found' }, 404)
-  }
-
-  // Validate required fields
-  if (!body.title || !body.startTime || !body.endTime) {
-    return c.json({ error: 'Missing required fields: title, startTime, endTime' }, 400)
-  }
-
-  // Validate time range
-  const startTime = new Date(body.startTime)
-  const endTime = new Date(body.endTime)
-  if (startTime >= endTime) {
-    return c.json({ error: 'startTime must be before endTime' }, 400)
-  }
-
+/**
+ * Get all schedule items for organization
+ */
+manualData.get('/schedule', async (c) => {
+  const organizationId = c.get('organizationId');
+  const { startDate, endDate, workerId } = c.req.query();
+  
   try {
-    const { data, error } = await supabase
-      .from('manual_schedule_items')
-      .insert({
-        organization_id: admin.organization_id,
-        worker_id: workerId,
-        title: body.title,
-        start_time: body.startTime,
-        end_time: body.endTime,
-        location: body.location,
-        description: body.description,
-      })
-      .select()
-      .single()
+    // This would typically use a ScheduleRepository
+    // For now, we'll use the worker repository to get schedule data
+    const scheduleItems = await workerRepository.getScheduleItems(organizationId, {
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      workerId
+    });
 
-    if (error) {
-      return c.json({ error: error.message }, 400)
-    }
-
-    return c.json(data, 201)
+    return c.json({
+      success: true,
+      data: scheduleItems
+    });
   } catch (error) {
-    return c.json(
-      {
-        error: error instanceof Error ? error.message : 'Failed to create schedule item',
-      },
-      500
-    )
+    console.error('Get schedule items error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to retrieve schedule items'
+    }, 500);
   }
-})
+});
 
-// Get schedule items for worker with date filtering
-manualData.get('/workers/:id/schedule-items', async (c) => {
-  const workerId = c.req.param('id')
-  // @ts-expect-error - Hono context typing issue
-  const userId = c.get('userId')
-  const startDate = c.req.query('startDate')
-  const endDate = c.req.query('endDate')
-  const page = parseInt(c.req.query('page') || '1')
-  const limit = parseInt(c.req.query('limit') || '20')
-
-  // Get user's organization
-  const { data: admin } = await supabase
-    .from('admins')
-    .select('organization_id')
-    .eq('auth_user_id', userId)
-    .single()
-
-  if (!admin) {
-    return c.json({ error: 'Not authorized' }, 403)
-  }
-
-  // Validate worker belongs to organization
-  const worker = await validateWorker(workerId, admin.organization_id)
-  if (!worker) {
-    return c.json({ error: 'Worker not found' }, 404)
-  }
-
-  // Build query
-  let query = supabase
-    .from('manual_schedule_items')
-    .select('*', { count: 'exact' })
-    .eq('organization_id', admin.organization_id)
-    .eq('worker_id', workerId)
-    .order('start_time', { ascending: true })
-
-  // Apply date filtering if provided
-  if (startDate) {
-    query = query.gte('start_time', startDate)
-  }
-  if (endDate) {
-    query = query.lte('start_time', endDate)
-  }
-
-  // Apply pagination
-  const offset = (page - 1) * limit
-  query = query.range(offset, offset + limit - 1)
-
-  const { data, error, count } = await query
-
-  if (error) {
-    return c.json({ error: error.message }, 500)
-  }
-
-  const totalPages = Math.ceil((count || 0) / limit)
-
-  return c.json({
-    data: data || [],
-    pagination: {
-      page,
-      limit,
-      total: count || 0,
-      totalPages,
-    },
-  })
-})
-
-// Update schedule item
-manualData.put('/schedule-items/:id', async (c) => {
-  const itemId = c.req.param('id')
-  // @ts-expect-error - Hono context typing issue
-  const userId = c.get('userId')
-  const body = (await c.req.json()) as UpdateScheduleItemRequest
-
-  // Get user's organization
-  const { data: admin } = await supabase
-    .from('admins')
-    .select('organization_id')
-    .eq('auth_user_id', userId)
-    .single()
-
-  if (!admin) {
-    return c.json({ error: 'Not authorized' }, 403)
-  }
-
-  // First check if item exists and belongs to organization
-  const { data: existingItem } = await supabase
-    .from('manual_schedule_items')
-    .select('id')
-    .eq('id', itemId)
-    .eq('organization_id', admin.organization_id)
-    .single()
-
-  if (!existingItem) {
-    return c.json({ error: 'Schedule item not found' }, 404)
-  }
-
-  // Build update object
-  const updateData: unknown = {}
-  if (body.title !== undefined) updateData.title = body.title
-  if (body.startTime !== undefined) updateData.start_time = body.startTime
-  if (body.endTime !== undefined) updateData.end_time = body.endTime
-  if (body.location !== undefined) updateData.location = body.location
-  if (body.description !== undefined) updateData.description = body.description
-
-  // Validate time range if both times are provided
-  if (body.startTime && body.endTime) {
-    const startTime = new Date(body.startTime)
-    const endTime = new Date(body.endTime)
-    if (startTime >= endTime) {
-      return c.json({ error: 'startTime must be before endTime' }, 400)
-    }
-  }
-
+/**
+ * Create a new schedule item
+ */
+manualData.post('/schedule', zValidator('json', createScheduleItemSchema), async (c) => {
+  const organizationId = c.get('organizationId');
+  const userId = c.get('userId');
+  const scheduleData = c.req.valid('json');
+  
   try {
-    const { data, error } = await supabase
-      .from('manual_schedule_items')
-      .update(updateData)
-      .eq('id', itemId)
-      .eq('organization_id', admin.organization_id)
-      .select()
-      .single()
-
-    if (error) {
-      return c.json({ error: error.message }, 400)
+    // Validate that the worker belongs to the organization
+    const worker = await workerRepository.findById(scheduleData.workerId);
+    
+    if (!worker || worker.organizationId !== organizationId) {
+      return c.json({
+        success: false,
+        error: 'Worker not found or access denied'
+      }, 404);
     }
 
-    return c.json(data)
+    const newScheduleItem = await workerRepository.createScheduleItem({
+      ...scheduleData,
+      organizationId,
+      createdBy: userId,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    return c.json({
+      success: true,
+      data: newScheduleItem
+    }, 201);
   } catch (error) {
-    return c.json(
-      {
-        error: error instanceof Error ? error.message : 'Failed to update schedule item',
-      },
-      500
-    )
+    console.error('Create schedule item error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to create schedule item'
+    }, 500);
   }
-})
+});
 
-// Delete schedule item
-manualData.delete('/schedule-items/:id', async (c) => {
-  const itemId = c.req.param('id')
-  // @ts-expect-error - Hono context typing issue
-  const userId = c.get('userId')
-
-  // Get user's organization
-  const { data: admin } = await supabase
-    .from('admins')
-    .select('organization_id')
-    .eq('auth_user_id', userId)
-    .single()
-
-  if (!admin) {
-    return c.json({ error: 'Not authorized' }, 403)
-  }
-
-  const { error } = await supabase
-    .from('manual_schedule_items')
-    .delete()
-    .eq('id', itemId)
-    .eq('organization_id', admin.organization_id)
-
-  if (error) {
-    return c.json({ error: error.message }, 400)
-  }
-
-  return c.body(null, 204)
-})
-
-// TASK ITEMS ENDPOINTS
-
-// Create task item for worker
-manualData.post('/workers/:id/task-items', async (c) => {
-  const workerId = c.req.param('id')
-  // @ts-expect-error - Hono context typing issue
-  const userId = c.get('userId')
-  const body = (await c.req.json()) as CreateTaskItemRequest
-
-  // Get user's organization
-  const { data: admin } = await supabase
-    .from('admins')
-    .select('organization_id')
-    .eq('auth_user_id', userId)
-    .single()
-
-  if (!admin) {
-    return c.json({ error: 'Not authorized' }, 403)
-  }
-
-  // Validate worker belongs to organization
-  const worker = await validateWorker(workerId, admin.organization_id)
-  if (!worker) {
-    return c.json({ error: 'Worker not found' }, 404)
-  }
-
-  // Validate required fields
-  if (!body.title || !body.priority || !body.status) {
-    return c.json({ error: 'Missing required fields: title, priority, status' }, 400)
-  }
-
-  // Validate priority and status values
-  if (!['low', 'medium', 'high'].includes(body.priority)) {
-    return c.json({ error: 'Invalid priority. Must be: low, medium, or high' }, 400)
-  }
-  if (!['pending', 'in_progress', 'completed'].includes(body.status)) {
-    return c.json({ error: 'Invalid status. Must be: pending, in_progress, or completed' }, 400)
-  }
-
+/**
+ * Update a schedule item
+ */
+manualData.put('/schedule/:id', zValidator('json', updateScheduleItemSchema), async (c) => {
+  const organizationId = c.get('organizationId');
+  const scheduleId = c.req.param('id');
+  const updateData = c.req.valid('json');
+  
   try {
-    const { data, error } = await supabase
-      .from('manual_task_items')
-      .insert({
-        organization_id: admin.organization_id,
-        worker_id: workerId,
-        title: body.title,
-        description: body.description,
-        due_date: body.dueDate,
-        priority: body.priority,
-        status: body.status,
-      })
-      .select()
-      .single()
-
-    if (error) {
-      return c.json({ error: error.message }, 400)
+    // First check if schedule item exists and belongs to organization
+    const existingItem = await workerRepository.getScheduleItemById(scheduleId);
+    
+    if (!existingItem) {
+      return c.json({
+        success: false,
+        error: 'Schedule item not found'
+      }, 404);
     }
 
-    return c.json(data, 201)
+    if (existingItem.organizationId !== organizationId) {
+      return c.json({
+        success: false,
+        error: 'Access denied'
+      }, 403);
+    }
+
+    const updatedItem = await workerRepository.updateScheduleItem(scheduleId, {
+      ...updateData,
+      updatedAt: new Date()
+    });
+
+    return c.json({
+      success: true,
+      data: updatedItem
+    });
   } catch (error) {
-    return c.json(
-      {
-        error: error instanceof Error ? error.message : 'Failed to create task item',
-      },
-      500
-    )
+    console.error('Update schedule item error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to update schedule item'
+    }, 500);
   }
-})
+});
 
-// Get task items for worker with date filtering
-manualData.get('/workers/:id/task-items', async (c) => {
-  const workerId = c.req.param('id')
-  // @ts-expect-error - Hono context typing issue
-  const userId = c.get('userId')
-  const startDate = c.req.query('startDate')
-  const endDate = c.req.query('endDate')
-  const page = parseInt(c.req.query('page') || '1')
-  const limit = parseInt(c.req.query('limit') || '20')
-
-  // Get user's organization
-  const { data: admin } = await supabase
-    .from('admins')
-    .select('organization_id')
-    .eq('auth_user_id', userId)
-    .single()
-
-  if (!admin) {
-    return c.json({ error: 'Not authorized' }, 403)
-  }
-
-  // Validate worker belongs to organization
-  const worker = await validateWorker(workerId, admin.organization_id)
-  if (!worker) {
-    return c.json({ error: 'Worker not found' }, 404)
-  }
-
-  // Build query
-  let query = supabase
-    .from('manual_task_items')
-    .select('*', { count: 'exact' })
-    .eq('organization_id', admin.organization_id)
-    .eq('worker_id', workerId)
-    .order('priority', { ascending: false }) // High priority first
-    .order('due_date', { ascending: true }) // Earlier due dates first
-
-  // Apply date filtering if provided
-  if (startDate) {
-    query = query.gte('due_date', startDate)
-  }
-  if (endDate) {
-    query = query.lte('due_date', endDate)
-  }
-
-  // Apply pagination
-  const offset = (page - 1) * limit
-  query = query.range(offset, offset + limit - 1)
-
-  const { data, error, count } = await query
-
-  if (error) {
-    return c.json({ error: error.message }, 500)
-  }
-
-  const totalPages = Math.ceil((count || 0) / limit)
-
-  return c.json({
-    data: data || [],
-    pagination: {
-      page,
-      limit,
-      total: count || 0,
-      totalPages,
-    },
-  })
-})
-
-// Update task item
-manualData.put('/task-items/:id', async (c) => {
-  const itemId = c.req.param('id')
-  // @ts-expect-error - Hono context typing issue
-  const userId = c.get('userId')
-  const body = (await c.req.json()) as UpdateTaskItemRequest
-
-  // Get user's organization
-  const { data: admin } = await supabase
-    .from('admins')
-    .select('organization_id')
-    .eq('auth_user_id', userId)
-    .single()
-
-  if (!admin) {
-    return c.json({ error: 'Not authorized' }, 403)
-  }
-
-  // First check if item exists and belongs to organization
-  const { data: existingItem } = await supabase
-    .from('manual_task_items')
-    .select('id')
-    .eq('id', itemId)
-    .eq('organization_id', admin.organization_id)
-    .single()
-
-  if (!existingItem) {
-    return c.json({ error: 'Task item not found' }, 404)
-  }
-
-  // Build update object
-  const updateData: unknown = {}
-  if (body.title !== undefined) updateData.title = body.title
-  if (body.description !== undefined) updateData.description = body.description
-  if (body.dueDate !== undefined) updateData.due_date = body.dueDate
-  if (body.priority !== undefined) {
-    if (!['low', 'medium', 'high'].includes(body.priority)) {
-      return c.json({ error: 'Invalid priority. Must be: low, medium, or high' }, 400)
-    }
-    updateData.priority = body.priority
-  }
-  if (body.status !== undefined) {
-    if (!['pending', 'in_progress', 'completed'].includes(body.status)) {
-      return c.json({ error: 'Invalid status. Must be: pending, in_progress, or completed' }, 400)
-    }
-    updateData.status = body.status
-  }
-
+/**
+ * Delete a schedule item
+ */
+manualData.delete('/schedule/:id', async (c) => {
+  const organizationId = c.get('organizationId');
+  const scheduleId = c.req.param('id');
+  
   try {
-    const { data, error } = await supabase
-      .from('manual_task_items')
-      .update(updateData)
-      .eq('id', itemId)
-      .eq('organization_id', admin.organization_id)
-      .select()
-      .single()
-
-    if (error) {
-      return c.json({ error: error.message }, 400)
+    // First check if schedule item exists and belongs to organization
+    const existingItem = await workerRepository.getScheduleItemById(scheduleId);
+    
+    if (!existingItem) {
+      return c.json({
+        success: false,
+        error: 'Schedule item not found'
+      }, 404);
     }
 
-    return c.json(data)
+    if (existingItem.organizationId !== organizationId) {
+      return c.json({
+        success: false,
+        error: 'Access denied'
+      }, 403);
+    }
+
+    await workerRepository.deleteScheduleItem(scheduleId);
+
+    return c.json({
+      success: true,
+      message: 'Schedule item deleted successfully'
+    });
   } catch (error) {
-    return c.json(
-      {
-        error: error instanceof Error ? error.message : 'Failed to update task item',
-      },
-      500
-    )
+    console.error('Delete schedule item error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to delete schedule item'
+    }, 500);
   }
-})
+});
 
-// Delete task item
-manualData.delete('/task-items/:id', async (c) => {
-  const itemId = c.req.param('id')
-  // @ts-expect-error - Hono context typing issue
-  const userId = c.get('userId')
+/**
+ * Get all task items for organization
+ */
+manualData.get('/tasks', async (c) => {
+  const organizationId = c.get('organizationId');
+  const { status, priority, workerId, dueDate } = c.req.query();
+  
+  try {
+    // This would typically use a TaskRepository
+    // For now, we'll use the worker repository to get task data
+    const taskItems = await workerRepository.getTaskItems(organizationId, {
+      status: status as any,
+      priority: priority as any,
+      workerId,
+      dueDate: dueDate ? new Date(dueDate) : undefined
+    });
 
-  // Get user's organization
-  const { data: admin } = await supabase
-    .from('admins')
-    .select('organization_id')
-    .eq('auth_user_id', userId)
-    .single()
-
-  if (!admin) {
-    return c.json({ error: 'Not authorized' }, 403)
+    return c.json({
+      success: true,
+      data: taskItems
+    });
+  } catch (error) {
+    console.error('Get task items error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to retrieve task items'
+    }, 500);
   }
+});
 
-  const { error } = await supabase
-    .from('manual_task_items')
-    .delete()
-    .eq('id', itemId)
-    .eq('organization_id', admin.organization_id)
+/**
+ * Create a new task item
+ */
+manualData.post('/tasks', zValidator('json', createTaskItemSchema), async (c) => {
+  const organizationId = c.get('organizationId');
+  const userId = c.get('userId');
+  const taskData = c.req.valid('json');
+  
+  try {
+    // Validate that the worker belongs to the organization
+    const worker = await workerRepository.findById(taskData.workerId);
+    
+    if (!worker || worker.organizationId !== organizationId) {
+      return c.json({
+        success: false,
+        error: 'Worker not found or access denied'
+      }, 404);
+    }
 
-  if (error) {
-    return c.json({ error: error.message }, 400)
+    const newTaskItem = await workerRepository.createTaskItem({
+      ...taskData,
+      organizationId,
+      assignedBy: userId,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    return c.json({
+      success: true,
+      data: newTaskItem
+    }, 201);
+  } catch (error) {
+    console.error('Create task item error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to create task item'
+    }, 500);
   }
+});
 
-  return c.body(null, 204)
-})
+/**
+ * Update a task item
+ */
+manualData.put('/tasks/:id', zValidator('json', updateTaskItemSchema), async (c) => {
+  const organizationId = c.get('organizationId');
+  const taskId = c.req.param('id');
+  const updateData = c.req.valid('json');
+  
+  try {
+    // First check if task item exists and belongs to organization
+    const existingItem = await workerRepository.getTaskItemById(taskId);
+    
+    if (!existingItem) {
+      return c.json({
+        success: false,
+        error: 'Task item not found'
+      }, 404);
+    }
 
-export default manualData
+    if (existingItem.organizationId !== organizationId) {
+      return c.json({
+        success: false,
+        error: 'Access denied'
+      }, 403);
+    }
+
+    const updatedItem = await workerRepository.updateTaskItem(taskId, {
+      ...updateData,
+      updatedAt: new Date()
+    });
+
+    return c.json({
+      success: true,
+      data: updatedItem
+    });
+  } catch (error) {
+    console.error('Update task item error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to update task item'
+    }, 500);
+  }
+});
+
+/**
+ * Delete a task item
+ */
+manualData.delete('/tasks/:id', async (c) => {
+  const organizationId = c.get('organizationId');
+  const taskId = c.req.param('id');
+  
+  try {
+    // First check if task item exists and belongs to organization
+    const existingItem = await workerRepository.getTaskItemById(taskId);
+    
+    if (!existingItem) {
+      return c.json({
+        success: false,
+        error: 'Task item not found'
+      }, 404);
+    }
+
+    if (existingItem.organizationId !== organizationId) {
+      return c.json({
+        success: false,
+        error: 'Access denied'
+      }, 403);
+    }
+
+    await workerRepository.deleteTaskItem(taskId);
+
+    return c.json({
+      success: true,
+      message: 'Task item deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete task item error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to delete task item'
+    }, 500);
+  }
+});
+
+/**
+ * Get manual data statistics
+ */
+manualData.get('/stats', async (c) => {
+  const organizationId = c.get('organizationId');
+  const { period } = c.req.query();
+  
+  try {
+    const stats = await workerRepository.getManualDataStats(organizationId, {
+      period: period as 'day' | 'week' | 'month' | 'year'
+    });
+
+    return c.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Get manual data stats error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to retrieve manual data statistics'
+    }, 500);
+  }
+});
+
+/**
+ * Bulk import schedule items
+ */
+manualData.post('/schedule/bulk', async (c) => {
+  const organizationId = c.get('organizationId');
+  const userId = c.get('userId');
+  const { items } = await c.req.json();
+  
+  try {
+    if (!Array.isArray(items) || items.length === 0) {
+      return c.json({
+        success: false,
+        error: 'Invalid or empty items array'
+      }, 400);
+    }
+
+    const results = await workerRepository.bulkCreateScheduleItems(
+      items.map(item => ({
+        ...item,
+        organizationId,
+        createdBy: userId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }))
+    );
+
+    return c.json({
+      success: true,
+      data: {
+        imported: results.length,
+        items: results
+      }
+    });
+  } catch (error) {
+    console.error('Bulk import schedule items error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to bulk import schedule items'
+    }, 500);
+  }
+});
+
+/**
+ * Bulk import task items
+ */
+manualData.post('/tasks/bulk', async (c) => {
+  const organizationId = c.get('organizationId');
+  const userId = c.get('userId');
+  const { items } = await c.req.json();
+  
+  try {
+    if (!Array.isArray(items) || items.length === 0) {
+      return c.json({
+        success: false,
+        error: 'Invalid or empty items array'
+      }, 400);
+    }
+
+    const results = await workerRepository.bulkCreateTaskItems(
+      items.map(item => ({
+        ...item,
+        organizationId,
+        assignedBy: userId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }))
+    );
+
+    return c.json({
+      success: true,
+      data: {
+        imported: results.length,
+        items: results
+      }
+    });
+  } catch (error) {
+    console.error('Bulk import task items error:', error);
+    return c.json({
+      success: false,
+      error: 'Failed to bulk import task items'
+    }, 500);
+  }
+});
+
+export default manualData;

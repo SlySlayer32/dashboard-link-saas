@@ -18,6 +18,7 @@ import manualData from './routes/manual-data'
 import organizations from './routes/organizations'
 import plugins from './routes/plugins'
 import sms from './routes/sms'
+import tokens from './routes/tokens'
 import webhooks from './routes/webhooks'
 import { workers } from './routes/workers'
 
@@ -60,6 +61,7 @@ app.get('/health', (c) => {
 
 // Mount routes
 app.route('/auth', auth)
+app.route('/tokens', tokens)
 app.route('/workers', workers)
 app.route('/organizations', organizations)
 app.route('/plugins', plugins)

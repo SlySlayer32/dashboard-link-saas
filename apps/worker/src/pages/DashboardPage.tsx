@@ -1,5 +1,5 @@
-import { LoadingSpinner } from '@dashboard-link/ui'
-import { useCallback, useEffect, useRef } from 'react'
+import { LoadingSpinner, WorkerAccess } from '@dashboard-link/ui'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ScheduleWidget from '../components/widgets/ScheduleWidget'
 import TasksWidget from '../components/widgets/TasksWidget'
@@ -9,6 +9,7 @@ function DashboardPage() {
   const { token } = useParams<{ token: string }>()
   const navigate = useNavigate()
   const { data, isLoading, error, refetch } = useDashboardData(token)
+  const [isValidating, setIsValidating] = useState(false)
 
   // Handle different error types
   useEffect(() => {
@@ -21,6 +22,16 @@ function DashboardPage() {
       }
     }
   }, [error, navigate])
+
+  // Handle token validation
+  const handleValidateToken = useCallback(async (_tokenToValidate: string) => {
+    setIsValidating(true)
+    try {
+      await refetch()
+    } finally {
+      setIsValidating(false)
+    }
+  }, [refetch])
 
   // Pull-to-refresh functionality
   const startY = useRef<number | null>(null)
@@ -75,7 +86,19 @@ function DashboardPage() {
     }
   }, [handleTouchStart, handleTouchMove, handleTouchEnd])
 
-  if (isLoading) {
+  // Show worker access screen if no data yet (first time)
+  if (!data && !error && !isLoading) {
+    return (
+      <WorkerAccess
+        token={token || ''}
+        onValidateToken={handleValidateToken}
+        isLoading={isValidating}
+      />
+    )
+  }
+
+  // Show loading while validating token or loading data
+  if (isLoading || isValidating) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-gray-50'>
         <div className='text-center'>
@@ -88,15 +111,12 @@ function DashboardPage() {
 
   if (error || !data) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-gray-50'>
-        <div className='text-center'>
-          <h2 className='text-2xl font-bold text-gray-900 mb-2'>Unable to Load Dashboard</h2>
-          <p className='text-gray-600 mb-4'>This link may have expired or is invalid.</p>
-          <p className='text-sm text-gray-500'>
-            Please request a new link from your administrator.
-          </p>
-        </div>
-      </div>
+      <WorkerAccess
+        token={token || ''}
+        onValidateToken={handleValidateToken}
+        isLoading={isValidating}
+        error={error?.message}
+      />
     )
   }
 
