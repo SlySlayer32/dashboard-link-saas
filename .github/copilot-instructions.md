@@ -116,7 +116,7 @@ router.post('/workers', validateBody(CreateWorkerSchema), async (c) => {
     return c.json({ success: true, data: worker }, 201);
   } catch (error) {
     console.error('Create worker error:', error);
-    return c.json({ success: false, error: error.message }, 500);
+    return c.json({ success: false, error: 'Failed to create worker' }, 500);
   }
 });
 
@@ -205,6 +205,171 @@ export class GoogleCalendarAdapter implements PluginAdapter {
   }
 }
 ```
+
+## 🎯 Zapier-Style Development Pattern
+
+**Core Principle**: Your app never touches external APIs directly. Everything flows through standard contracts.
+
+### Define YOUR Standard Data Shapes (These NEVER Change)
+
+```typescript
+// YOUR standard schedule format - external APIs adapt to THIS
+interface StandardScheduleItem {
+  id: string;
+  title: string;
+  startTime: string; // ISO 8601
+  endTime: string;   // ISO 8601
+  location?: string;
+  description?: string;
+  priority?: 'low' | 'medium' | 'high';
+  metadata: Record<string, any>; // Provider-specific data stored here
+}
+
+// YOUR standard task format - external APIs adapt to THIS
+interface StandardTaskItem {
+  id: string;
+  title: string;
+  description?: string;
+  dueDate?: string; // ISO 8601
+  priority: 'low' | 'medium' | 'high';
+  status: 'todo' | 'in_progress' | 'done';
+  assignee?: string;
+  tags?: string[];
+  estimatedTime?: number;
+  metadata: Record<string, any>; // Provider-specific data stored here
+}
+
+// YOUR standard response envelope - all plugins use THIS
+interface PluginResponse<T> {
+  success: boolean;
+  data: T[];
+  errors?: PluginError[];
+  metadata: {
+    provider: string;
+    fetchedAt: string;
+    [key: string]: any;
+  };
+}
+```
+
+### Plugin Responsibility
+
+Each plugin adapter:
+1. **Fetches from external API** (their problem if API changes)
+2. **Transforms to YOUR standard format** (adapter's job)
+3. **Returns YOUR standard response envelope** (consistent interface)
+4. **Handles its own errors** (no leaking external API errors)
+
+```typescript
+// Example: Airtable Adapter
+class AirtableAdapter implements PluginAdapter {
+  async getSchedule(workerId: string, config: PluginConfig): Promise<PluginResponse<StandardScheduleItem>> {
+    try {
+      // 1. Fetch from Airtable (their format, their problem)
+      const airtableRecords = await this.fetchAirtableRecords(workerId, config);
+      
+      // 2. Transform to YOUR format
+      const standardItems: StandardScheduleItem[] = airtableRecords.map(record => ({
+        id: record.id,
+        title: record.fields['Task Name'],
+        startTime: record.fields['Start Time'],
+        endTime: record.fields['End Time'],
+        location: record.fields['Location'],
+        description: record.fields['Notes'],
+        priority: this.mapPriority(record.fields['Priority']),
+        metadata: {
+          airtableId: record.id,
+          airtableFields: record.fields // Store original for reference
+        }
+      }));
+      
+      // 3. Return YOUR envelope
+      return {
+        success: true,
+        data: standardItems,
+        metadata: {
+          provider: 'airtable',
+          fetchedAt: new Date().toISOString(),
+          baseId: config.baseId
+        }
+      };
+    } catch (error) {
+      // 4. Handle errors (don't leak Airtable internals)
+      return {
+        success: false,
+        data: [],
+        errors: [{
+          code: 'AIRTABLE_FETCH_ERROR',
+          message: 'Failed to fetch schedule from Airtable',
+          provider: 'airtable'
+        }],
+        metadata: {
+          provider: 'airtable',
+          fetchedAt: new Date().toISOString()
+        }
+      };
+    }
+  }
+}
+```
+
+### Your App Responsibility
+
+Your core system:
+1. **Only knows about standard data shapes** (never external API formats)
+2. **Calls adapter.getSchedule()** (generic interface)
+3. **Aggregates results from multiple plugins** (combine data)
+4. **Never touches external APIs directly** (all through adapters)
+
+```typescript
+// Your dashboard service (knows NOTHING about Google, Airtable, etc.)
+class DashboardService {
+  async getWorkerDashboard(workerId: string, organizationId: string): Promise<Dashboard> {
+    // Get organization's configured plugins
+    const plugins = await this.getActivePlugins(organizationId);
+    
+    // Fetch from ALL plugins (generic interface)
+    const schedulePromises = plugins.map(plugin => 
+      plugin.adapter.getSchedule(workerId, plugin.config)
+    );
+    
+    const taskPromises = plugins.map(plugin => 
+      plugin.adapter.getTasks(workerId, plugin.config)
+    );
+    
+    // Aggregate all results (all in YOUR standard format)
+    const scheduleResults = await Promise.allSettled(schedulePromises);
+    const taskResults = await Promise.allSettled(taskPromises);
+    
+    // Combine successful results
+    const allScheduleItems: StandardScheduleItem[] = scheduleResults
+      .filter(r => r.status === 'fulfilled' && r.value.success)
+      .flatMap(r => r.value.data);
+    
+    const allTaskItems: StandardTaskItem[] = taskResults
+      .filter(r => r.status === 'fulfilled' && r.value.success)
+      .flatMap(r => r.value.data);
+    
+    // Sort and return (all in YOUR format)
+    return {
+      schedule: this.sortByStartTime(allScheduleItems),
+      tasks: this.sortByPriority(allTaskItems),
+      metadata: {
+        providers: plugins.map(p => p.adapter.name),
+        fetchedAt: new Date().toISOString()
+      }
+    };
+  }
+}
+```
+
+### Benefits of This Pattern
+
+1. **Swap providers instantly**: Replace Google Calendar with Outlook? Just swap the adapter. Core app doesn't change.
+2. **Multiple sources**: Pull from Google + Airtable + Notion simultaneously. All data in YOUR format.
+3. **External API changes don't break you**: Google changes their API? Update the adapter. Core app untouched.
+4. **Easy testing**: Mock adapters return YOUR standard format. No need to mock external APIs.
+5. **Future-proof**: Add new plugins without touching existing code.
 
 ## 🧪 Testing & Quality
 
