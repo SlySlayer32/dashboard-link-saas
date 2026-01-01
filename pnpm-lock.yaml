@@ -370,6 +370,9 @@ importers:
 
   packages/sms:
     dependencies:
+      '@dashboard-link/shared':
+        specifier: workspace:*
+        version: link:../shared
       hono:
         specifier: ^4.0.0
         version: 4.11.3

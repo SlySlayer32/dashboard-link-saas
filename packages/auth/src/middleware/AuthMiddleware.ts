@@ -206,7 +206,8 @@ export class AuthMiddlewareImpl implements AuthMiddleware {
 
   private getPath(req: AuthRequest): string {
     // Extract path from request (implementation depends on framework)
-    return (req as Record<string, unknown>).path || (req as Record<string, unknown>).url || '/';
+    const reqObj = req as unknown as Record<string, unknown>;
+    return (reqObj.path as string) || (reqObj.url as string) || '/';
   }
 }
 

@@ -67,7 +67,7 @@ export class SupabaseAuthProvider extends BaseAuthProvider {
       }
 
       const authUser = this.transformUserToAuthUser(data.user);
-      const _authSession = this.transformSessionToAuthSession(data.session);
+      // Session transformation handled separately if needed
 
       await this.logAuthEvent({
         userId: authUser.id,
@@ -395,8 +395,7 @@ export class SupabaseAuthProvider extends BaseAuthProvider {
 
   async healthCheck(): Promise<boolean> {
     try {
-      const { data, error } = await this.client.auth.getSession();
-      const _data = data; // Mark as unused
+      const { error } = await this.client.auth.getSession();
       return !error;
     } catch (error) {
       return false;
@@ -404,21 +403,6 @@ export class SupabaseAuthProvider extends BaseAuthProvider {
   }
 
   // Helper methods
-  private transformSessionToAuthSession(session: Record<string, unknown>): AuthSession {
-    const s = session as Record<string, unknown>;
-    return {
-      id: this.generateSessionId(),
-      userId: (s.user as Record<string, unknown>).id as string,
-      token: s.access_token as string,
-      refreshToken: s.refresh_token as string | undefined,
-      expiresAt: s.expires_at ? new Date((s.expires_at as number) * 1000).toISOString() : this.calculateExpiry(this.sessionConfig.absoluteTimeout),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      lastAccessAt: new Date().toISOString(),
-      metadata: {}
-    };
-  }
-
   private mapSupabaseError(message: string): AuthErrorCode {
     if (message.includes('Invalid login credentials')) {
       return 'INVALID_CREDENTIALS';
