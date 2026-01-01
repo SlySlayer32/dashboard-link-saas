@@ -218,7 +218,6 @@ export class WorkerService {
         try {
           return await this.updateWorker(id, { active }, organizationId);
         } catch (error) {
-          console.error(`Failed to update worker ${id}:`, error);
           return null;
         }
       })

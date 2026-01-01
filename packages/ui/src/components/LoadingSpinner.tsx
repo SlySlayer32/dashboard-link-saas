@@ -1,4 +1,4 @@
-import { cva, type VariantProps } from 'class-variance-authority'
+import { cva } from 'class-variance-authority'
 import React from 'react'
 
 const spinnerVariants = cva(
@@ -18,7 +18,8 @@ const spinnerVariants = cva(
   }
 )
 
-export interface LoadingSpinnerProps extends VariantProps<typeof spinnerVariants> {
+export interface LoadingSpinnerProps {
+  size?: 'sm' | 'md' | 'lg' | 'xl'
   className?: string
   label?: string
 }

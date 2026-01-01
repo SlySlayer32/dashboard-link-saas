@@ -62,7 +62,6 @@ organizations.get('/', async (c) => {
       data: organization
     });
   } catch (error) {
-    console.error('Get organization error:', error);
     return c.json({
       success: false,
       error: 'Failed to retrieve organization'
@@ -91,7 +90,6 @@ organizations.put('/', zValidator('json', updateOrganizationSchema), async (c) =
       data: updatedOrganization
     });
   } catch (error) {
-    console.error('Update organization error:', error);
     return c.json({
       success: false,
       error: 'Failed to update organization'
@@ -116,7 +114,6 @@ organizations.get('/stats', async (c) => {
       data: stats
     });
   } catch (error) {
-    console.error('Get organization stats error:', error);
     return c.json({
       success: false,
       error: 'Failed to retrieve organization statistics'
@@ -141,7 +138,6 @@ organizations.get('/search', async (c) => {
       data: results
     });
   } catch (error) {
-    console.error('Search organizations error:', error);
     return c.json({
       success: false,
       error: 'Failed to search organizations'
@@ -166,7 +162,6 @@ organizations.get('/health', async (c) => {
       data: health
     });
   } catch (error) {
-    console.error('Get organization health error:', error);
     return c.json({
       success: false,
       error: 'Failed to retrieve organization health'
@@ -195,7 +190,6 @@ organizations.patch('/settings', zValidator('json', updateOrganizationSchema.par
       data: updatedOrganization
     });
   } catch (error) {
-    console.error('Update organization settings error:', error);
     return c.json({
       success: false,
       error: 'Failed to update organization settings'
@@ -222,7 +216,6 @@ organizations.get('/members', async (c) => {
       data: members
     });
   } catch (error) {
-    console.error('Get organization members error:', error);
     return c.json({
       success: false,
       error: 'Failed to retrieve organization members'
@@ -248,7 +241,6 @@ organizations.delete('/', async (c) => {
       message: result ? 'Organization deleted successfully' : 'Failed to delete organization'
     });
   } catch (error) {
-    console.error('Delete organization error:', error);
     return c.json({
       success: false,
       error: 'Failed to delete organization'

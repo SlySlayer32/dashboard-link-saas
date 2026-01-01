@@ -1,0 +1,38 @@
+﻿
+> dashboard-link-saas@0.1.0 build E:\CleanConnect
+> turbo run build
+
+node.exe : ΓÇó turbo 2.7.2
+At C:\Program Files\nodejs\pnpm.ps1:16 char:5
++     & "$basedir/node$exe"  "$basedir/node_modules/corepack/dist/pnpm. ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ΓÇó turbo 2.7.2:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ΓÇó Packages in scope: @dashboard-link/admin, @dashboard-link/api, @dashboard-link/auth, @dashboard-link/database, @dashboard-link/plugins, @dashboard-link/shared, @dashboard-link/sms, @dashboard-link/tokens, @dashboard-link/ui, @dashboard-link/worker
+ΓÇó Running build in 10 packages
+ΓÇó Remote caching disabled
+@dashboard-link/sms:build: cache miss, executing 0db22b4fdd373939
+@dashboard-link/shared:build: cache miss, executing a9b35c3aff88ffbc
+@dashboard-link/shared:build: 
+@dashboard-link/shared:build: > @dashboard-link/shared@0.1.0 build E:\CleanConnect\packages\shared
+@dashboard-link/shared:build: > tsc
+@dashboard-link/shared:build: 
+@dashboard-link/sms:build: 
+@dashboard-link/sms:build: > @dashboard-link/sms@0.1.0 build E:\CleanConnect\packages\sms
+@dashboard-link/sms:build: > tsc
+@dashboard-link/sms:build: 
+@dashboard-link/sms:build: src/base/BaseSMSProvider.ts(65,5): error TS6133: 'retryable' is declared but its value is never read.
+@dashboard-link/sms:build: src/manager/SMSManager.ts(148,11): error TS6133: '_startTime' is declared but its value is never read.
+@dashboard-link/sms:build: src/manager/SMSManager.ts(169,11): error TS6133: '_endTime' is declared but its value is never read.
+@dashboard-link/sms:build: ΓÇëELIFECYCLEΓÇë Command failed with exit code 2.
+@dashboard-link/sms:build: ERROR: command finished with error: command (E:\CleanConnect\packages\sms) C:\Program Files\nodejs\pnpm.CMD run build exited (2)
+@dashboard-link/sms#build: command (E:\CleanConnect\packages\sms) C:\Program Files\nodejs\pnpm.CMD run build exited (2)
+
+ Tasks:    0 successful, 2 total
+Cached:    0 cached, 2 total
+  Time:    2.387s 
+Failed:    @dashboard-link/sms#build
+
+ ERROR  run failed: command  exited (2)
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 2.

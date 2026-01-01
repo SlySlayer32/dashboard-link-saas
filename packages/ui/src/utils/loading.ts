@@ -2,8 +2,6 @@
  * Utility functions for loading states
  */
 
-type Timeout = ReturnType<typeof setTimeout>
-
 /**
  * Creates a promise that resolves after a minimum delay
  * Useful for preventing flickering on fast operations
@@ -24,19 +22,19 @@ export const createDelayedLoader = (
   setLoading: (loading: boolean) => void,
   delay: number = 200
 ) => {
-  let timeoutId: Timeout
+  let timeoutId: number | null = null
 
   return {
     start: () => {
-      clearTimeout(timeoutId)
-      timeoutId = setTimeout(() => setLoading(true), delay)
+      if (timeoutId) clearTimeout(timeoutId)
+      timeoutId = (setTimeout(() => setLoading(true), delay) as unknown) as number
     },
     stop: () => {
-      clearTimeout(timeoutId)
+      if (timeoutId) clearTimeout(timeoutId)
       setLoading(false)
     },
     cancel: () => {
-      clearTimeout(timeoutId)
+      if (timeoutId) clearTimeout(timeoutId)
     },
   }
 }
@@ -66,7 +64,7 @@ export const isFastOperation = async <T>(
  */
 export const createLoadingManager = (minDisplayTime: number = 300) => {
   let startTime: number | null = null
-  let minDisplayTimeout: Timeout | null = null
+  let minDisplayTimeout: number | null = null
 
   return {
     start: () => {
@@ -82,7 +80,7 @@ export const createLoadingManager = (minDisplayTime: number = 300) => {
       const remaining = Math.max(0, minDisplayTime - elapsed)
 
       if (remaining > 0) {
-        minDisplayTimeout = setTimeout(callback, remaining)
+        minDisplayTimeout = (setTimeout(callback, remaining) as unknown) as number
       } else {
         callback()
       }

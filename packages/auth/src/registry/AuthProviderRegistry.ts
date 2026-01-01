@@ -60,25 +60,25 @@ export const authProviderRegistry = new AuthProviderRegistryImpl();
 // Provider factory functions
 export const authProviderFactories: Record<string, AuthProviderFactory> = {
   // Supabase provider factory
-  supabase: (config: AuthConfig) => {
+  supabase: (_config: AuthConfig) => {
     // This would be implemented with actual Supabase client
     // For now, return a placeholder
     throw new Error('Supabase provider not implemented in registry');
   },
 
   // Mock provider factory
-  mock: (config: AuthConfig) => {
+  mock: (_config: AuthConfig) => {
     // This would be implemented with MockAuthProvider
     throw new Error('Mock provider not implemented in registry');
   },
 
   // Auth0 provider factory (placeholder)
-  auth0: (config: AuthConfig) => {
+  auth0: (_config: AuthConfig) => {
     throw new Error('Auth0 provider not implemented');
   },
 
   // Okta provider factory (placeholder)
-  okta: (config: AuthConfig) => {
+  okta: (_config: AuthConfig) => {
     throw new Error('Okta provider not implemented');
   }
 };

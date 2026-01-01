@@ -10,9 +10,15 @@ import type {
     AuthUser,
     AuthValidationResult,
     PasswordPolicy,
-    UserRole,
-    ValidationError
+    UserRole
 } from '@dashboard-link/shared';
+
+// Create local ValidationError interface for compatibility
+export interface ValidationError {
+  field: string;
+  message: string;
+  code: string;
+}
 
 export class AuthUtils {
   // Email validation

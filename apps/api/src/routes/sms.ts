@@ -125,15 +125,6 @@ sms.post('/send-dashboard-link', async (c) => {
       )
     }
 
-    // Convert expiresIn to seconds
-    const expiryMap = {
-      '1h': 3600,
-      '6h': 21600,
-      '12h': 43200,
-      '24h': 86400,
-    }
-    const expirySeconds = expiryMap[expiresIn]
-
     // Generate token
     const tokenData = await tokenManager.generateWorkerToken(workerId, admin.organization_id, {
       permissions: ['worker:access', 'sms:receive'],

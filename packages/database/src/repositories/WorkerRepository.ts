@@ -16,8 +16,7 @@ export class WorkerRepository extends BaseRepository<Worker> {
   protected tableName = 'workers';
 
   constructor(adapter: DatabaseAdapter) {
-    super();
-    this.adapter = adapter;
+    super(adapter);
   }
 
   async findById(id: string): Promise<Worker | null> {
@@ -86,7 +85,7 @@ export class WorkerRepository extends BaseRepository<Worker> {
     this.validateUpdateData(data);
     
     try {
-      const updateData = this.setUpdateTimestamps(data);
+      const updateData = this.setUpdateTimestamp(data);
       const transformedData = this.transformToDB(updateData);
       
       // In a real implementation, you'd use update()
@@ -184,19 +183,22 @@ export class WorkerRepository extends BaseRepository<Worker> {
   }
 
   // Transform methods
-  protected transformFromDB(row: any): Worker {
-    if (!row) return null;
+  protected transformFromDB(row: unknown): Worker {
+    if (!row) {
+      throw new Error('Cannot transform null or undefined row to Worker');
+    }
     
+    const data = row as Record<string, unknown>;
     return {
-      id: row.id,
-      name: row.name,
-      phone: row.phone,
-      email: row.email,
-      organizationId: row.organization_id,
-      active: row.active,
-      metadata: row.metadata,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
+      id: data.id as string,
+      name: data.name as string,
+      phone: data.phone as string,
+      email: data.email as string | undefined,
+      organizationId: data.organization_id as string,
+      active: data.active as boolean,
+      metadata: data.metadata as Record<string, unknown>,
+      createdAt: data.created_at as string,
+      updatedAt: data.updated_at as string,
     };
   }
 

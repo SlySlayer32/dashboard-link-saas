@@ -1,0 +1,30 @@
+{
+  "name": "@dashboard-link/auth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Authentication package with pluggable providers",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src",
+    "test": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@dashboard-link/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.39.0",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.6",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  }
+}

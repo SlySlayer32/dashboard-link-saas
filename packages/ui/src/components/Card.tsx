@@ -1,4 +1,4 @@
-import { cva, type VariantProps } from 'class-variance-authority'
+import { cva } from 'class-variance-authority'
 import React from 'react'
 
 const cardVariants = cva(
@@ -27,8 +27,10 @@ const cardVariants = cva(
 )
 
 export interface CardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {}
+  extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'muted' | 'elevated' | 'outline'
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl'
+}
 
 /**
  * Card component - primary layout primitive for Zapier-style admin interface

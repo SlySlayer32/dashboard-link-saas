@@ -262,4 +262,7 @@ export abstract class BasePluginAdapter implements PluginAdapter {
       date.getFullYear() === now.getFullYear()
     );
   }
+
+  // Abstract method that must be implemented by concrete plugins
+  abstract getConfigSchema(): import('@dashboard-link/shared').PluginConfigSchema;
 }

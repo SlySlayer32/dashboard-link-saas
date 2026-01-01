@@ -86,7 +86,7 @@ export class MobileMessageProvider extends BaseSMSProvider {
 
   async getStatus(messageId: string): Promise<SMSStatus> {
     try {
-      const response = await this.makeAPIRequest('GET', null, messageId);
+      const response = await this.makeAPIRequest('GET', undefined, messageId);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch status: ${response.status}`);

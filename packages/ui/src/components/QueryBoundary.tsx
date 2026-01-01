@@ -1,9 +1,29 @@
-import { UseInfiniteQueryResult, UseMutationResult, UseQueryResult } from '@tanstack/react-query'
 import React from 'react'
 import { LoadingSpinner } from './LoadingSpinner'
 
+// Define basic query result interfaces to avoid external dependency
+interface BaseQueryResult<TData, TError> {
+  data: TData | undefined
+  error: TError | null
+  isLoading: boolean
+  isError: boolean
+  isSuccess: boolean
+  isFetching?: boolean
+  refetch?: () => void
+}
+
+interface BaseMutationResult<TData, TError> {
+  data: TData | undefined
+  error: TError | null
+  isLoading: boolean
+  isError: boolean
+  isSuccess: boolean
+  isPending?: boolean
+  reset: () => void
+}
+
 interface QueryBoundaryProps<TData, TError> {
-  query: UseQueryResult<TData, TError> | UseInfiniteQueryResult<TData, TError>
+  query: BaseQueryResult<TData, TError>
   children: (data: TData) => React.ReactNode
   loadingFallback?: React.ReactNode
   errorFallback?: React.ReactNode
@@ -11,8 +31,8 @@ interface QueryBoundaryProps<TData, TError> {
   isEmpty?: (data: TData) => boolean
 }
 
-interface MutationBoundaryProps<TData, TError, TVariables> {
-  mutation: UseMutationResult<TData, TError, TVariables>
+interface MutationBoundaryProps<TData, TError> {
+  mutation: BaseMutationResult<TData, TError>
   children: React.ReactNode
   loadingFallback?: React.ReactNode
   errorFallback?: React.ReactNode
@@ -59,7 +79,7 @@ export const QueryBoundary = <TData, TError>({
     if (errorFallback) {
       return <>{errorFallback}</>
     }
-    return <DefaultError error={query.error} retry={() => query.refetch()} />
+    return <DefaultError error={query.error} retry={query.refetch ? () => query.refetch() : undefined} />
   }
 
   // Success state
@@ -85,15 +105,15 @@ export const QueryBoundary = <TData, TError>({
 /**
  * MutationBoundary component for handling mutation states
  */
-export const MutationBoundary = <TData, TError, TVariables>({
+export const MutationBoundary = <TData, TError>({
   mutation,
   children,
   loadingFallback,
   errorFallback,
   successMessage,
-}: MutationBoundaryProps<TData, TError, TVariables>) => {
+}: MutationBoundaryProps<TData, TError>) => {
   // Loading state
-  if (mutation.isPending) {
+  if (mutation.isPending || mutation.isLoading) {
     return <>{loadingFallback || <LoadingSpinner />}</>
   }
 

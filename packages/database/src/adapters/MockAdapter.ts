@@ -64,13 +64,11 @@ export class MockAdapter implements DatabaseAdapter {
 
   async getDetailedHealthCheck(): Promise<AdapterHealthCheck> {
     return {
-      connected: true,
-      latency: 0,
-      metadata: {
-        adapter: 'mock',
-        tables: Array.from(this.data.keys()),
-        totalRows: Array.from(this.data.values()).reduce((sum, rows) => sum + rows.length, 0)
-      }
+      healthy: true,
+      status: 'healthy' as const,
+      lastChecked: new Date().toISOString(),
+      responseTime: 0,
+      message: 'Mock adapter is always healthy'
     };
   }
 
@@ -95,15 +93,13 @@ export class MockAdapter implements DatabaseAdapter {
 
 export class MockQueryBuilder implements QueryBuilder {
   private data: unknown[];
-  private table: string;
   private conditions: Array<(row: unknown) => boolean> = [];
   private sortFields: Array<{ field: string; direction: 'asc' | 'desc' }> = [];
   private limitCount?: number;
   private offsetCount = 0;
 
-  constructor(data: unknown[], table: string) {
+  constructor(data: unknown[], _table: string) {
     this.data = [...data];
-    this.table = table;
   }
 
   select(fields?: string[]): QueryBuilder {
@@ -111,7 +107,7 @@ export class MockQueryBuilder implements QueryBuilder {
       this.data = this.data.map(row => {
         const selected: Record<string, unknown> = {};
         fields.forEach(field => {
-          if (field in row) {
+          if (field in (row as Record<string, unknown>)) {
             selected[field] = (row as Record<string, unknown>)[field];
           }
         });
@@ -160,7 +156,9 @@ export class MockQueryBuilder implements QueryBuilder {
   whereBetween(field: string, values: [unknown, unknown]): QueryBuilder {
     this.conditions.push(row => {
       const rowValue = (row as Record<string, unknown>)[field];
-      return rowValue >= values[0] && rowValue <= values[1];
+      return typeof rowValue === 'number' && typeof values[0] === 'number' && typeof values[1] === 'number' 
+        ? rowValue >= values[0] && rowValue <= values[1]
+        : String(rowValue) >= String(values[0]) && String(rowValue) <= String(values[1]);
     });
     return this;
   }
@@ -224,7 +222,7 @@ export class MockQueryBuilder implements QueryBuilder {
           const bValue = (b as Record<string, unknown>)[field];
           
           if (aValue !== bValue) {
-            const comparison = aValue < bValue ? -1 : 1;
+            const comparison = String(aValue) < String(bValue) ? -1 : 1;
             return direction === 'desc' ? -comparison : comparison;
           }
         }

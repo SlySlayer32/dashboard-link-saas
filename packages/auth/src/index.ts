@@ -5,20 +5,20 @@
  * Provides pluggable authentication providers and unified interface
  */
 
-export * from './src/middleware/AuthMiddleware';
-export * from './src/providers/BaseAuthProvider';
-export * from './src/providers/MockAuthProvider';
-export * from './src/providers/SupabaseAuthProvider';
-export * from './src/registry/AuthProviderRegistry';
-export * from './src/services/AuthService';
-export * from './src/utils/AuthUtils';
+export * from './middleware/AuthMiddleware';
+export * from './providers/BaseAuthProvider';
+export * from './providers/MockAuthProvider';
+export * from './providers/SupabaseAuthProvider';
+export * from './registry/AuthProviderRegistry';
+export * from './services/AuthService';
+export * from './utils/AuthUtils';
 
 // Re-export types from shared package
 export type {
-    AuthAction, AuthAuditLog, AuthConfig, AuthCredentials, AuthError, AuthErrorCode, AuthMiddleware, AuthMiddlewareFactory, AuthNext, AuthProvider, AuthProviderFactory, AuthProviderRegistry, AuthRequest,
+    AppValidationError, AuthAction, AuthAuditLog, AuthConfig, AuthCredentials, AuthError, AuthErrorCode, AuthMiddleware, AuthMiddlewareFactory, AuthNext, AuthProvider, AuthProviderFactory, AuthProviderRegistry, AuthRequest,
     AuthResponse, AuthResult, AuthService, AuthSession, AuthUser, AuthValidationResult, CookieOptions, PasswordPolicy,
     SessionConfig,
     TokenPayload,
-    TokenResult, UserRole, ValidationError
+    TokenResult, UserRole
 } from '@dashboard-link/shared';
 

@@ -5,16 +5,22 @@
  * Provides login, logout, refresh, and user management endpoints
  */
 
-import type { AuthCredentials, AuthService } from '@dashboard-link/shared';
-import { Router } from 'express';
+import type { AuthCredentials, AuthService, AuthSession, AuthUser } from '@dashboard-link/shared';
+import { Router, type Request as ExpressRequest, type NextFunction, type Response } from 'express';
 import { createExpressAuthMiddleware } from '../middleware/AuthMiddleware';
+
+// Extend Express Request to include auth properties
+interface AuthRequest extends ExpressRequest {
+  user?: AuthUser;
+  session?: AuthSession;
+}
 
 export function createAuthRoutes(authService: AuthService): Router {
   const router = Router();
   const authMiddleware = createExpressAuthMiddleware(authService);
 
   // POST /auth/login
-  router.post('/login', async (req, res, next) => {
+  router.post('/login', async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const credentials: AuthCredentials = req.body;
 
@@ -63,10 +69,10 @@ export function createAuthRoutes(authService: AuthService): Router {
   });
 
   // POST /auth/logout
-  router.post('/logout', authMiddleware.expressAuthenticate(), async (req, res, next) => {
+  router.post('/logout', authMiddleware.expressAuthenticate(), async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
-      const refreshToken = req.cookies['refresh-token'];
+      // const refreshToken = req.cookies['refresh-token']; // Not used in current implementation
 
       if (userId) {
         await authService.logout(userId, req.session?.id);
@@ -91,7 +97,7 @@ export function createAuthRoutes(authService: AuthService): Router {
   });
 
   // POST /auth/refresh
-  router.post('/refresh', async (req, res, next) => {
+  router.post('/refresh', async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       // Get refresh token from cookie or body
       const refreshToken = req.cookies['refresh-token'] || req.body.refreshToken;
@@ -148,7 +154,7 @@ export function createAuthRoutes(authService: AuthService): Router {
   });
 
   // POST /auth/reset-password-request
-  router.post('/reset-password-request', async (req, res, next) => {
+  router.post('/reset-password-request', async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { email } = req.body;
 
@@ -160,7 +166,7 @@ export function createAuthRoutes(authService: AuthService): Router {
         });
       }
 
-      const success = await authService.sendPasswordReset(email);
+      await authService.sendPasswordReset(email); // Always return success to prevent email enumeration
 
       // Always return success to prevent email enumeration
       return res.status(200).json({
@@ -174,7 +180,7 @@ export function createAuthRoutes(authService: AuthService): Router {
   });
 
   // POST /auth/reset-password
-  router.post('/reset-password', async (req, res, next) => {
+  router.post('/reset-password', async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { token, newPassword } = req.body;
 
@@ -207,7 +213,7 @@ export function createAuthRoutes(authService: AuthService): Router {
   });
 
   // GET /auth/me
-  router.get('/me', authMiddleware.expressAuthenticate(), async (req, res, next) => {
+  router.get('/me', authMiddleware.expressAuthenticate(), async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       return res.status(200).json({
         success: true,
@@ -222,7 +228,7 @@ export function createAuthRoutes(authService: AuthService): Router {
   });
 
   // PUT /auth/profile
-  router.put('/profile', authMiddleware.expressAuthenticate(), async (req, res, next) => {
+  router.put('/profile', authMiddleware.expressAuthenticate(), async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
       const updates = req.body;
@@ -258,7 +264,7 @@ export function createAuthRoutes(authService: AuthService): Router {
   });
 
   // PUT /auth/change-password
-  router.put('/change-password', authMiddleware.expressAuthenticate(), async (req, res, next) => {
+  router.put('/change-password', authMiddleware.expressAuthenticate(), async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
       const { currentPassword, newPassword } = req.body;
@@ -300,7 +306,7 @@ export function createAuthRoutes(authService: AuthService): Router {
   });
 
   // GET /auth/sessions
-  router.get('/sessions', authMiddleware.expressAuthenticate(), async (req, res, next) => {
+  router.get('/sessions', authMiddleware.expressAuthenticate(), async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
 
@@ -334,7 +340,7 @@ export function createAuthRoutes(authService: AuthService): Router {
   });
 
   // DELETE /auth/sessions/:sessionId
-  router.delete('/sessions/:sessionId', authMiddleware.expressAuthenticate(), async (req, res, next) => {
+  router.delete('/sessions/:sessionId', authMiddleware.expressAuthenticate(), async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
       const { sessionId } = req.params;
@@ -360,7 +366,7 @@ export function createAuthRoutes(authService: AuthService): Router {
   });
 
   // DELETE /auth/sessions
-  router.delete('/sessions', authMiddleware.expressAuthenticate(), async (req, res, next) => {
+  router.delete('/sessions', authMiddleware.expressAuthenticate(), async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const userId = req.user?.id;
 
@@ -385,7 +391,7 @@ export function createAuthRoutes(authService: AuthService): Router {
   });
 
   // GET /auth/health
-  router.get('/health', async (req, res, next) => {
+  router.get('/health', async (_req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const isHealthy = await authService.healthCheck();
 
@@ -412,9 +418,9 @@ export function createAdminAuthRoutes(authService: AuthService): Router {
   router.use(authMiddleware.expressAuthorize(['admin']));
 
   // POST /admin/auth/users
-  router.post('/users', async (req, res, next) => {
+  router.post('/users', authMiddleware.expressAuthenticate(), async (_req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const userData = req.body;
+      // const userData = req.body; // Would be used for user creation implementation
 
       // Note: This would need to be implemented in the AuthService
       return res.status(501).json({
@@ -429,9 +435,9 @@ export function createAdminAuthRoutes(authService: AuthService): Router {
   });
 
   // GET /admin/auth/users/:userId
-  router.get('/users/:userId', async (req, res, next) => {
+  router.get('/users/:userId', authMiddleware.expressAuthenticate(), async (_req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const { userId } = req.params;
+      // const { userId } = req.params; // Would be used for user retrieval implementation
 
       // Note: This would need to be implemented in the AuthService
       return res.status(501).json({
@@ -446,9 +452,9 @@ export function createAdminAuthRoutes(authService: AuthService): Router {
   });
 
   // PUT /admin/auth/users/:userId/disable
-  router.put('/users/:userId/disable', async (req, res, next) => {
+  router.put('/users/:userId/disable', authMiddleware.expressAuthenticate(), async (_req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const { userId } = req.params;
+      // const { userId } = req.params; // Would be used for user disable implementation
 
       // Note: This would need to be implemented in the AuthService
       return res.status(501).json({

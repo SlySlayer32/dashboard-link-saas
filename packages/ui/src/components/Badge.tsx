@@ -1,4 +1,4 @@
-import { cva, type VariantProps } from 'class-variance-authority'
+import { cva } from 'class-variance-authority'
 import React from 'react'
 
 const badgeVariants = cva(
@@ -27,8 +27,10 @@ const badgeVariants = cva(
 )
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof badgeVariants> {}
+  extends React.HTMLAttributes<HTMLSpanElement> {
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info'
+  size?: 'sm' | 'md' | 'lg'
+}
 
 /**
  * Badge component - status indicators for Zapier-style admin interface

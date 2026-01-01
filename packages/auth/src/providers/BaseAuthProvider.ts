@@ -15,9 +15,9 @@ import type {
     AuthUser,
     AuthValidationResult,
     PasswordPolicy,
-    SessionConfig,
-    ValidationError
+    SessionConfig
 } from '@dashboard-link/shared';
+import type { ValidationError } from '../utils/AuthUtils';
 
 export abstract class BaseAuthProvider implements AuthProvider {
   protected config: AuthConfig;
@@ -133,21 +133,22 @@ export abstract class BaseAuthProvider implements AuthProvider {
     };
   }
 
-  protected transformUserToAuthUser(user: any): AuthUser {
+  protected transformUserToAuthUser(user: unknown): AuthUser {
+    const u = user as Record<string, unknown>;
     return {
-      id: user.id,
-      email: user.email,
-      name: user.name || user.user_metadata?.name,
-      avatar: user.avatar || user.user_metadata?.avatar_url,
-      role: this.mapRole(user.role || user.user_metadata?.role),
-      organizationId: user.organization_id || user.user_metadata?.organization_id,
-      metadata: user.user_metadata || {},
-      createdAt: user.created_at,
-      updatedAt: user.updated_at || user.created_at,
-      lastLoginAt: user.last_sign_in_at,
-      emailVerified: user.email_confirmed_at != null,
-      phone: user.phone,
-      phoneVerified: user.phone_confirmed_at != null
+      id: u.id as string,
+      email: u.email as string,
+      name: (u.name as string | undefined) || (u.user_metadata as Record<string, unknown>)?.name as string | undefined,
+      avatar: (u.avatar as string | undefined) || (u.user_metadata as Record<string, unknown>)?.avatar_url as string | undefined,
+      role: this.mapRole((u.role as string | undefined) || (u.user_metadata as Record<string, unknown>)?.role as string | undefined),
+      organizationId: (u.organization_id as string | undefined) || (u.user_metadata as Record<string, unknown>)?.organization_id as string | undefined,
+      metadata: (u.user_metadata as Record<string, unknown>) || {},
+      createdAt: u.created_at as string,
+      updatedAt: (u.updated_at as string) || (u.created_at as string),
+      lastLoginAt: u.last_sign_in_at as string | undefined,
+      emailVerified: u.email_confirmed_at != null,
+      phone: u.phone as string | undefined,
+      phoneVerified: u.phone_confirmed_at != null
     };
   }
 
@@ -248,13 +249,13 @@ export abstract class BaseAuthProvider implements AuthProvider {
   }
 
   // Rate limiting helpers
-  protected async checkRateLimit(identifier: string, action: string, limit: number = 5, windowMs: number = 900000): Promise<boolean> {
+  protected async checkRateLimit(_identifier: string, _action: string, _limit: number = 5, _windowMs: number = 900000): Promise<boolean> {
     // This should be implemented with Redis or in-memory store
     // For now, return true (no rate limiting)
     return true;
   }
 
-  protected async recordRateLimitHit(identifier: string, action: string): Promise<void> {
+  protected async recordRateLimitHit(_identifier: string, _action: string): Promise<void> {
     // This should be implemented with Redis or in-memory store
     // For now, do nothing
   }
@@ -265,13 +266,13 @@ export abstract class BaseAuthProvider implements AuthProvider {
     action: string;
     resource: string;
     resourceId?: string;
-    success: boolean;
+    success?: boolean;
     error?: string;
     metadata?: Record<string, unknown>;
   }): Promise<void> {
-    // This should be implemented with audit logging system
-    // For now, console.log for debugging
-    console.log('Auth Event:', event);
+    // This would be implemented with actual logging service
+    // For now, just log to console
+    console.log('Auth event:', event);
   }
 
   // Token helpers

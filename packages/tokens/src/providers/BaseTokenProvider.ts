@@ -298,7 +298,7 @@ export abstract class BaseTokenProvider implements TokenProvider {
     };
   }
 
-  private cleanupAuditLogs(): number {
+  protected cleanupAuditLogs(): number {
     const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
     const beforeCount = this.auditLogs.length;
     this.auditLogs = this.auditLogs.filter(log => log.timestamp > cutoff);

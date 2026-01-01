@@ -70,7 +70,7 @@ export abstract class BaseSMSProvider implements SMSProvider {
       provider: this.id,
       timestamp: new Date().toISOString(),
       error,
-      errorType,
+      errorType: errorType as 'temporary' | 'permanent' | 'rate_limit' | 'invalid_number',
       metadata: providerData
     };
   }

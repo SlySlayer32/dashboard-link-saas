@@ -20,9 +20,9 @@ export interface DatabaseAdapter {
 }
 
 export abstract class BaseTransaction implements Transaction {
-  protected abstract query(table: string): QueryBuilder;
-  protected abstract commit(): Promise<void>;
-  protected abstract rollback(): Promise<void>;
+  public abstract query(table: string): QueryBuilder;
+  public abstract commit(): Promise<void>;
+  public abstract rollback(): Promise<void>;
 
   // Helper methods for transaction operations
   protected async executeInTransaction<T>(

@@ -6,7 +6,7 @@ CleanConnect is a Zapier-inspired enterprise SaaS platform that delivers persona
 
 ---
 
-## 🏗️ High-Level System Architecture
+## 🏗️ High-Level System Architecture (Zapier-Style)
 
 ```mermaid
 graph TB
@@ -24,7 +24,7 @@ graph TB
         LoadBalancer[Load Balancer]
     end
 
-    subgraph "Core Services"
+    subgraph "Service Layer (Your Core)"
         UserService[User Service]
         DashboardService[Dashboard Service]
         SMSService[SMS Service]
@@ -32,25 +32,31 @@ graph TB
         BillingService[Billing Service]
     end
 
-    subgraph "Background Processing"
-        Queue[Message Queue]
-        Workers[Background Workers]
-        CronJobs[Scheduled Jobs]
-        Webhooks[Webhook Handler]
+    subgraph "Contract Layer (THE MISSING PIECE)"
+        style Contract fill:#ffd43b,stroke:#000,stroke-width:4px
+        Contract[Provider Interfaces<br/>────────────────<br/>SMSProvider<br/>PluginAdapter<br/>Repository<br/>AuthProvider<br/>PaymentProvider]
     end
 
-    subgraph "Data Storage"
-        PostgreSQL[(Primary DB)]
-        Redis[(Cache)]
-        S3[(File Storage)]
-        Analytics[(Analytics)]
+    subgraph "Adapter Layer (Swappable)"
+        MobileMessageAdapter[MobileMessage SMS]
+        TwilioAdapter[Twilio SMS]
+        GoogleAdapter[Google Calendar]
+        AirtableAdapter[Airtable]
+        PostgresAdapter[PostgreSQL]
+        CacheAdapter[Redis Cache]
+        StripeAdapter[Stripe]
+        SupabaseAdapter[Supabase Auth]
     end
 
-    subgraph "External Integrations"
-        Telstra[Telstra SMS API]
-        Stripe[Stripe Payments]
-        GoogleAuth[Google OAuth]
-        Plugins[Third-party Plugins]
+    subgraph "External Services (Their Problem)"
+        MobileMessage[MobileMessage API]
+        Twilio[Twilio API]
+        Google[Google API]
+        Airtable[Airtable API]
+        Postgres[(PostgreSQL)]
+        Redis[(Redis)]
+        Stripe[Stripe API]
+        Supabase[Supabase Auth]
     end
 
     %% User Flow
@@ -71,82 +77,305 @@ graph TB
     API --> PluginService
     API --> BillingService
 
-    %% Background Processing
-    SMSService --> Queue
-    DashboardService --> Queue
-    Queue --> Workers
-    CronJobs --> Queue
-    Webhooks --> Queue
+    %% Contract Layer (The Critical Missing Piece)
+    UserService --> Contract
+    DashboardService --> Contract
+    SMSService --> Contract
+    PluginService --> Contract
+    BillingService --> Contract
 
-    %% Data Storage
-    UserService --> PostgreSQL
-    DashboardService --> PostgreSQL
-    PluginService --> PostgreSQL
-    API --> Redis
-    Workers --> S3
-    API --> Analytics
+    %% Adapter Layer
+    Contract --> MobileMessageAdapter
+    Contract --> TwilioAdapter
+    Contract --> GoogleAdapter
+    Contract --> AirtableAdapter
+    Contract --> PostgresAdapter
+    Contract --> CacheAdapter
+    Contract --> StripeAdapter
+    Contract --> SupabaseAdapter
 
-    %% External Integrations
-    SMSService --> Telstra
-    BillingService --> Stripe
-    Auth --> GoogleAuth
-    PluginService --> Plugins
+    %% External Services
+    MobileMessageAdapter --> MobileMessage
+    TwilioAdapter --> Twilio
+    GoogleAdapter --> Google
+    AirtableAdapter --> Airtable
+    PostgresAdapter --> Postgres
+    CacheAdapter --> Redis
+    StripeAdapter --> Stripe
+    SupabaseAdapter --> Supabase
 ```
 
 ---
 
-## 🔧 Plugin System Architecture
+## 🔧 Plugin System Architecture (Zapier-Style)
+
+```mermaid
+graph TB
+    subgraph "Your Core Services (Stable)"
+        PluginService[Plugin Service]
+        DashboardService[Dashboard Service]
+    end
+    
+    subgraph "Contract Layer (THE MISSING PIECE)"
+        style PluginContract fill:#ffd43b,stroke:#000,stroke-width:4px
+        PluginContract[PluginAdapter Interface<br/>────────────────<br/>getSchedule<br/>getTasks<br/>validateConfig<br/>healthCheck]
+    end
+    
+    subgraph "Adapter Layer (Swappable)"
+        GoogleAdapter[Google Calendar Adapter]
+        AirtableAdapter[Airtable Adapter]
+        NotionAdapter[Notion Adapter]
+        SlackAdapter[Slack Adapter]
+        TrelloAdapter[Trello Adapter]
+    end
+    
+    subgraph "External APIs (Their Problem)"
+        GoogleAPI[Google Calendar API]
+        AirtableAPI[Airtable API]
+        NotionAPI[Notion API]
+        SlackAPI[Slack API]
+        TrelloAPI[Trello API]
+    end
+    
+    subgraph "Standard Data Flow"
+        StandardSchedule[StandardScheduleItem<br/>Your Format]
+        StandardTasks[StandardTaskItem<br/>Your Format]
+        PluginResponse[PluginResponse<br/>Your Envelope]
+    end
+
+    %% Service to Contract
+    PluginService --> PluginContract
+    DashboardService --> PluginContract
+    
+    %% Contract to Adapters
+    PluginContract --> GoogleAdapter
+    PluginContract --> AirtableAdapter
+    PluginContract --> NotionAdapter
+    PluginContract --> SlackAdapter
+    PluginContract --> TrelloAdapter
+    
+    %% Adapters to External APIs
+    GoogleAdapter --> GoogleAPI
+    AirtableAdapter --> AirtableAPI
+    NotionAdapter --> NotionAPI
+    SlackAdapter --> SlackAPI
+    TrelloAdapter --> TrelloAPI
+    
+    %% Data Transformation Flow
+    GoogleAPI -.->|Transform| StandardSchedule
+    AirtableAPI -.->|Transform| StandardTasks
+    NotionAPI -.->|Transform| StandardSchedule
+    SlackAPI -.->|Transform| StandardTasks
+    TrelloAPI -.->|Transform| StandardTasks
+    
+    StandardSchedule --> PluginResponse
+    StandardTasks --> PluginResponse
+    PluginResponse --> PluginService
+```
+
+---
+
+## 🔍 Contract Layer Details (What's INSIDE the Interfaces)
+
+### SMSProvider Contract Fields
+
+```mermaid
+graph TB
+    subgraph "SMSProvider Interface"
+        SMSContract[SMSProvider Contract]
+        
+        subgraph "Input: SMSMessage"
+            SMSMsg[SMSMessage<br/>├─ to: string<br/>├─ body: string<br/>├─ from?: string<br/>├─ metadata?: Record<br/>├─ scheduledFor?: Date<br/>├─ priority?: 'low|normal|high'<br/>└─ tags?: string[]]
+        end
+        
+        subgraph "Output: SMSResult"
+            SMSRes[SMSResult<br/>├─ success: boolean<br/>├─ messageId: string<br/>├─ provider: string<br/>├─ timestamp: string<br/>├─ cost?: number<br/>├─ error?: string<br/>├─ errorType?: enum<br/>└─ deliveryReport?: object]
+        end
+        
+        subgraph "Methods"
+            Methods[├─ send(message): Promise<SMSResult><br/>├─ getStatus(messageId): Promise<SMSStatus><br/>├─ validateConfig(): Promise<Validation><br/>└─ getHealthCheck(): Promise<Health>]
+        end
+    end
+    
+    SMSContract --> SMSMsg
+    SMSContract --> SMSRes
+    SMSContract --> Methods
+```
+
+### PluginAdapter Contract Fields
+
+```mermaid
+graph TB
+    subgraph "PluginAdapter Interface"
+        PluginContract[PluginAdapter Contract]
+        
+        subgraph "Standard Data Shapes"
+            ScheduleItem[StandardScheduleItem<br/>├─ id: string<br/>├─ title: string<br/>├─ startTime: string (ISO 8601)<br/>├─ endTime: string (ISO 8601)<br/>├─ location?: string<br/>├─ description?: string<br/>├─ priority?: enum<br/>├─ status?: enum<br/>└─ metadata: Record]
+            
+            TaskItem[StandardTaskItem<br/>├─ id: string<br/>├─ title: string<br/>├─ description?: string<br/>├─ dueDate?: string (ISO 8601)<br/>├─ priority: enum<br/>├─ status: enum<br/>├─ assignee?: string<br/>├─ tags?: string[]<br/>├─ estimatedTime?: number<br/>└─ metadata: Record]
+        end
+        
+        subgraph "Response Envelope"
+            Response[PluginResponse<T><br/>├─ success: boolean<br/>├─ data: T[]<br/>├─ errors?: PluginError[]<br/>└─ metadata: PluginMetadata]
+        end
+        
+        subgraph "Methods"
+            Methods[├─ getSchedule(): Promise<PluginResponse<StandardScheduleItem>><br/>├─ getTasks(): Promise<PluginResponse<StandardTaskItem>><br/>├─ validateConfig(): Promise<Validation><br/>├─ handleWebhook?(): Promise<Response><br/>└─ healthCheck?(): Promise<Health>]
+        end
+    end
+    
+    PluginContract --> ScheduleItem
+    PluginContract --> TaskItem
+    PluginContract --> Response
+    PluginContract --> Methods
+```
+
+---
+
+## 🔄 SMS Fallback Flow (Resilience Pattern)
+
+```mermaid
+graph TB
+    subgraph "SMS Service (Your Core)"
+        SMSService[SMS Service<br/>sendDashboardLink()]
+    end
+    
+    subgraph "Contract Layer"
+        SMSManager[SMS Manager<br/>sendWithFallback()]
+    end
+    
+    subgraph "Primary Provider"
+        MobileAdapter[MobileMessage Adapter]
+        MobileAPI[MobileMessage API]
+    end
+    
+    subgraph "Fallback Provider"
+        TwilioAdapter[Twilio Adapter]
+        TwilioAPI[Twilio API]
+    end
+    
+    subgraph "Fallback Logic"
+        TryPrimary[Try Primary Provider]
+        CheckSuccess{Success?}
+        TryFallback[Try Fallback Provider]
+        LogFailure[Log Failure]
+        ReturnResult[Return Result]
+    end
+    
+    subgraph "Error Handling"
+        Validation[Validate Message]
+        FormatPhone[Format Phone]
+        CreateStandard[Create Standard SMSMessage]
+        TransformResponse[Transform to Standard Result]
+    end
+    
+    %% Flow
+    SMSService --> Validation
+    Validation --> FormatPhone
+    FormatPhone --> CreateStandard
+    CreateStandard --> SMSManager
+    
+    SMSManager --> TryPrimary
+    TryPrimary --> MobileAdapter
+    MobileAdapter --> MobileAPI
+    MobileAPI -.->|API Response| TransformResponse
+    TransformResponse --> CheckSuccess
+    
+    CheckSuccess -->|Yes| ReturnResult
+    CheckSuccess -->|No| TryFallback
+    
+    TryFallback --> TwilioAdapter
+    TwilioAdapter --> TwilioAPI
+    TwilioAPI -.->|API Response| TransformResponse
+    TransformResponse --> ReturnResult
+    
+    TryFallback -.->|Both Failed| LogFailure
+    LogFailure --> ReturnResult
+    
+    style SMSManager fill:#ffd43b,stroke:#000,stroke-width:3px
+```
+
+---
+
+## ⚡ Adapter Transformation Details (Inside the Black Box)
+
+### MobileMessage Adapter Transformation
 
 ```mermaid
 graph LR
-    subgraph "Plugin Ecosystem"
-        Registry[Plugin Registry]
-        Manager[Plugin Manager]
-        Adapters[Plugin Adapters]
+    subgraph "MobileMessage Adapter"
+        subgraph "Input (Your Format)"
+            StandardMsg[Standard SMSMessage<br/>├─ to: "+61412345678"<br/>├─ body: "Your dashboard: ..."<br/>├─ from: "DashLink"<br/>└─ metadata: {...}]
+        end
+        
+        subgraph "Transformation Logic"
+            Validate[Validate Required Fields]
+            Format[Format to MobileMessage Schema]
+            Auth[Create Basic Auth Header]
+            Request[Build HTTP Request]
+        end
+        
+        subgraph "Output (Their Format)"
+            MobilePayload[MobileMessage Payload<br/>├─ to: "+61412345678"<br/>├─ message: "Your dashboard: ..."<br/>└─ from: "DashLink"]
+        end
+        
+        subgraph "Response Transformation"
+            MobileResponse[MobileMessage Response<br/>├─ message_id: "msg_12345"<br/>├─ cost: 0.085<br/>└─ status: "sent"]
+            
+            StandardResult[Standard SMSResult<br/>├─ success: true<br/>├─ messageId: "msg_12345"<br/>├─ provider: "mobile-message"<br/>├─ timestamp: "2026-01-01T12:00:00Z"<br/>├─ cost: 0.085<br/>└─ deliveryReport: {...}]
+        end
     end
+    
+    StandardMsg --> Validate
+    Validate --> Format
+    Format --> Auth
+    Auth --> Request
+    Request --> MobilePayload
+    
+    MobilePayload -.->|API Call| MobileResponse
+    MobileResponse --> StandardResult
+```
 
-    subgraph "Core Plugins"
-        GoogleCalendar[Google Calendar]
-        Airtable[Airtable]
-        Notion[Notion]
-        Slack[Slack]
-        Trello[Trello]
+### Google Calendar Adapter Transformation
+
+```mermaid
+graph LR
+    subgraph "Google Calendar Adapter"
+        subgraph "Input (Your Request)"
+            YourRequest[getSchedule()<br/>├─ workerId: "user_123"<br/>├─ dateRange: {...}<br/>└─ config: {...}]
+        end
+        
+        subgraph "API Request Building"
+            BuildURL[Build Google API URL]
+            AddParams[Add Time Range & API Key]
+            MakeCall[Fetch Google Calendar API]
+        end
+        
+        subgraph "External API Response"
+            GoogleResponse[Google API Response<br/>├─ items: [<br/>│  {<br/>│    id: "event_123",<br/>│    summary: "Team Meeting",<br/>│    start: { dateTime: "..." },<br/>│    end: { dateTime: "..." },<br/>│    location: "Room 1",<br/>│    description: "Weekly sync"<br/>│  }<br/>]]
+        end
+        
+        subgraph "Transformation Logic"
+            MapItems[Map Each Google Event]
+            ExtractFields[Extract & Rename Fields]
+            ConvertTime[Convert to ISO 8601]
+            AddMetadata[Store Google-Specific Data]
+        end
+        
+        subgraph "Output (Your Format)"
+            StandardItems[StandardScheduleItem[]<br/>├─ id: "event_123"<br/>├─ title: "Team Meeting"<br/>├─ startTime: "2026-01-01T10:00:00Z"<br/>├─ endTime: "2026-01-01T11:00:00Z"<br/>├─ location: "Room 1"<br/>├─ description: "Weekly sync"<br/>├─ metadata: {<br/>│  googleEventId: "event_123",<br/>│  htmlLink: "...",<br/>│  attendees: [...]<br/>│}]
+        end
     end
-
-    subgraph "Plugin Interface"
-        Config[Config Schema]
-        Execute[Execute Method]
-        Validate[Validation]
-        Error[Error Handling]
-    end
-
-    subgraph "Data Flow"
-        Transform[Data Transform]
-        Normalize[Normalize Data]
-        Enrich[Enrich Data]
-        Cache[Cache Results]
-    end
-
-    %% Plugin Management
-    Manager --> Registry
-    Manager --> Adapters
-    Adapters --> Config
-    Adapters --> Execute
-    Adapters --> Validate
-    Adapters --> Error
-
-    %% Plugin Implementations
-    Adapters --> GoogleCalendar
-    Adapters --> Airtable
-    Adapters --> Notion
-    Adapters --> Slack
-    Adapters --> Trello
-
-    %% Data Processing
-    Execute --> Transform
-    Transform --> Normalize
-    Normalize --> Enrich
-    Enrich --> Cache
+    
+    YourRequest --> BuildURL
+    BuildURL --> AddParams
+    AddParams --> MakeCall
+    MakeCall --> GoogleResponse
+    GoogleResponse --> MapItems
+    MapItems --> ExtractFields
+    ExtractFields --> ConvertTime
+    ConvertTime --> AddMetadata
+    AddMetadata --> StandardItems
 ```
 
 ---

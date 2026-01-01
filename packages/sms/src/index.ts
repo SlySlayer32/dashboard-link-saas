@@ -21,4 +21,4 @@ export { SMSManagerImpl, smsManager } from './manager/SMSManager';
 export { SMSRegistryImpl, smsRegistry } from './registry/SMSRegistry';
 
 // Legacy exports for backward compatibility
-export { SMSService } from './services/SMSService';
+// export { SMSService } from './services/SMSService'; // TODO: Implement SMSService

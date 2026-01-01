@@ -1,11 +1,14 @@
 // Re-export auth types from shared package
 export type {
     AuthConfig, AuthCredentials, AuthError,
-    AuthErrorCode, AuthResult, AuthSession, AuthUser, AuthValidationResult, CookieOptions, PasswordPolicy,
+    AuthErrorCode, AuthResult, AuthSession, AuthValidationResult, CookieOptions, PasswordPolicy,
     SessionConfig, TokenPayload,
     TokenResult,
     UserRole
 } from '@dashboard-link/shared'
+
+// Import AuthUser for use in this file
+import type { AuthUser } from '@dashboard-link/shared'
 
 // Additional frontend-specific types
 export interface AuthState {

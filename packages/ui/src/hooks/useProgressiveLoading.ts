@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-type Timeout = ReturnType<typeof setTimeout>
-
 export interface UseProgressiveLoadingOptions {
   batchSize?: number
   initialBatchSize?: number
@@ -28,7 +26,7 @@ export const useProgressiveLoading = <T>(
 
   const [visibleCount, setVisibleCount] = useState(initialBatchSize)
   const [isLoading, setIsLoading] = useState(false)
-  const timeoutRef = useRef<Timeout>()
+  const timeoutRef = useRef<number | null>(null)
 
   const visibleItems = items.slice(0, visibleCount)
   const hasMore = items.length > visibleCount
@@ -39,10 +37,10 @@ export const useProgressiveLoading = <T>(
     setIsLoading(true)
 
     // Add a small delay to prevent UI blocking
-    timeoutRef.current = setTimeout(() => {
+    timeoutRef.current = (setTimeout(() => {
       setVisibleCount((prev) => Math.min(prev + batchSize, items.length))
       setIsLoading(false)
-    }, delay)
+    }, delay) as unknown) as number
   }, [batchSize, delay, hasMore, isLoading, items.length])
 
   const reset = useCallback(() => {

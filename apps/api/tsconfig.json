@@ -4,11 +4,14 @@
     "outDir": "./dist",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
     "baseUrl": ".",
     "paths": {
-      "@dashboard-link/shared": ["../../packages/shared/dist/index.js"]
+      "@dashboard-link/shared": ["../shared/dist/index.js"],
+      "@dashboard-link/database": ["../database/dist/index.js"],
+      "@dashboard-link/sms": ["../sms/dist/index.js"],
+      "@dashboard-link/tokens": ["../tokens/dist/index.js"],
+      "@dashboard-link/auth": ["../auth/dist/index.js"],
+      "@dashboard-link/plugins": ["../plugins/dist/index.js"]
     }
   },
   "include": ["src/**/*"],

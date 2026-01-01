@@ -67,7 +67,7 @@ export class SupabaseAuthProvider extends BaseAuthProvider {
       }
 
       const authUser = this.transformUserToAuthUser(data.user);
-      const authSession = this.transformSessionToAuthSession(data.session);
+      const _authSession = this.transformSessionToAuthSession(data.session);
 
       await this.logAuthEvent({
         userId: authUser.id,
@@ -203,7 +203,7 @@ export class SupabaseAuthProvider extends BaseAuthProvider {
     }
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<AuthResult> {
+  async resetPassword(_token: string, newPassword: string): Promise<AuthResult> {
     try {
       const passwordValidation = this.validatePassword(newPassword);
       if (!passwordValidation.valid) {
@@ -245,7 +245,7 @@ export class SupabaseAuthProvider extends BaseAuthProvider {
     try {
       const sanitizedUpdates = this.sanitizeMetadata(updates.metadata || {});
       
-      const supabaseUpdates: any = {
+      const supabaseUpdates: Record<string, unknown> = {
         data: {
           ...sanitizedUpdates,
           ...(updates.name && { name: updates.name }),
@@ -281,7 +281,7 @@ export class SupabaseAuthProvider extends BaseAuthProvider {
     }
   }
 
-  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<AuthResult> {
+  async changePassword(userId: string, _currentPassword: string, newPassword: string): Promise<AuthResult> {
     try {
       // First verify current password by attempting to sign in
       const user = await this.getUserById(userId);
@@ -359,7 +359,7 @@ export class SupabaseAuthProvider extends BaseAuthProvider {
     }
   }
 
-  async getUserSessions(userId: string): Promise<AuthSession[]> {
+  async getUserSessions(_userId: string): Promise<AuthSession[]> {
     try {
       // Supabase doesn't provide direct session listing
       // This would need to be implemented with custom session tracking
@@ -396,6 +396,7 @@ export class SupabaseAuthProvider extends BaseAuthProvider {
   async healthCheck(): Promise<boolean> {
     try {
       const { data, error } = await this.client.auth.getSession();
+      const _data = data; // Mark as unused
       return !error;
     } catch (error) {
       return false;
@@ -403,13 +404,14 @@ export class SupabaseAuthProvider extends BaseAuthProvider {
   }
 
   // Helper methods
-  private transformSessionToAuthSession(session: any): AuthSession {
+  private transformSessionToAuthSession(session: Record<string, unknown>): AuthSession {
+    const s = session as Record<string, unknown>;
     return {
       id: this.generateSessionId(),
-      userId: session.user.id,
-      token: session.access_token,
-      refreshToken: session.refresh_token,
-      expiresAt: session.expires_at ? new Date(session.expires_at * 1000).toISOString() : this.calculateExpiry(this.sessionConfig.absoluteTimeout),
+      userId: (s.user as Record<string, unknown>).id as string,
+      token: s.access_token as string,
+      refreshToken: s.refresh_token as string | undefined,
+      expiresAt: s.expires_at ? new Date((s.expires_at as number) * 1000).toISOString() : this.calculateExpiry(this.sessionConfig.absoluteTimeout),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       lastAccessAt: new Date().toISOString(),

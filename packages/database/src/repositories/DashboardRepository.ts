@@ -16,8 +16,7 @@ export class DashboardRepository extends BaseRepository<Dashboard> {
   protected tableName = 'dashboards';
 
   constructor(adapter: DatabaseAdapter) {
-    super();
-    this.adapter = adapter;
+    super(adapter);
   }
 
   async findById(id: string): Promise<Dashboard | null> {
@@ -78,7 +77,7 @@ export class DashboardRepository extends BaseRepository<Dashboard> {
     this.validateUpdateData(data);
     
     try {
-      const updateData = this.setUpdateTimestamps(data);
+      const updateData = this.setUpdateTimestamp(data);
       const transformedData = this.transformToDB(updateData);
       
       const result = await this.adapter
@@ -180,7 +179,12 @@ export class DashboardRepository extends BaseRepository<Dashboard> {
         throw new Error('Dashboard not found');
       }
 
-      let worker = undefined;
+      let worker: {
+        id: string;
+        name: string;
+        phone: string;
+        email?: string;
+      } | undefined = undefined;
       if (dashboard.workerId) {
         // This would typically join with workers table
         const workerData = await this.adapter
@@ -189,11 +193,12 @@ export class DashboardRepository extends BaseRepository<Dashboard> {
           .first();
 
         if (workerData) {
+          const workerRecord = workerData as Record<string, unknown>;
           worker = {
-            id: workerData.id,
-            name: workerData.name,
-            phone: workerData.phone,
-            email: workerData.email
+            id: workerRecord.id as string,
+            name: workerRecord.name as string,
+            phone: workerRecord.phone as string,
+            email: workerRecord.email as string | undefined
           };
         }
       }
@@ -221,18 +226,21 @@ export class DashboardRepository extends BaseRepository<Dashboard> {
   }
 
   // Transform methods
-  protected transformFromDB(row: any): Dashboard {
-    if (!row) return null;
+  protected transformFromDB(row: unknown): Dashboard {
+    if (!row) {
+      throw new Error('Cannot transform null or undefined row to Dashboard');
+    }
     
+    const data = row as Record<string, unknown>;
     return {
-      id: row.id,
-      name: row.name,
-      workerId: row.worker_id,
-      organizationId: row.organization_id,
-      active: row.active,
-      config: row.config,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
+      id: data.id as string,
+      name: data.name as string,
+      workerId: data.worker_id as string,
+      organizationId: data.organization_id as string,
+      active: data.active as boolean,
+      config: data.config as Record<string, unknown>,
+      createdAt: data.created_at as string,
+      updatedAt: data.updated_at as string,
     };
   }
 

@@ -1,4 +1,4 @@
-import { cva, type VariantProps } from 'class-variance-authority'
+import { cva } from 'class-variance-authority'
 import React from 'react'
 import { LoadingSpinner } from './LoadingSpinner'
 
@@ -31,7 +31,9 @@ const buttonVariants = cva(
 )
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'link' | 'default' | 'destructive' | 'success'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
   loading?: boolean
   loadingText?: string
   fullWidth?: boolean

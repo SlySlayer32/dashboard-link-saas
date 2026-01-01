@@ -17,6 +17,7 @@ export class ManualAdapter extends BasePluginAdapter {
   readonly id = 'manual'
   readonly name = 'Manual Entry'
   readonly version = '1.0.0'
+  readonly description = 'Allows admins to manually enter schedule and task data'
 
   protected async fetchExternalSchedule(
     workerId: string,
@@ -118,5 +119,13 @@ export class ManualAdapter extends BasePluginAdapter {
   async validateConfig(_config: PluginConfig): Promise<ValidationResult> {
     // Manual adapter doesn't require external configuration
     return { valid: true }
+  }
+
+  getConfigSchema(): import('@dashboard-link/shared').PluginConfigSchema {
+    return {
+      type: 'object',
+      properties: {},
+      required: []
+    };
   }
 }

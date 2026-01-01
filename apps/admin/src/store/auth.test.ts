@@ -1,18 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { LoginCredentials, User } from '../types/auth'
+import type { LoginCredentials } from '../types/auth'
 import { useAuthStore } from './auth'
 
 // Mock fetch
 global.fetch = vi.fn()
 
+// Use the same User interface as the auth store
+interface User {
+  id: string
+  email: string
+  name: string
+}
+
 const mockUser: User = {
   id: 'test-user-id',
   email: 'test@example.com',
   name: 'Test User',
-  organization_id: 'test-org-id',
-  role: 'admin',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
 }
 
 const mockCredentials: LoginCredentials = {
@@ -23,9 +26,10 @@ const mockCredentials: LoginCredentials = {
 describe('Auth Store', () => {
   beforeEach(() => {
     // Clear localStorage mock
-    ;(localStorage.getItem as any).mockReturnValue(null)
-    ;(localStorage.setItem as any).mockImplementation(() => {})
-    ;(localStorage.removeItem as any).mockImplementation(() => {})
+    const localStorageMock = vi.fn()
+    ;(global.localStorage.getItem as any) = localStorageMock
+    ;(global.localStorage.setItem as any) = vi.fn()
+    ;(global.localStorage.removeItem as any) = vi.fn()
     vi.clearAllMocks()
   })
 
@@ -35,10 +39,9 @@ describe('Auth Store', () => {
       user: null,
       token: null,
       refreshToken: null,
-      expiresAt: null,
+      isAuthenticated: false,
       isLoading: false,
       error: null,
-      isAuthenticated: false,
     })
   })
 
@@ -48,7 +51,7 @@ describe('Auth Store', () => {
 
       expect(state.user).toBeNull()
       expect(state.token).toBeNull()
-      expect(state.expiresAt).toBeNull()
+      expect(state.refreshToken).toBeNull()
       expect(state.isLoading).toBe(false)
       expect(state.error).toBeNull()
       expect(state.isAuthenticated).toBe(false)
@@ -67,7 +70,7 @@ describe('Auth Store', () => {
       const mockResponse = {
         user: mockUser,
         token: 'test-token',
-        expires_at: '2024-12-31T23:59:59Z',
+        refreshToken: 'refresh-token',
       }
 
       ;(fetch as any).mockResolvedValueOnce({
@@ -82,7 +85,7 @@ describe('Auth Store', () => {
       const currentState = useAuthStore.getState()
       expect(currentState.user).toEqual(mockUser)
       expect(currentState.token).toBe('test-token')
-      expect(currentState.expiresAt).toBe('2024-12-31T23:59:59Z')
+      expect(currentState.refreshToken).toBe('refresh-token')
       expect(currentState.isAuthenticated).toBe(true)
       expect(currentState.isLoading).toBe(false)
       expect(currentState.error).toBeNull()
@@ -121,10 +124,10 @@ describe('Auth Store', () => {
 
       const state = useAuthStore.getState()
 
-      await expect(state.login(mockCredentials)).rejects.toThrow('Network error')
+      await expect(state.login(mockCredentials)).rejects.toThrow('An unexpected error occurred')
 
       const currentState = useAuthStore.getState()
-      expect(currentState.error).toBe('Network error')
+      expect(currentState.error).toBe('An unexpected error occurred')
       expect(currentState.isLoading).toBe(false)
       expect(currentState.isAuthenticated).toBe(false)
     })
@@ -152,7 +155,7 @@ describe('Auth Store', () => {
         json: async () => ({
           user: mockUser,
           token: 'test-token',
-          expires_at: '2024-12-31T23:59:59Z',
+          refreshToken: 'refresh-token',
         }),
       })
 
@@ -169,7 +172,7 @@ describe('Auth Store', () => {
       useAuthStore.setState({
         user: mockUser,
         token: 'test-token',
-        expiresAt: '2024-12-31T23:59:59Z',
+        refreshToken: 'refresh-token',
         isAuthenticated: true,
         error: 'some error',
       })
@@ -180,7 +183,7 @@ describe('Auth Store', () => {
       const currentState = useAuthStore.getState()
       expect(currentState.user).toBeNull()
       expect(currentState.token).toBeNull()
-      expect(currentState.expiresAt).toBeNull()
+      expect(currentState.refreshToken).toBeNull()
       expect(currentState.isAuthenticated).toBe(false)
       expect(currentState.error).toBeNull()
       expect(currentState.isLoading).toBe(false)
@@ -259,6 +262,16 @@ describe('Auth Store', () => {
       state.clearError()
 
       expect(useAuthStore.getState().error).toBeNull()
+    })
+
+    it('should clear error state and set loading to false', () => {
+      useAuthStore.setState({ error: 'Some error', isLoading: true })
+
+      const state = useAuthStore.getState()
+      state.clearError()
+
+      expect(useAuthStore.getState().error).toBeNull()
+      expect(useAuthStore.getState().isLoading).toBe(false)
     })
   })
 

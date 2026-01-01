@@ -4,19 +4,18 @@ import type {
     StandardScheduleItem
 } from '@dashboard-link/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { BasePluginAdapter } from '../src/base/adapter'
-import { GoogleCalendarAdapter } from '../src/google-calendar'
+import { BasePluginAdapter } from '../base/adapter'
+import { GoogleCalendarAdapter } from '../google-calendar'
 
-// Mock global fetch
-global.fetch = vi.fn()
+// Mock global fetch with proper typing
+const mockFetch = vi.fn()
+global.fetch = mockFetch
 
 describe('GoogleCalendarAdapter', () => {
   let adapter: GoogleCalendarAdapter
-  let mockFetch: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     adapter = new GoogleCalendarAdapter()
-    mockFetch = vi.mocked(global.fetch)
     vi.clearAllMocks()
   })
 
@@ -57,6 +56,9 @@ describe('GoogleCalendarAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'google-calendar-plugin',
+        name: 'Google Calendar Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           calendarId: 'primary',
@@ -91,6 +93,9 @@ describe('GoogleCalendarAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'google-calendar-plugin',
+        name: 'Google Calendar Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           accessToken: 'test-token'
@@ -112,6 +117,9 @@ describe('GoogleCalendarAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'google-calendar-plugin',
+        name: 'Google Calendar Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {}
       }
@@ -133,6 +141,9 @@ describe('GoogleCalendarAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'google-calendar-plugin',
+        name: 'Google Calendar Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           accessToken: 'invalid-token'
@@ -156,6 +167,9 @@ describe('GoogleCalendarAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'google-calendar-plugin',
+        name: 'Google Calendar Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           accessToken: 'test-token'
@@ -178,6 +192,9 @@ describe('GoogleCalendarAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'google-calendar-plugin',
+        name: 'Google Calendar Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           calendarId: 'user@example.com',
@@ -313,6 +330,9 @@ describe('GoogleCalendarAdapter', () => {
   describe('validateConfig', () => {
     it('should validate config with required fields', async () => {
       const config: PluginConfig = {
+        id: 'google-calendar-plugin',
+        name: 'Google Calendar Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           calendarId: 'primary',
@@ -333,6 +353,9 @@ describe('GoogleCalendarAdapter', () => {
 
     it('should handle missing access token', async () => {
       const config: PluginConfig = {
+        id: 'google-calendar-plugin',
+        name: 'Google Calendar Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           calendarId: 'primary'
@@ -347,6 +370,9 @@ describe('GoogleCalendarAdapter', () => {
 
     it('should handle API connection errors', async () => {
       const config: PluginConfig = {
+        id: 'google-calendar-plugin',
+        name: 'Google Calendar Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           calendarId: 'primary',
@@ -368,6 +394,9 @@ describe('GoogleCalendarAdapter', () => {
 
     it('should handle network errors', async () => {
       const config: PluginConfig = {
+        id: 'google-calendar-plugin',
+        name: 'Google Calendar Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           calendarId: 'primary',
@@ -407,6 +436,9 @@ describe('GoogleCalendarAdapter', () => {
       }
 
       const result = await adapter.getSchedule('worker-123', dateRange, {
+        id: 'google-calendar-plugin',
+        name: 'Google Calendar Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: { accessToken: 'test-token' }
       })
@@ -427,6 +459,9 @@ describe('GoogleCalendarAdapter', () => {
       }
 
       const result = await adapter.getSchedule('worker-123', dateRange, {
+        id: 'google-calendar-plugin',
+        name: 'Google Calendar Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: { accessToken: 'test-token' }
       })
@@ -434,13 +469,19 @@ describe('GoogleCalendarAdapter', () => {
       expect(result.success).toBe(false)
       expect(result.data).toEqual([])
       expect(result.errors).toHaveLength(1)
-      expect(result.errors![0].code).toBe('PLUGIN_ERROR')
+      expect(result.errors?.[0]?.code).toBe('PLUGIN_ERROR')
     })
   })
 
   describe('getTasks', () => {
     it('should return empty tasks response', async () => {
-      const result = await adapter.getTasks('worker-123', { enabled: true, settings: {} })
+      const result = await adapter.getTasks('worker-123', { 
+        id: 'google-calendar-plugin',
+        name: 'Google Calendar Plugin',
+        version: '1.0.0',
+        enabled: true, 
+        settings: {} 
+      })
 
       expect(result.success).toBe(true)
       expect(result.data).toEqual([])

@@ -149,7 +149,7 @@ export class TokenManagerService implements TokenManager {
     }
   }
 
-  async getUserTokens(userId: string): Promise<TokenResult[]> {
+  async getUserTokens(_userId: string): Promise<TokenResult[]> {
     try {
       // This would need to be implemented based on provider capabilities
       // For now, return empty array as placeholder
@@ -160,7 +160,7 @@ export class TokenManagerService implements TokenManager {
     }
   }
 
-  async getTokenStats(organizationId?: string): Promise<TokenStats> {
+  async getTokenStats(_organizationId?: string): Promise<TokenStats> {
     try {
       if ('getStats' in this.provider) {
         const stats = await (this.provider as any).getStats();
@@ -216,7 +216,7 @@ export class TokenManagerService implements TokenManager {
       const newProvider = this.createProvider(config);
       
       // Perform health check on new provider
-      newProvider.healthCheck().then(healthy => {
+      newProvider.healthCheck().then((healthy: boolean) => {
         if (!healthy) {
           throw new Error('New provider failed health check');
         }
@@ -276,7 +276,7 @@ export class TokenManagerService implements TokenManager {
   }
 
   // Advanced operations
-  async migrateTokens(fromProvider: TokenProvider, toProvider: TokenProvider): Promise<{
+  async migrateTokens(_fromProvider: TokenProvider, _toProvider: TokenProvider): Promise<{
     success: boolean;
     migratedCount: number;
     errors: string[];
@@ -484,9 +484,11 @@ export class TokenManagerService implements TokenManager {
   }): TokenManagerService {
     const dbConfig: TokenConfig = {
       provider: 'database',
-      tableName: config.tableName || 'tokens',
-      hashTokens: config.hashTokens !== false,
-      cleanupExpired: config.cleanupExpired !== false,
+      databaseConfig: {
+        tableName: config.tableName || 'tokens',
+        hashTokens: config.hashTokens !== false,
+        cleanupExpired: config.cleanupExpired !== false
+      },
       defaultExpiry: config.defaultExpiry || 3600,
       refreshExpiry: config.refreshExpiry || 30 * 24 * 60 * 60
     };

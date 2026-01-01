@@ -31,7 +31,7 @@ export class SMSManagerImpl implements ISMSManager {
    * Tries each provider in order until one succeeds
    */
   async sendWithFallback(message: SMSMessage, providerIds: string[]): Promise<SMSResult> {
-    let lastError: string;
+    let lastError = 'No providers attempted';
 
     for (const providerId of providerIds) {
       const provider = this.registry.get(providerId);
@@ -145,7 +145,7 @@ export class SMSManagerImpl implements ISMSManager {
     const parallel = options?.parallel ?? true;
     const batchSize = options?.batchSize ?? 100;
 
-    const startTime = Date.now();
+    const _startTime = Date.now();
     const results: SMSResult[] = [];
 
     if (parallel) {
@@ -166,7 +166,7 @@ export class SMSManagerImpl implements ISMSManager {
       }
     }
 
-    const endTime = Date.now();
+    const _endTime = Date.now();
     const successful = results.filter(r => r.success).length;
     const failed = results.length - successful;
     const totalCost = results.reduce((sum, r) => sum + (r.cost || 0), 0);

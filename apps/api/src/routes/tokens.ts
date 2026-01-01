@@ -38,7 +38,7 @@ const revokeSchema = z.object({
  * List all tokens for the organization with filtering and pagination
  */
 tokens.get('/', zValidator('query', listTokensSchema), async (c) => {
-  const { page, limit, workerId, status } = c.req.valid('query');
+  const { page, limit } = c.req.valid('query');
   const organizationId = c.get('organizationId') as string;
 
   try {
@@ -112,7 +112,6 @@ tokens.get('/stats', async (c) => {
  * Revoke a specific token by ID
  */
 tokens.post('/revoke', zValidator('json', revokeSchema), async (c) => {
-  const { tokenId } = c.req.valid('json');
   const organizationId = c.get('organizationId') as string;
 
   try {

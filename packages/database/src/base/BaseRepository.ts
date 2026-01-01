@@ -16,7 +16,11 @@ import type {
 
 export abstract class BaseRepository<T extends BaseEntity> implements Repository<T> {
   protected abstract tableName: string;
-  protected abstract adapter: DatabaseAdapter;
+  protected adapter: DatabaseAdapter;
+
+  constructor(adapter: DatabaseAdapter) {
+    this.adapter = adapter;
+  }
 
   // Standard CRUD operations
   abstract findById(id: string): Promise<T | null>;

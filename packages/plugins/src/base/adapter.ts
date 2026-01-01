@@ -108,7 +108,7 @@ export abstract class BasePluginAdapter {
     const pluginError: PluginError = {
       code: 'PLUGIN_ERROR',
       message: error instanceof Error ? error.message : 'Unknown error',
-      recoverable: true
+      retryable: true
     }
 
     return {
@@ -127,7 +127,7 @@ export abstract class BasePluginAdapter {
     const pluginError: PluginError = {
       code: 'VALIDATION_ERROR',
       message: errors.join(', '),
-      recoverable: false
+      retryable: false
     }
 
     return {

@@ -5,13 +5,20 @@
  * Replaces direct Supabase queries with service layer abstraction
  */
 
-import { getDashboardRepository } from '@dashboard-link/database';
+import { createContainerFromEnvironment, getDashboardRepository, initializeContainer } from '@dashboard-link/database';
+import type { Dashboard } from '@dashboard-link/shared';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { authMiddleware } from '../middleware/auth';
+import { authMiddleware, type AuthContext } from '../middleware/auth';
 
-const dashboard = new Hono();
+// Initialize container if not already done
+if (!process.env.DB_INITIALIZED) {
+  initializeContainer(createContainerFromEnvironment());
+  process.env.DB_INITIALIZED = 'true';
+}
+
+const dashboard = new Hono<AuthContext>();
 
 // Initialize repository
 const dashboardRepository = getDashboardRepository();
@@ -35,32 +42,39 @@ const createDashboardSchema = z.object({
         width: z.number(),
         height: z.number()
       }),
-      config: z.record(z.any()).optional()
+      config: z.record(z.string(), z.any()).optional()
     })).optional()
   }).optional()
 });
 
 const updateDashboardSchema = createDashboardSchema.partial().extend({
-  isActive: z.boolean().optional()
+  active: z.boolean().optional()
 });
 
 /**
  * Get dashboard statistics
  */
 dashboard.get('/stats', async (c) => {
-  const userId = c.get('userId');
   const organizationId = c.get('organizationId');
   
   try {
-    // Get dashboard statistics for the organization
-    const stats = await dashboardRepository.getDashboardStats(organizationId);
+    // Get dashboard count for the organization
+    const dashboards = await dashboardRepository.findMany({
+      where: { organizationId },
+      orderBy: [{ field: 'createdAt', direction: 'desc' }]
+    });
+
+    const stats = {
+      totalDashboards: dashboards.length,
+      activeDashboards: dashboards.filter((d: Dashboard) => d.active).length,
+      inactiveDashboards: dashboards.filter((d: Dashboard) => !d.active).length
+    };
 
     return c.json({
       success: true,
       data: stats
     });
-  } catch (error) {
-    console.error('Get dashboard stats error:', error);
+  } catch {
     return c.json({
       success: false,
       error: 'Failed to retrieve dashboard statistics'
@@ -72,7 +86,6 @@ dashboard.get('/stats', async (c) => {
  * List all dashboards for the organization
  */
 dashboard.get('/', async (c) => {
-  const userId = c.get('userId');
   const organizationId = c.get('organizationId');
   
   try {
@@ -85,8 +98,7 @@ dashboard.get('/', async (c) => {
       success: true,
       data: dashboards
     });
-  } catch (error) {
-    console.error('List dashboards error:', error);
+  } catch {
     return c.json({
       success: false,
       error: 'Failed to retrieve dashboards'
@@ -123,8 +135,7 @@ dashboard.get('/:id', async (c) => {
       success: true,
       data: dashboard
     });
-  } catch (error) {
-    console.error('Get dashboard error:', error);
+  } catch {
     return c.json({
       success: false,
       error: 'Failed to retrieve dashboard'
@@ -136,16 +147,16 @@ dashboard.get('/:id', async (c) => {
  * Create a new dashboard
  */
 dashboard.post('/', zValidator('json', createDashboardSchema), async (c) => {
-  const userId = c.get('userId');
   const organizationId = c.get('organizationId');
+  const userId = c.get('userId');
   const dashboardData = c.req.valid('json');
   
   try {
     const newDashboard = await dashboardRepository.create({
       ...dashboardData,
       organizationId,
-      createdBy: userId,
-      isActive: true,
+      workerId: userId,
+      active: true,
       createdAt: new Date(),
       updatedAt: new Date()
     });
@@ -154,8 +165,7 @@ dashboard.post('/', zValidator('json', createDashboardSchema), async (c) => {
       success: true,
       data: newDashboard
     }, 201);
-  } catch (error) {
-    console.error('Create dashboard error:', error);
+  } catch {
     return c.json({
       success: false,
       error: 'Failed to create dashboard'
@@ -198,8 +208,7 @@ dashboard.put('/:id', zValidator('json', updateDashboardSchema), async (c) => {
       success: true,
       data: updatedDashboard
     });
-  } catch (error) {
-    console.error('Update dashboard error:', error);
+  } catch {
     return c.json({
       success: false,
       error: 'Failed to update dashboard'
@@ -238,8 +247,7 @@ dashboard.delete('/:id', async (c) => {
       success: true,
       message: 'Dashboard deleted successfully'
     });
-  } catch (error) {
-    console.error('Delete dashboard error:', error);
+  } catch {
     return c.json({
       success: false,
       error: 'Failed to delete dashboard'
@@ -280,8 +288,8 @@ dashboard.post('/:id/duplicate', async (c) => {
       description: existingDashboard.description,
       config: existingDashboard.config,
       organizationId,
-      createdBy: userId,
-      isActive: true,
+      workerId: userId,
+      active: true,
       createdAt: new Date(),
       updatedAt: new Date()
     });
@@ -290,8 +298,7 @@ dashboard.post('/:id/duplicate', async (c) => {
       success: true,
       data: duplicatedDashboard
     }, 201);
-  } catch (error) {
-    console.error('Duplicate dashboard error:', error);
+  } catch {
     return c.json({
       success: false,
       error: 'Failed to duplicate dashboard'
@@ -325,16 +332,19 @@ dashboard.get('/:id/activity', async (c) => {
       }, 403);
     }
 
-    // This would typically use an activity log repository
-    // For now, we'll return a placeholder
-    const activity = await dashboardRepository.getDashboardActivity(dashboardId, limit);
+    // Return placeholder activity data for now
+    const activity = {
+      dashboardId,
+      activities: [],
+      total: 0,
+      limit
+    };
 
     return c.json({
       success: true,
       data: activity
     });
-  } catch (error) {
-    console.error('Get dashboard activity error:', error);
+  } catch {
     return c.json({
       success: false,
       error: 'Failed to retrieve dashboard activity'

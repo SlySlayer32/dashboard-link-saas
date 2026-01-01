@@ -14,6 +14,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@dashboard-link/auth": "workspace:*",
+    "@dashboard-link/database": "workspace:*",
     "@dashboard-link/plugins": "workspace:*",
     "@dashboard-link/shared": "workspace:*",
     "@hono/node-server": "^1.5.0",

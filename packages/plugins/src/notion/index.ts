@@ -15,6 +15,7 @@ export class NotionAdapter extends BasePluginAdapter {
   readonly id = 'notion'
   readonly name = 'Notion'
   readonly version = '1.0.0'
+  readonly description = 'Fetches schedule and task data from Notion databases'
 
   protected async fetchExternalSchedule(
     workerId: string,
@@ -300,5 +301,39 @@ export class NotionAdapter extends BasePluginAdapter {
       return ((prop.date as Record<string, unknown>).start as string)
     }
     return undefined
+  }
+
+  getConfigSchema(): import('@dashboard-link/shared').PluginConfigSchema {
+    return {
+      type: 'object',
+      properties: {
+        integrationSecret: {
+          type: 'string',
+          title: 'Integration Secret',
+          description: 'Notion API integration secret'
+        },
+        scheduleDatabaseId: {
+          type: 'string',
+          title: 'Schedule Database ID',
+          description: 'Notion database ID for schedule data'
+        },
+        tasksDatabaseId: {
+          type: 'string',
+          title: 'Tasks Database ID',
+          description: 'Notion database ID for task data (optional)'
+        },
+        workerProperty: {
+          type: 'string',
+          title: 'Worker Property',
+          description: 'Property name for worker assignment'
+        },
+        dateProperty: {
+          type: 'string',
+          title: 'Date Property',
+          description: 'Property name for date filtering'
+        }
+      },
+      required: ['integrationSecret', 'scheduleDatabaseId']
+    };
   }
 }

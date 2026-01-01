@@ -7,10 +7,10 @@
 
 import { getWorkerRepository } from '@dashboard-link/database';
 import { Hono } from 'hono';
-import { authMiddleware } from '../middleware/auth';
+import { authMiddleware, type AuthContext } from '../middleware/auth';
 import { WorkerService } from '../services/WorkerService';
 
-const workers = new Hono();
+const workers = new Hono<{ Variables: AuthContext['Variables'] }>();
 
 // Initialize service with repository
 const workerService = new WorkerService(getWorkerRepository());
@@ -29,8 +29,7 @@ workers.get('/', async (c) => {
     
     const workers = await workerService.getWorkers(organizationId);
     return c.json(workers);
-  } catch (error) {
-    console.error('Failed to get workers:', error);
+  } catch (_error) {
     return c.json({ error: 'Failed to retrieve workers' }, 500);
   }
 });
@@ -45,7 +44,6 @@ workers.get('/:id/stats', async (c) => {
     const stats = await workerService.getWorkerStats(id, organizationId);
     return c.json(stats);
   } catch (error) {
-    console.error('Failed to get worker stats:', error);
     
     if (error instanceof Error && error.message === 'Worker not found') {
       return c.json({ error: 'Worker not found' }, 404);
@@ -69,8 +67,7 @@ workers.get('/:id', async (c) => {
     }
     
     return c.json(worker);
-  } catch (error) {
-    console.error('Failed to get worker:', error);
+  } catch (_error) {
     return c.json({ error: 'Failed to retrieve worker' }, 500);
   }
 });
@@ -90,7 +87,6 @@ workers.post('/', async (c) => {
     
     return c.json({ worker, dashboard }, 201);
   } catch (error) {
-    console.error('Failed to create worker:', error);
     
     if (error instanceof Error) {
       if (error.message.includes('name')) {
@@ -121,7 +117,6 @@ workers.put('/:id', async (c) => {
     const worker = await workerService.updateWorker(id, body, organizationId);
     return c.json(worker);
   } catch (error) {
-    console.error('Failed to update worker:', error);
     
     if (error instanceof Error && error.message === 'Worker not found') {
       return c.json({ error: 'Worker not found' }, 404);
@@ -155,7 +150,6 @@ workers.delete('/:id', async (c) => {
     await workerService.deleteWorker(id, organizationId);
     return c.json({ message: 'Worker deleted successfully' });
   } catch (error) {
-    console.error('Failed to delete worker:', error);
     
     if (error instanceof Error && error.message === 'Worker not found') {
       return c.json({ error: 'Worker not found' }, 404);
@@ -177,8 +171,7 @@ workers.get('/search/:query', async (c) => {
     const organizationId = await getOrganizationId(userId);
     const workers = await workerService.searchWorkers(organizationId, query, limit);
     return c.json(workers);
-  } catch (error) {
-    console.error('Failed to search workers:', error);
+  } catch (_error) {
     return c.json({ error: 'Failed to search workers' }, 500);
   }
 });
@@ -191,8 +184,7 @@ workers.get('/active/list', async (c) => {
     const organizationId = await getOrganizationId(userId);
     const workers = await workerService.getActiveWorkers(organizationId);
     return c.json(workers);
-  } catch (error) {
-    console.error('Failed to get active workers:', error);
+  } catch (_error) {
     return c.json({ error: 'Failed to retrieve active workers' }, 500);
   }
 });
@@ -207,7 +199,6 @@ workers.post('/:id/activate', async (c) => {
     const worker = await workerService.activateWorker(id, organizationId);
     return c.json(worker);
   } catch (error) {
-    console.error('Failed to activate worker:', error);
     
     if (error instanceof Error && error.message === 'Worker not found') {
       return c.json({ error: 'Worker not found' }, 404);
@@ -227,7 +218,6 @@ workers.post('/:id/deactivate', async (c) => {
     const worker = await workerService.deactivateWorker(id, organizationId);
     return c.json(worker);
   } catch (error) {
-    console.error('Failed to deactivate worker:', error);
     
     if (error instanceof Error && error.message === 'Worker not found') {
       return c.json({ error: 'Worker not found' }, 404);

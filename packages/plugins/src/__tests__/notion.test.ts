@@ -5,19 +5,18 @@ import type {
     StandardTaskItem
 } from '@dashboard-link/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { BasePluginAdapter } from '../src/base/adapter'
-import { NotionAdapter } from '../src/notion'
+import { BasePluginAdapter } from '../base/adapter'
+import { NotionAdapter } from '../notion'
 
-// Mock global fetch
-global.fetch = vi.fn()
+// Mock global fetch with proper typing
+const mockFetch = vi.fn()
+global.fetch = mockFetch
 
 describe('NotionAdapter', () => {
   let adapter: NotionAdapter
-  let mockFetch: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     adapter = new NotionAdapter()
-    mockFetch = vi.mocked(global.fetch)
     vi.clearAllMocks()
   })
 
@@ -62,6 +61,9 @@ describe('NotionAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           integrationSecret: 'secret123',
@@ -101,6 +103,9 @@ describe('NotionAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           integrationSecret: 'secret123',
@@ -125,6 +130,9 @@ describe('NotionAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           integrationSecret: 'secret123'
@@ -149,6 +157,9 @@ describe('NotionAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           integrationSecret: 'invalid-secret',
@@ -173,6 +184,9 @@ describe('NotionAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           integrationSecret: 'secret123',
@@ -184,7 +198,14 @@ describe('NotionAdapter', () => {
 
       await (adapter as any).fetchExternalSchedule('worker-123', dateRange, config)
 
-      const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body as string)
+      const requestBody = JSON.parse(mockFetch.mock.calls[0][1]?.body as string) as {
+  filter: {
+    and: Array<{
+      property: string;
+      date?: { on_or_after?: string; on_or_before?: string };
+    }>;
+  };
+}
       expect(requestBody.filter.and[0].property).toBe('Employee ID')
       expect(requestBody.filter.and[1].property).toBe('Schedule Date')
     })
@@ -213,10 +234,13 @@ describe('NotionAdapter', () => {
       })
 
       const config: PluginConfig = {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           integrationSecret: 'secret123',
-          tasksDatabaseId: 'db456',
+          tasksDatabaseId: 'task123',
           workerProperty: 'Worker'
         }
       }
@@ -245,6 +269,9 @@ describe('NotionAdapter', () => {
       })
 
       const config: PluginConfig = {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           integrationSecret: 'secret123',
@@ -505,6 +532,9 @@ describe('NotionAdapter', () => {
   describe('validateConfig', () => {
     it('should validate config with required fields', async () => {
       const config: PluginConfig = {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           integrationSecret: 'secret123',
@@ -525,6 +555,9 @@ describe('NotionAdapter', () => {
 
     it('should handle missing integration secret', async () => {
       const config: PluginConfig = {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           scheduleDatabaseId: 'db123'
@@ -539,6 +572,9 @@ describe('NotionAdapter', () => {
 
     it('should handle missing database ID', async () => {
       const config: PluginConfig = {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           integrationSecret: 'secret123'
@@ -553,6 +589,9 @@ describe('NotionAdapter', () => {
 
     it('should handle API connection errors', async () => {
       const config: PluginConfig = {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           integrationSecret: 'invalid-secret',
@@ -574,6 +613,9 @@ describe('NotionAdapter', () => {
 
     it('should handle network errors', async () => {
       const config: PluginConfig = {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           integrationSecret: 'secret123',
@@ -618,6 +660,9 @@ describe('NotionAdapter', () => {
       }
 
       const result = await adapter.getSchedule('worker-123', dateRange, {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: { integrationSecret: 'secret123', scheduleDatabaseId: 'db123' }
       })
@@ -638,6 +683,9 @@ describe('NotionAdapter', () => {
       }
 
       const result = await adapter.getSchedule('worker-123', dateRange, {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: { integrationSecret: 'secret123', scheduleDatabaseId: 'db123' }
       })
@@ -645,7 +693,7 @@ describe('NotionAdapter', () => {
       expect(result.success).toBe(false)
       expect(result.data).toEqual([])
       expect(result.errors).toHaveLength(1)
-      expect(result.errors![0].code).toBe('PLUGIN_ERROR')
+      expect(result.errors?.[0]?.code).toBe('PLUGIN_ERROR')
     })
   })
 
@@ -670,6 +718,9 @@ describe('NotionAdapter', () => {
       })
 
       const result = await adapter.getTasks('worker-123', {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: { integrationSecret: 'secret123', scheduleDatabaseId: 'db123' }
       })
@@ -684,6 +735,9 @@ describe('NotionAdapter', () => {
       mockFetch.mockRejectedValueOnce(new Error('API Error'))
 
       const result = await adapter.getTasks('worker-123', {
+        id: 'notion-plugin',
+        name: 'Notion Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: { integrationSecret: 'secret123', scheduleDatabaseId: 'db123' }
       })

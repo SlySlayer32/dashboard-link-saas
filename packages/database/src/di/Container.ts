@@ -5,7 +5,8 @@
  * Provides singleton access to repositories throughout the application
  */
 
-import { DatabaseAdapter } from '@dashboard-link/shared';
+import type { DatabaseAdapter as LocalDatabaseAdapter } from '../adapters/DatabaseAdapter.js';
+import { createMockAdapter } from '../adapters/MockAdapter.js';
 import { createSupabaseAdapter } from '../adapters/SupabaseAdapter.js';
 import { DashboardRepository } from '../repositories/DashboardRepository.js';
 import { OrganizationRepository } from '../repositories/OrganizationRepository.js';
@@ -22,7 +23,7 @@ export interface RepositoryContainer {
 export interface ContainerConfig {
   database: {
     type: 'supabase' | 'postgresql' | 'mock';
-    connection: any;
+    connection: unknown;
     config?: {
       caching?: {
         enabled: boolean;
@@ -34,7 +35,7 @@ export interface ContainerConfig {
 
 export class DIContainer {
   private repositories: RepositoryContainer;
-  private adapter: DatabaseAdapter;
+  private adapter: LocalDatabaseAdapter;
   private config: ContainerConfig;
 
   constructor(config: ContainerConfig) {
@@ -43,14 +44,14 @@ export class DIContainer {
     this.repositories = this.setupRepositories();
   }
 
-  private createAdapter(): DatabaseAdapter {
+  private createAdapter(): LocalDatabaseAdapter {
     const { database } = this.config;
     
     switch (database.type) {
       case 'supabase':
         return createSupabaseAdapter(
-          database.connection,
-          database.config
+          database.connection as import('./adapters/SupabaseAdapter.js').SupabaseClient,
+          database.config || {}
         );
       
       case 'postgresql':
@@ -58,8 +59,7 @@ export class DIContainer {
         throw new Error('PostgreSQL adapter not yet implemented');
       
       case 'mock':
-        // Will be implemented when MockAdapter is created
-        throw new Error('Mock adapter not yet implemented');
+        return createMockAdapter();
       
       default:
         throw new Error(`Unknown database type: ${database.type}`);
@@ -93,7 +93,7 @@ export class DIContainer {
   }
 
   // Adapter access
-  getAdapter(): DatabaseAdapter {
+  getAdapter(): LocalDatabaseAdapter {
     return this.adapter;
   }
 
@@ -121,12 +121,12 @@ export class DIContainer {
     };
   }
 
-  private async checkRepository(repository: any): Promise<boolean> {
+  private async checkRepository(repository: { count(): Promise<number> }): Promise<boolean> {
     try {
       // Simple existence check
       await repository.count();
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -155,7 +155,7 @@ let defaultContainer: DIContainer | null = null;
 export function initializeContainer(config: ContainerConfig): DIContainer {
   if (defaultContainer) {
     console.warn('Container already initialized. Reinitializing...');
-    await defaultContainer.close();
+    void defaultContainer.close();
   }
   
   defaultContainer = new DIContainer(config);
@@ -195,7 +195,7 @@ export function getSMSLogRepository(): SMSLogRepository {
 export function createContainerFromEnvironment(): DIContainer {
   const config: ContainerConfig = {
     database: {
-      type: (process.env.DB_TYPE as any) || 'supabase',
+      type: (process.env.DB_TYPE as 'supabase' | 'postgresql' | 'mock') || 'supabase',
       connection: null, // Will be set based on environment
       config: {
         caching: {
@@ -209,7 +209,7 @@ export function createContainerFromEnvironment(): DIContainer {
   // Set up connection based on type
   if (config.database.type === 'supabase') {
     // Import Supabase client dynamically to avoid circular dependencies
-    import('@supabase/supabase-js').then(({ createClient }) => {
+    void import('@supabase/supabase-js').then(({ createClient }) => {
       config.database.connection = createClient(
         process.env.SUPABASE_URL || '',
         process.env.SUPABASE_SERVICE_KEY || ''

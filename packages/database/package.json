@@ -2,8 +2,18 @@
   "name": "@dashboard-link/database",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Database migrations and schema for Dashboard Link SaaS",
   "scripts": {
-    "clean": "echo 'No build artifacts to clean'"
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@dashboard-link/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "typescript": "^5.3.3"
   }
 }

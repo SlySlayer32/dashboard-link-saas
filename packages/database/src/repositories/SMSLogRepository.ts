@@ -16,8 +16,7 @@ export class SMSLogRepository extends BaseRepository<SMSLog> {
   protected tableName = 'sms_logs';
 
   constructor(adapter: DatabaseAdapter) {
-    super();
-    this.adapter = adapter;
+    super(adapter);
   }
 
   async findById(id: string): Promise<SMSLog | null> {
@@ -78,7 +77,7 @@ export class SMSLogRepository extends BaseRepository<SMSLog> {
     this.validateUpdateData(data);
     
     try {
-      const updateData = this.setUpdateTimestamps(data);
+      const updateData = this.setUpdateTimestamp(data);
       const transformedData = this.transformToDB(updateData);
       
       const result = await this.adapter
@@ -269,7 +268,7 @@ export class SMSLogRepository extends BaseRepository<SMSLog> {
     this.validateId(id);
     
     try {
-      const updateData = this.setUpdateTimestamps({ status });
+      const updateData = this.setUpdateTimestamp({ status });
       if (metadata) {
         updateData.metadata = metadata;
       }
@@ -304,23 +303,26 @@ export class SMSLogRepository extends BaseRepository<SMSLog> {
   }
 
   // Transform methods
-  protected transformFromDB(row: any): SMSLog {
-    if (!row) return null;
+  protected transformFromDB(row: unknown): SMSLog {
+    if (!row) {
+      throw new Error('Cannot transform null or undefined row to SMSLog');
+    }
     
+    const data = row as Record<string, unknown>;
     return {
-      id: row.id,
-      workerId: row.worker_id,
-      organizationId: row.organization_id,
-      to: row.to,
-      from: row.from,
-      body: row.body,
-      status: row.status,
-      provider: row.provider,
-      providerMessageId: row.provider_message_id,
-      cost: row.cost,
-      metadata: row.metadata,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
+      id: data.id as string,
+      workerId: data.worker_id as string,
+      organizationId: data.organization_id as string,
+      to: data.to as string,
+      from: data.from as string | undefined,
+      body: data.body as string,
+      status: data.status as SMSLog['status'],
+      provider: data.provider as string,
+      providerMessageId: data.provider_message_id as string | undefined,
+      cost: data.cost as number | undefined,
+      metadata: data.metadata as Record<string, unknown>,
+      createdAt: data.created_at as string,
+      updatedAt: data.updated_at as string,
     };
   }
 

@@ -5,19 +5,18 @@ import type {
     StandardTaskItem
 } from '@dashboard-link/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { AirtableAdapter } from '../src/airtable'
-import { BasePluginAdapter } from '../src/base/adapter'
+import { AirtableAdapter } from '../airtable'
+import { BasePluginAdapter } from '../base/adapter'
 
-// Mock global fetch
-global.fetch = vi.fn()
+// Mock global fetch with proper typing
+const mockFetch = vi.fn()
+global.fetch = mockFetch
 
 describe('AirtableAdapter', () => {
   let adapter: AirtableAdapter
-  let mockFetch: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     adapter = new AirtableAdapter()
-    mockFetch = vi.mocked(global.fetch)
     vi.clearAllMocks()
   })
 
@@ -62,6 +61,9 @@ describe('AirtableAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           apiKey: 'test-key',
@@ -99,6 +101,9 @@ describe('AirtableAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           apiKey: 'test-key',
@@ -121,6 +126,9 @@ describe('AirtableAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           apiKey: 'test-key'
@@ -145,6 +153,9 @@ describe('AirtableAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           apiKey: 'invalid-key',
@@ -169,6 +180,9 @@ describe('AirtableAdapter', () => {
       }
 
       const config: PluginConfig = {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           apiKey: 'test-key',
@@ -210,6 +224,9 @@ describe('AirtableAdapter', () => {
       })
 
       const config: PluginConfig = {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           apiKey: 'test-key',
@@ -241,6 +258,9 @@ describe('AirtableAdapter', () => {
       })
 
       const config: PluginConfig = {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           apiKey: 'test-key',
@@ -485,6 +505,9 @@ describe('AirtableAdapter', () => {
   describe('validateConfig', () => {
     it('should validate config with required fields', async () => {
       const config: PluginConfig = {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           apiKey: 'test-key',
@@ -505,6 +528,9 @@ describe('AirtableAdapter', () => {
 
     it('should handle missing API key', async () => {
       const config: PluginConfig = {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           baseId: 'app123'
@@ -519,6 +545,9 @@ describe('AirtableAdapter', () => {
 
     it('should handle missing base ID', async () => {
       const config: PluginConfig = {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           apiKey: 'test-key'
@@ -533,6 +562,9 @@ describe('AirtableAdapter', () => {
 
     it('should handle API connection errors', async () => {
       const config: PluginConfig = {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           apiKey: 'invalid-key',
@@ -580,6 +612,9 @@ describe('AirtableAdapter', () => {
       }
 
       const result = await adapter.getSchedule('worker-123', dateRange, {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: { apiKey: 'test-key', baseId: 'app123' }
       })
@@ -600,6 +635,9 @@ describe('AirtableAdapter', () => {
       }
 
       const result = await adapter.getSchedule('worker-123', dateRange, {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: { apiKey: 'test-key', baseId: 'app123' }
       })
@@ -607,7 +645,7 @@ describe('AirtableAdapter', () => {
       expect(result.success).toBe(false)
       expect(result.data).toEqual([])
       expect(result.errors).toHaveLength(1)
-      expect(result.errors![0].code).toBe('PLUGIN_ERROR')
+      expect(result.errors?.[0]?.code).toBe('PLUGIN_ERROR')
     })
   })
 
@@ -632,6 +670,9 @@ describe('AirtableAdapter', () => {
       })
 
       const result = await adapter.getTasks('worker-123', {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: { apiKey: 'test-key', baseId: 'app123' }
       })
@@ -646,6 +687,9 @@ describe('AirtableAdapter', () => {
       mockFetch.mockRejectedValueOnce(new Error('API Error'))
 
       const result = await adapter.getTasks('worker-123', {
+        id: 'airtable-plugin',
+        name: 'Airtable Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: { apiKey: 'test-key', baseId: 'app123' }
       })

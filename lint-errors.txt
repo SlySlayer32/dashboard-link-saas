@@ -1,0 +1,79 @@
+﻿
+> dashboard-link-saas@0.1.0 lint E:\CleanConnect
+> turbo run lint
+
+node.exe : ΓÇó turbo 2.7.2
+At C:\Program Files\nodejs\pnpm.ps1:16 char:5
++     & "$basedir/node$exe"  "$basedir/node_modules/corepack/dist/pnpm. ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ΓÇó turbo 2.7.2:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ΓÇó Packages in scope: @dashboard-link/admin, @dashboard-link/api, @dashboard-link/auth, @dashboard-link/database, @dashboard-link/plugins, @dashboard-link/shared, @dashboard-link/sms, @dashboard-link/tokens, @dashboard-link/ui, @dashboard-link/worker
+ΓÇó Running lint in 10 packages
+ΓÇó Remote caching disabled
+@dashboard-link/ui:lint: cache miss, executing be861b78e8befea7
+@dashboard-link/shared:lint: cache miss, executing 2d01d441eddcf1b3
+@dashboard-link/shared:build: cache miss, executing a9b35c3aff88ffbc
+@dashboard-link/sms:lint: cache miss, executing 0e83ce0ebf36c5ed
+@dashboard-link/shared:build: 
+@dashboard-link/shared:build: > @dashboard-link/shared@0.1.0 build E:\CleanConnect\packages\shared
+@dashboard-link/shared:build: > tsc
+@dashboard-link/shared:build: 
+@dashboard-link/shared:lint: 
+@dashboard-link/shared:lint: > @dashboard-link/shared@0.1.0 lint E:\CleanConnect\packages\shared
+@dashboard-link/shared:lint: > eslint src --ext .ts,.tsx
+@dashboard-link/shared:lint: 
+@dashboard-link/ui:lint: 
+@dashboard-link/ui:lint: > @dashboard-link/ui@0.1.0 lint E:\CleanConnect\packages\ui
+@dashboard-link/ui:lint: > eslint src --ext .ts,.tsx
+@dashboard-link/ui:lint: 
+@dashboard-link/sms:lint: 
+@dashboard-link/sms:lint: > @dashboard-link/sms@0.1.0 lint E:\CleanConnect\packages\sms
+@dashboard-link/sms:lint: > eslint src --ext .ts,.tsx
+@dashboard-link/sms:lint: 
+@dashboard-link/plugins:build: cache miss, executing b57de84461d9ab3b
+@dashboard-link/admin:lint: cache miss, executing 9c593c08f344ab8e
+@dashboard-link/worker:lint: cache miss, executing 75f74300d9fc3d12
+@dashboard-link/auth:build: cache miss, executing 1e24bae905763438
+@dashboard-link/tokens:lint: cache miss, executing ea60e90ad8f3f94f
+@dashboard-link/auth:lint: cache miss, executing 0cc51768813479bb
+@dashboard-link/plugins:lint: cache miss, executing e3811c98289fb516
+@dashboard-link/sms:lint: Invalid option '--ext' - perhaps you meant '-c'?
+@dashboard-link/sms:lint: You're using eslint.config.js, some command line flags are no longer available. Please see https://eslint.org/docs/latest/use/command-line-interface for details.
+@dashboard-link/sms:lint: ΓÇëELIFECYCLEΓÇë Command failed with exit code 2.
+@dashboard-link/auth:build: 
+@dashboard-link/auth:build: > @dashboard-link/auth@0.1.0 build E:\CleanConnect\packages\auth
+@dashboard-link/auth:build: > tsc
+@dashboard-link/auth:build: 
+@dashboard-link/worker:lint: 
+@dashboard-link/worker:lint: > @dashboard-link/worker@0.1.0 lint E:\CleanConnect\apps\worker
+@dashboard-link/worker:lint: > eslint src --ext .ts,.tsx
+@dashboard-link/worker:lint: 
+@dashboard-link/admin:lint: 
+@dashboard-link/admin:lint: > @dashboard-link/admin@0.1.0 lint E:\CleanConnect\apps\admin
+@dashboard-link/admin:lint: > eslint src --ext .ts,.tsx
+@dashboard-link/admin:lint: 
+@dashboard-link/plugins:build: 
+@dashboard-link/plugins:build: > @dashboard-link/plugins@0.1.0 build E:\CleanConnect\packages\plugins
+@dashboard-link/plugins:build: > tsc
+@dashboard-link/plugins:build: 
+@dashboard-link/auth:lint: 
+@dashboard-link/auth:lint: > @dashboard-link/auth@0.1.0 lint E:\CleanConnect\packages\auth
+@dashboard-link/auth:lint: > eslint src --ext .ts
+@dashboard-link/auth:lint: 
+@dashboard-link/plugins:lint: 
+@dashboard-link/plugins:lint: > @dashboard-link/plugins@0.1.0 lint E:\CleanConnect\packages\plugins
+@dashboard-link/plugins:lint: > eslint src --ext .ts,.tsx
+@dashboard-link/plugins:lint: 
+@dashboard-link/sms:lint: ERROR: command finished with error: command (E:\CleanConnect\packages\sms) C:\Program Files\nodejs\pnpm.CMD run lint exited (2)
+@dashboard-link/database:build: cache miss, executing d6cc69e9d4349f7d
+@dashboard-link/sms#lint: command (E:\CleanConnect\packages\sms) C:\Program Files\nodejs\pnpm.CMD run lint exited (2)
+
+ Tasks:    1 successful, 12 total
+Cached:    0 cached, 12 total
+  Time:    3.506s 
+Failed:    @dashboard-link/sms#lint
+
+ ERROR  run failed: command  exited (2)
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 2.

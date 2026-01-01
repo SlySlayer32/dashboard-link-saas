@@ -255,8 +255,8 @@ export interface TokenProviderCapabilities {
 export interface TokenMigration {
   from: string;
   to: string;
-  migrate: (tokens: any[]) => Promise<void>;
-  rollback?: (tokens: any[]) => Promise<void>;
+  migrate: (tokens: TokenResult[]) => Promise<void>;
+  rollback?: (tokens: TokenResult[]) => Promise<void>;
 }
 
 export interface TokenMigrationResult {
@@ -352,7 +352,7 @@ export type TokenProviderName = 'jwt' | 'database' | 'custom';
 export type TokenProviderMap = Record<TokenProviderName, TokenProvider>;
 
 // Token utility types
-export type TokenExtractor = (req: any) => string | null;
+export type TokenExtractor = (req: Record<string, unknown>) => string | null;
 export type TokenValidator = (token: string) => Promise<TokenValidation>;
 export type TokenGenerator = (payload: TokenPayload) => Promise<TokenResult>;
 
@@ -364,8 +364,8 @@ export interface TokenMiddlewareOptions {
   getToken?: TokenExtractor;
   isRevoked?: TokenValidator;
   credentialsRequired?: boolean;
-  onExpired?: (req: any, res: any, next: any) => void;
-  onUnauthorized?: (req: any, res: any, next: any) => void;
+  onExpired?: (req: Record<string, unknown>, res: Record<string, unknown>, next: () => void) => void;
+  onUnauthorized?: (req: Record<string, unknown>, res: Record<string, unknown>, next: () => void) => void;
 }
 
 // Token cache interface

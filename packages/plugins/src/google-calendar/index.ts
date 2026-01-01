@@ -9,6 +9,7 @@ export class GoogleCalendarAdapter extends BasePluginAdapter {
   readonly id = 'google-calendar'
   readonly name = 'Google Calendar'
   readonly version = '1.0.0'
+  readonly description = 'Fetches schedule data from Google Calendar API'
 
   protected async fetchExternalSchedule(
     _workerId: string,
@@ -147,5 +148,24 @@ export class GoogleCalendarAdapter extends BasePluginAdapter {
         errors: [error instanceof Error ? error.message : 'Connection failed']
       }
     }
+  }
+
+  getConfigSchema(): import('@dashboard-link/shared').PluginConfigSchema {
+    return {
+      type: 'object',
+      properties: {
+        calendarId: {
+          type: 'string',
+          title: 'Calendar ID',
+          description: 'Google Calendar ID (defaults to primary)'
+        },
+        accessToken: {
+          type: 'string',
+          title: 'Access Token',
+          description: 'Google Calendar API access token'
+        }
+      },
+      required: ['accessToken']
+    };
   }
 }

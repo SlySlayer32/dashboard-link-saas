@@ -15,6 +15,7 @@ export class AirtableAdapter extends BasePluginAdapter {
   readonly id = 'airtable'
   readonly name = 'Airtable'
   readonly version = '1.0.0'
+  readonly description = 'Fetches schedule and task data from Airtable bases'
 
   protected async fetchExternalSchedule(
     workerId: string,
@@ -229,5 +230,44 @@ export class AirtableAdapter extends BasePluginAdapter {
         errors: [error instanceof Error ? error.message : 'Connection failed']
       }
     }
+  }
+
+  getConfigSchema(): import('@dashboard-link/shared').PluginConfigSchema {
+    return {
+      type: 'object',
+      properties: {
+        apiKey: {
+          type: 'string',
+          title: 'API Key',
+          description: 'Airtable API key'
+        },
+        baseId: {
+          type: 'string',
+          title: 'Base ID',
+          description: 'Airtable base ID'
+        },
+        scheduleTable: {
+          type: 'string',
+          title: 'Schedule Table',
+          description: 'Table name for schedule data'
+        },
+        tasksTable: {
+          type: 'string',
+          title: 'Tasks Table',
+          description: 'Table name for task data'
+        },
+        workerField: {
+          type: 'string',
+          title: 'Worker Field',
+          description: 'Field name for worker assignment'
+        },
+        dateField: {
+          type: 'string',
+          title: 'Date Field',
+          description: 'Field name for date filtering'
+        }
+      },
+      required: ['apiKey', 'baseId']
+    };
   }
 }

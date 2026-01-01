@@ -11,8 +11,8 @@ import type {
     TokenProviderFactory,
     TokenRegistry
 } from '@dashboard-link/shared';
-import { DatabaseTokenProvider } from './providers/DatabaseTokenProvider';
-import { JWTTokenProvider } from './providers/JWTTokenProvider';
+import { DatabaseTokenProvider } from '../providers/DatabaseTokenProvider';
+import { JWTTokenProvider } from '../providers/JWTTokenProvider';
 
 export class TokenRegistryImpl implements TokenRegistry {
   private providers = new Map<string, TokenProvider>();
@@ -395,9 +395,11 @@ export function createDatabaseProvider(config: {
 }): TokenProvider {
   const providerConfig: TokenConfig = {
     provider: 'database',
-    tableName: config.tableName || 'tokens',
-    hashTokens: config.hashTokens !== false,
-    cleanupExpired: config.cleanupExpired !== false,
+    databaseConfig: {
+      tableName: config.tableName || 'tokens',
+      hashTokens: config.hashTokens !== false,
+      cleanupExpired: config.cleanupExpired !== false
+    },
     defaultExpiry: config.defaultExpiry || 3600,
     refreshExpiry: config.refreshExpiry || 30 * 24 * 60 * 60
   };

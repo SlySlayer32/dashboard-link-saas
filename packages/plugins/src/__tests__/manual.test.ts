@@ -6,33 +6,13 @@ import type {
     ValidationResult
 } from '@dashboard-link/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { BasePluginAdapter } from '../src/base/adapter'
-import { ManualAdapter } from '../src/manual'
+import { BasePluginAdapter } from '../base/adapter'
+import { ManualAdapter } from '../manual'
 
 // Mock Supabase
+const mockCreateClient = vi.fn()
 vi.mock('@supabase/supabase-js', () => ({
-  createClient: vi.fn(() => ({
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          gte: vi.fn(() => ({
-            lt: vi.fn(() => ({
-              order: vi.fn(() => ({
-                data: null,
-                error: null
-              }))
-            }))
-          }))
-        })),
-        lt: vi.fn(() => ({
-          order: vi.fn(() => ({
-            data: null,
-            error: null
-          }))
-        }))
-      }))
-    }))
-  }))
+  createClient: mockCreateClient
 }))
 
 describe('ManualAdapter', () => {
@@ -41,9 +21,30 @@ describe('ManualAdapter', () => {
 
   beforeEach(() => {
     adapter = new ManualAdapter()
-    // Get the mocked Supabase client
-    const { createClient } = require('@supabase/supabase-js')
-    mockSupabase = createClient()
+    // Setup mock Supabase client
+    mockSupabase = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            gte: vi.fn(() => ({
+              lt: vi.fn(() => ({
+                order: vi.fn(() => ({
+                  data: null,
+                  error: null
+                }))
+              }))
+            }))
+          })),
+          lt: vi.fn(() => ({
+            order: vi.fn(() => ({
+              data: null,
+              error: null
+            }))
+          }))
+        }))
+      }))
+    }
+    mockCreateClient.mockReturnValue(mockSupabase)
   })
 
   describe('Plugin Identity', () => {
@@ -95,7 +96,7 @@ describe('ManualAdapter', () => {
       const result = await (adapter as any).fetchExternalSchedule(
         'worker-123',
         dateRange,
-        { enabled: true, settings: {} }
+        { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} }
       )
 
       expect(mockSupabase.from).toHaveBeenCalledWith('manual_schedule_items')
@@ -128,7 +129,7 @@ describe('ManualAdapter', () => {
       }
 
       await expect(
-        (adapter as any).fetchExternalSchedule('worker-123', dateRange, { enabled: true, settings: {} })
+        (adapter as any).fetchExternalSchedule('worker-123', dateRange, { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} })
       ).rejects.toThrow('Database connection failed')
     })
   })
@@ -162,7 +163,7 @@ describe('ManualAdapter', () => {
 
       const result = await (adapter as any).fetchExternalTasks(
         'worker-123',
-        { enabled: true, settings: {} }
+        { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} }
       )
 
       expect(mockSupabase.from).toHaveBeenCalledWith('manual_task_items')
@@ -309,6 +310,9 @@ describe('ManualAdapter', () => {
   describe('validateConfig', () => {
     it('should validate config successfully', async () => {
       const config: PluginConfig = {
+        id: 'manual-plugin',
+        name: 'Manual Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {}
       }
@@ -325,6 +329,9 @@ describe('ManualAdapter', () => {
 
     it('should validate config for any settings since manual plugin has no external dependencies', async () => {
       const config: PluginConfig = {
+        id: 'manual-plugin',
+        name: 'Manual Plugin',
+        version: '1.0.0',
         enabled: true,
         settings: {
           anySetting: 'any-value'
@@ -360,7 +367,7 @@ describe('ManualAdapter', () => {
         end: '2024-01-02T00:00:00Z'
       }
 
-      const result = await adapter.getSchedule('worker-123', dateRange, { enabled: true, settings: {} })
+      const result = await adapter.getSchedule('worker-123', dateRange, { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} })
 
       expect(result.success).toBe(true)
       expect(result.data).toHaveLength(1)
@@ -379,14 +386,14 @@ describe('ManualAdapter', () => {
         end: '2024-01-02T00:00:00Z'
       }
 
-      const result = await adapter.getSchedule('worker-123', dateRange, { enabled: true, settings: {} })
+      const result = await adapter.getSchedule('worker-123', dateRange, { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} })
 
       expect(result.success).toBe(false)
       expect(result.data).toEqual([])
       expect(result.errors).toHaveLength(1)
-      expect(result.errors![0].code).toBe('PLUGIN_ERROR')
-      expect(result.errors![0].message).toBe('Database connection failed')
-      expect(result.errors![0].recoverable).toBe(true)
+      expect(result.errors?.[0]?.code).toBe('PLUGIN_ERROR')
+      expect(result.errors?.[0]?.message).toBe('Database connection failed')
+      expect(result.errors?.[0]?.retryable).toBe(true)
     })
   })
 
@@ -406,7 +413,7 @@ describe('ManualAdapter', () => {
 
       vi.spyOn(adapter as any, 'fetchExternalTasks').mockResolvedValue(mockExternalData)
 
-      const result = await adapter.getTasks('worker-123', { enabled: true, settings: {} })
+      const result = await adapter.getTasks('worker-123', { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} })
 
       expect(result.success).toBe(true)
       expect(result.data).toHaveLength(1)
@@ -419,12 +426,12 @@ describe('ManualAdapter', () => {
       const mockError = new Error('Database connection failed')
       vi.spyOn(adapter as any, 'fetchExternalTasks').mockRejectedValue(mockError)
 
-      const result = await adapter.getTasks('worker-123', { enabled: true, settings: {} })
+      const result = await adapter.getTasks('worker-123', { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} })
 
       expect(result.success).toBe(false)
       expect(result.data).toEqual([])
       expect(result.errors).toHaveLength(1)
-      expect(result.errors![0].code).toBe('PLUGIN_ERROR')
+      expect(result.errors?.[0]?.code).toBe('PLUGIN_ERROR')
     })
   })
 })

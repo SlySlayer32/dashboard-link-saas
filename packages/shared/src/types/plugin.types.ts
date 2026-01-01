@@ -117,13 +117,10 @@ export interface PluginHealthResult {
   responseTime?: number;
 }
 
-// Plugin registry interface
-export interface PluginRegistry {
-  register(plugin: PluginAdapter): void;
-  unregister(pluginId: string): void;
-  get(pluginId: string): PluginAdapter | undefined;
-  getAll(): PluginAdapter[];
-  getEnabled(): PluginAdapter[];
+// Alias for database adapters to maintain compatibility
+export interface AdapterHealthCheck extends PluginHealthResult {
+  adapter?: string;
+  metadata?: Record<string, unknown>;
 }
 
 // Plugin manager interface

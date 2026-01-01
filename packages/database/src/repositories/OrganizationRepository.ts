@@ -16,8 +16,7 @@ export class OrganizationRepository extends BaseRepository<Organization> {
   protected tableName = 'organizations';
 
   constructor(adapter: DatabaseAdapter) {
-    super();
-    this.adapter = adapter;
+    super(adapter);
   }
 
   async findById(id: string): Promise<Organization | null> {
@@ -78,7 +77,7 @@ export class OrganizationRepository extends BaseRepository<Organization> {
     this.validateUpdateData(data);
     
     try {
-      const updateData = this.setUpdateTimestamps(data);
+      const updateData = this.setUpdateTimestamp(data);
       const transformedData = this.transformToDB(updateData);
       
       const result = await this.adapter
@@ -116,7 +115,7 @@ export class OrganizationRepository extends BaseRepository<Organization> {
     this.validateId(id);
     
     try {
-      const updateData = this.setUpdateTimestamps({ settings });
+      const updateData = this.setUpdateTimestamp({ settings });
       const transformedData = this.transformToDB(updateData);
       
       const result = await this.adapter
@@ -177,19 +176,22 @@ export class OrganizationRepository extends BaseRepository<Organization> {
   }
 
   // Transform methods
-  protected transformFromDB(row: any): Organization {
-    if (!row) return null;
+  protected transformFromDB(row: unknown): Organization {
+    if (!row) {
+      throw new Error('Cannot transform null or undefined row to Organization');
+    }
     
+    const data = row as Record<string, unknown>;
     return {
-      id: row.id,
-      name: row.name,
-      settings: row.settings ? {
-        smsSenderId: row.settings.sms_sender_id,
-        defaultTokenExpiry: row.settings.default_token_expiry,
-        customMetadata: row.settings.custom_metadata
+      id: data.id as string,
+      name: data.name as string,
+      settings: data.settings ? {
+        smsSenderId: (data.settings as Record<string, unknown>).sms_sender_id as string | undefined,
+        defaultTokenExpiry: (data.settings as Record<string, unknown>).default_token_expiry as number | undefined,
+        customMetadata: (data.settings as Record<string, unknown>).custom_metadata as Record<string, unknown> | undefined
       } : undefined,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
+      createdAt: data.created_at as string,
+      updatedAt: data.updated_at as string,
     };
   }
 

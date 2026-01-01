@@ -1,4 +1,4 @@
-import { cva, type VariantProps } from 'class-variance-authority'
+import { cva } from 'class-variance-authority'
 import React from 'react'
 
 const skeletonVariants = cva('animate-pulse rounded-md bg-gray-200', {
@@ -14,9 +14,11 @@ const skeletonVariants = cva('animate-pulse rounded-md bg-gray-200', {
   },
 })
 
-export interface SkeletonProps extends VariantProps<typeof skeletonVariants> {
+export interface SkeletonProps {
+  variant?: 'default' | 'dark' | 'light'
   className?: string
   children?: React.ReactNode
+  style?: React.CSSProperties
 }
 
 /**
@@ -27,6 +29,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   variant,
   className = '',
   children,
+  style,
   ...props
 }) => {
   if (children) {
@@ -35,11 +38,12 @@ export const Skeleton: React.FC<SkeletonProps> = ({
         <div className='invisible'>{children}</div>
         <div
           className={`absolute inset-0 ${skeletonVariants({ variant })} ${className}`}
+          style={style}
           {...props}
         />
       </div>
     )
   }
 
-  return <div className={`${skeletonVariants({ variant })} ${className}`} {...props} />
+  return <div className={`${skeletonVariants({ variant })} ${className}`} style={style} {...props} />
 }

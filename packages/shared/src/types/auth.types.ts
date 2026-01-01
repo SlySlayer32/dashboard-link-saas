@@ -35,6 +35,7 @@ export interface AuthResult {
   expiresAt?: string;
   error?: string;
   errorCode?: AuthErrorCode;
+  details?: Record<string, unknown>;
 }
 
 export interface AuthSession {
@@ -193,6 +194,8 @@ export interface AuthRequest {
   body?: unknown;
   query?: Record<string, string>;
   params?: Record<string, string>;
+  path?: string;
+  url?: string;
 }
 
 export interface AuthResponse {
@@ -201,6 +204,7 @@ export interface AuthResponse {
   send(data: string): void;
   cookie(name: string, value: string, options?: CookieOptions): void;
   clearCookie(name: string, options?: CookieOptions): void;
+  header(name: string, value: string): void;
 }
 
 export interface AuthNext {
@@ -240,6 +244,7 @@ export interface AuthAuditLog {
 // Enums and Unions
 export type UserRole = 'admin' | 'manager' | 'worker' | 'guest';
 export type AuthErrorCode = 
+  | 'MISSING_TOKEN'
   | 'INVALID_CREDENTIALS'
   | 'USER_NOT_FOUND'
   | 'USER_DISABLED'
@@ -255,7 +260,8 @@ export type AuthErrorCode =
   | 'NETWORK_ERROR'
   | 'VALIDATION_ERROR'
   | 'UNAUTHORIZED'
-  | 'FORBIDDEN';
+  | 'FORBIDDEN'
+  | 'NOT_IMPLEMENTED';
 
 export type AuthAction =
   | 'LOGIN'

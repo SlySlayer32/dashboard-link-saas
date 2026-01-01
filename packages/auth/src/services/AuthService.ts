@@ -13,7 +13,8 @@ import type {
     AuthService,
     AuthSession,
     AuthUser,
-    AuthValidationResult
+    AuthValidationResult,
+    ValidationError
 } from '@dashboard-link/shared';
 
 export class AuthServiceImpl implements AuthService {
@@ -222,7 +223,7 @@ export class AuthServiceImpl implements AuthService {
 
   // Business logic methods
   private validateBusinessRules(credentials: AuthCredentials): AuthValidationResult {
-    const errors: any[] = [];
+    const errors: ValidationError[] = [];
 
     // Check if email domain is allowed (example business rule)
     const allowedDomains = this.config.providerConfig?.allowedDomains as string[] || [];
@@ -258,7 +259,7 @@ export class AuthServiceImpl implements AuthService {
   }
 
   private validatePasswordStrength(password: string): AuthValidationResult {
-    const errors: any[] = [];
+    const errors: ValidationError[] = [];
 
     if (!this.config.passwordPolicy) {
       return { valid: true, errors: [] };
@@ -323,7 +324,7 @@ export class AuthServiceImpl implements AuthService {
   }
 
   private validateProfileUpdates(updates: Partial<AuthUser>): AuthValidationResult {
-    const errors: any[] = [];
+    const errors: ValidationError[] = [];
 
     // Validate email format if provided
     if (updates.email && !this.isValidEmail(updates.email)) {
@@ -448,10 +449,10 @@ export class AuthServiceImpl implements AuthService {
     }
   }
 
-  private validateUserCreation(userData: any): AuthValidationResult {
-    const errors: any[] = [];
+  private validateUserCreation(userData: Record<string, unknown>): AuthValidationResult {
+    const errors: ValidationError[] = [];
 
-    if (!userData.email || !this.isValidEmail(userData.email)) {
+    if (!userData.email || !this.isValidEmail(userData.email as string)) {
       errors.push({
         field: 'email',
         message: 'Valid email is required',
@@ -466,13 +467,13 @@ export class AuthServiceImpl implements AuthService {
         code: 'REQUIRED'
       });
     } else {
-      const passwordValidation = this.validatePasswordStrength(userData.password);
+      const passwordValidation = this.validatePasswordStrength(userData.password as string);
       if (!passwordValidation.valid) {
         errors.push(...passwordValidation.errors);
       }
     }
 
-    if (!userData.role || !['admin', 'manager', 'worker', 'guest'].includes(userData.role)) {
+    if (!userData.role || !['admin', 'manager', 'worker', 'guest'].includes(userData.role as string)) {
       errors.push({
         field: 'role',
         message: 'Valid role is required',

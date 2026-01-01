@@ -45,19 +45,16 @@ interface RefreshTokenRecord {
 }
 
 export class DatabaseTokenProvider extends BaseTokenProvider {
-  private dbConfig: DatabaseProviderConfig;
-  private tableName: string;
-  private refreshTableName: string;
+  // private tableName: string; // Not used yet
 
-  constructor(config: DatabaseProviderConfig) {
-    super(config);
-    this.dbConfig = config;
-    this.tableName = config.tableName || 'tokens';
-    this.refreshTableName = `${this.tableName}_refresh`;
+  constructor(_config: DatabaseProviderConfig) {
+    super(_config);
+    // this.tableName = _config.tableName || 'tokens'; // Not used yet
+    // this._refreshTableName = `${this.tableName}_refresh`; // Not used yet
     
     // Start cleanup interval
-    if (config.cleanupInterval) {
-      setInterval(() => this.cleanup(), config.cleanupInterval * 1000);
+    if (_config.cleanupInterval) {
+      setInterval(() => this.cleanup(), _config.cleanupInterval * 1000);
     }
   }
 
@@ -80,7 +77,6 @@ export class DatabaseTokenProvider extends BaseTokenProvider {
 
       // Store token in database
       const tokenRecord = await this.insertTokenRecord({
-        id: this.generateId(),
         token_hash: tokenHash,
         user_id: payload.userId,
         organization_id: payload.organizationId,
@@ -359,7 +355,7 @@ export class DatabaseTokenProvider extends BaseTokenProvider {
         return null;
       }
 
-      return tokenRecord.metadata ? JSON.parse(tokenRecord.metadata) : null;
+      return tokenRecord.metadata ? (JSON.parse(tokenRecord.metadata) as Record<string, unknown>) : null;
     } catch {
       return null;
     }
@@ -376,7 +372,7 @@ export class DatabaseTokenProvider extends BaseTokenProvider {
       cleanupCount += await this.cleanupExpiredRefreshTokens();
 
       // Clean up old audit logs
-      this.cleanupAuditLogs();
+      await this.cleanupAuditLogs();
 
       // Clean up rate limiting
       this.cleanupRateLimit();
@@ -515,27 +511,27 @@ export class DatabaseTokenProvider extends BaseTokenProvider {
     } as DatabaseTokenRecord;
   }
 
-  private async findTokenRecord(tokenHash: string): Promise<DatabaseTokenRecord | null> {
+  private async findTokenRecord(_tokenHash: string): Promise<DatabaseTokenRecord | null> {
     // This would be implemented with actual database query
     // For now, return null (mock implementation)
     return null;
   }
 
-  private async findRefreshTokenRecord(tokenHash: string): Promise<RefreshTokenRecord | null> {
+  private async findRefreshTokenRecord(_tokenHash: string): Promise<RefreshTokenRecord | null> {
     // This would be implemented with actual database query
     // For now, return null (mock implementation)
     return null;
   }
 
-  private async updateLastUsed(tokenId: string): Promise<void> {
+  private async updateLastUsed(_tokenId: string): Promise<void> {
     // This would be implemented with actual database update
   }
 
-  private async revokeTokenRecord(tokenId: string): Promise<void> {
+  private async revokeTokenRecord(_tokenId: string): Promise<void> {
     // This would be implemented with actual database update
   }
 
-  private async markRefreshTokenUsed(refreshTokenId: string): Promise<void> {
+  private async markRefreshTokenUsed(_refreshTokenId: string): Promise<void> {
     // This would be implemented with actual database update
   }
 
@@ -544,7 +540,6 @@ export class DatabaseTokenProvider extends BaseTokenProvider {
     const refreshTokenHash = this.hashToken(refreshToken);
 
     await this.insertRefreshTokenRecord({
-      id: this.generateId(),
       token_hash: refreshTokenHash,
       user_id: payload.userId,
       organization_id: payload.organizationId,
@@ -558,7 +553,7 @@ export class DatabaseTokenProvider extends BaseTokenProvider {
     return refreshToken;
   }
 
-  private async insertRefreshTokenRecord(record: Omit<RefreshTokenRecord, 'id'>): Promise<void> {
+  private async insertRefreshTokenRecord(_record: Omit<RefreshTokenRecord, 'id'>): Promise<void> {
     // This would be implemented with actual database insertion
   }
 
@@ -572,12 +567,12 @@ export class DatabaseTokenProvider extends BaseTokenProvider {
     return 0;
   }
 
-  private async revokeUserTokensInDatabase(userId: string): Promise<number> {
+  private async revokeUserTokensInDatabase(_userId: string): Promise<number> {
     // This would be implemented with actual database query
     return 0;
   }
 
-  private async revokeOrganizationTokensInDatabase(organizationId: string): Promise<number> {
+  private async revokeOrganizationTokensInDatabase(_organizationId: string): Promise<number> {
     // This would be implemented with actual database query
     return 0;
   }

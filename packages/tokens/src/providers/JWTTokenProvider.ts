@@ -13,7 +13,7 @@ import type {
     TokenValidation
 } from '@dashboard-link/shared';
 import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
+import jwt, { Algorithm } from 'jsonwebtoken';
 import { BaseTokenProvider } from './BaseTokenProvider';
 
 export class JWTTokenProvider extends BaseTokenProvider {
@@ -53,15 +53,11 @@ export class JWTTokenProvider extends BaseTokenProvider {
         sanitizedPayload,
         this.jwtConfig.jwtSecret,
         {
-          algorithm: this.jwtConfig.algorithm || 'HS256',
-          expiresIn: Math.floor(payload.expiresAt - payload.issuedAt),
+          algorithm: (this.jwtConfig.algorithm as Algorithm) || 'HS256',
+          expiresIn: this.config.defaultExpiry,
           issuer: this.jwtConfig.issuer,
           audience: this.jwtConfig.audience,
-          keyid: this.jwtConfig.keyid,
-          header: {
-            typ: 'JWT',
-            alg: this.jwtConfig.algorithm || 'HS256'
-          }
+          jwtid: crypto.randomUUID()
         }
       );
 
@@ -120,7 +116,7 @@ export class JWTTokenProvider extends BaseTokenProvider {
 
       // Verify JWT signature and claims
       const decoded = jwt.verify(token, this.jwtConfig.jwtSecret, {
-        algorithms: [this.jwtConfig.algorithm || 'HS256'],
+        algorithms: [(this.jwtConfig.algorithm as Algorithm) || 'HS256'],
         issuer: this.jwtConfig.issuer,
         audience: this.jwtConfig.audience,
         clockTolerance: this.jwtConfig.clockTolerance || 0,
@@ -349,11 +345,12 @@ export class JWTTokenProvider extends BaseTokenProvider {
       // Test JWT signing and verification
       const testPayload = this.createTokenPayload('test-user', { expiresIn: 60 });
       const token = jwt.sign(testPayload, this.jwtConfig.jwtSecret, {
-        algorithm: this.jwtConfig.algorithm || 'HS256'
+        algorithm: (this.jwtConfig.algorithm as Algorithm) || 'HS256',
+        expiresIn: '1h'
       });
       
       const decoded = jwt.verify(token, this.jwtConfig.jwtSecret, {
-        algorithms: [this.jwtConfig.algorithm || 'HS256']
+        algorithms: [(this.jwtConfig.algorithm as Algorithm) || 'HS256']
       });
 
       return !!decoded;

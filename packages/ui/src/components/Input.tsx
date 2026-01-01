@@ -1,5 +1,5 @@
 import * as LabelPrimitive from '@radix-ui/react-label'
-import { cva, type VariantProps } from 'class-variance-authority'
+import { cva } from 'class-variance-authority'
 import React, { useId } from 'react'
 
 const inputVariants = cva(
@@ -25,8 +25,9 @@ const inputVariants = cva(
 )
 
 export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement>,
-    VariantProps<typeof inputVariants> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+  variant?: 'default' | 'error' | 'success'
+  size?: 'sm' | 'md' | 'lg'
   label?: string
   error?: string
   helperText?: string

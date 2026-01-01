@@ -25,7 +25,7 @@ export class AuthMiddlewareImpl implements AuthMiddleware {
     enableSessionTracking?: boolean;
   };
 
-  constructor(authService: AuthService, config: any = {}) {
+  constructor(authService: AuthService, config: Record<string, unknown> = {}) {
     this.authService = authService;
     this.config = {
       tokenHeader: 'Authorization',
@@ -206,33 +206,33 @@ export class AuthMiddlewareImpl implements AuthMiddleware {
 
   private getPath(req: AuthRequest): string {
     // Extract path from request (implementation depends on framework)
-    return (req as any).path || (req as any).url || '/';
+    return (req as Record<string, unknown>).path || (req as Record<string, unknown>).url || '/';
   }
 }
 
 // Factory functions for common middleware patterns
-export function createAuthMiddleware(authService: AuthService, config?: any): AuthMiddleware {
+export function createAuthMiddleware(authService: AuthService, config?: Record<string, unknown>): AuthMiddleware {
   return new AuthMiddlewareImpl(authService, config);
 }
 
-export function requireAuth(authService: AuthService, config?: any) {
+export function requireAuth(authService: AuthService, config?: Record<string, unknown>) {
   const middleware = createAuthMiddleware(authService, config);
   return middleware.authenticate.bind(middleware);
 }
 
-export function requireRole(roles: UserRole[], authService: AuthService, config?: any) {
+export function requireRole(roles: UserRole[], authService: AuthService, config?: Record<string, unknown>) {
   const middleware = createAuthMiddleware(authService, config);
   return middleware.authorize(roles).bind(middleware);
 }
 
-export function requireOrganization(organizationId: string, authService: AuthService, config?: any) {
+export function requireOrganization(organizationId: string, authService: AuthService, config?: Record<string, unknown>) {
   const middleware = createAuthMiddleware(authService, config);
   return middleware.authorizeOrganization(organizationId).bind(middleware);
 }
 
 // Express.js specific implementation
 export class ExpressAuthMiddleware extends AuthMiddlewareImpl {
-  constructor(authService: AuthService, config?: any) {
+  constructor(authService: AuthService, config?: Record<string, unknown>) {
     super(authService, config);
   }
 
