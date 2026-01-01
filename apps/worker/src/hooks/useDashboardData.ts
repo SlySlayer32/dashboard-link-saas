@@ -1,11 +1,11 @@
-import type { ScheduleItem, TaskItem, Worker } from '@dashboard-link/shared'
+import type { StandardScheduleItem, StandardTaskItem, Worker } from '@dashboard-link/shared'
 import { UseQueryResult, useQuery } from '@tanstack/react-query'
 import { API_URL } from '../lib/config'
 
 interface DashboardData {
   worker: Worker
-  schedule: ScheduleItem[]
-  tasks: TaskItem[]
+  schedule: StandardScheduleItem[]
+  tasks: StandardTaskItem[]
 }
 
 export type DashboardErrorCode =

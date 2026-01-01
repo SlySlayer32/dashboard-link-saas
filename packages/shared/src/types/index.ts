@@ -10,7 +10,48 @@ export {
 } from './auth.types';
 
 // Token types (avoid conflicts with auth.types)
-export { type DatabaseProviderConfig, type JWTProviderConfig, type TokenAuditLog, type TokenConfig, type TokenEvent, type TokenEventHandler, type TokenGenerationOptions, type TokenManager, type TokenPayload, type TokenProvider, type TokenProviderCapabilities, type TokenProviderFactory, type TokenRegistry, type TokenResult, type TokenSecurityConfig, type TokenStats, type TokenValidation } from './token.types';
+export {
+  type DatabaseProviderConfig,
+  type JWTProviderConfig,
+  type TokenAuditLog,
+  type TokenBlacklist,
+  type TokenCache,
+  type TokenConfig,
+  type TokenError,
+  type TokenEvent,
+  type TokenEventHandler,
+  type TokenExtractor,
+  type TokenGenerationOptions,
+  type TokenGenerator,
+  type TokenManager,
+  type TokenMiddlewareOptions,
+  type TokenMigration,
+  type TokenMigrationResult,
+  type TokenPayload,
+  type TokenProvider,
+  type TokenProviderCapabilities,
+  type TokenProviderFactory,
+  type TokenProviderMap,
+  type TokenProviderName,
+  type TokenRateLimit,
+  type TokenRateLimitResult,
+  type TokenRegistry,
+  type TokenResult,
+  type TokenSecurityConfig,
+  type TokenStats,
+  type TokenStorageOptions,
+  type TokenValidation,
+  type TokenValidator,
+  type WorkerTokenPayload,
+  type WorkerTokenResult,
+  type WorkerTokenValidation
+} from './token.types';
+
+// SMS types - full export
+export * from './sms.types';
+
+// Repository types - full export
+export * from './repository.types';
 
 // Legacy simple types (avoid conflicts with .types.ts files)
 export type { DashboardWidget } from './dashboard';

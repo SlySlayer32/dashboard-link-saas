@@ -48,11 +48,14 @@ export class DIContainer {
     const { database } = this.config;
     
     switch (database.type) {
-      case 'supabase':
+      case 'supabase': {
+        // Import the SupabaseClient type from SupabaseAdapter
+        type SupabaseClient = Parameters<typeof createSupabaseAdapter>[0];
         return createSupabaseAdapter(
-          database.connection as import('./adapters/SupabaseAdapter.js').SupabaseClient,
+          database.connection as SupabaseClient,
           database.config || {}
         );
+      }
       
       case 'postgresql':
         // Will be implemented when PostgreSQLAdapter is created

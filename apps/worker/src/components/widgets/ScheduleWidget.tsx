@@ -1,8 +1,8 @@
-import type { ScheduleItem } from '@dashboard-link/shared';
+import type { StandardScheduleItem } from '@dashboard-link/shared';
 import { formatTime } from '@dashboard-link/shared';
 
 interface ScheduleWidgetProps {
-  schedule: ScheduleItem[];
+  schedule: StandardScheduleItem[];
 }
 
 function ScheduleWidget({ schedule }: ScheduleWidgetProps) {

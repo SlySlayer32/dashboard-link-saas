@@ -62,7 +62,7 @@ export abstract class BaseSMSProvider implements SMSProvider {
     error: string,
     errorType: SMSError['type'] = 'temporary',
     providerData?: Record<string, unknown>,
-    retryable: boolean = true
+    _retryable: boolean = true
   ): SMSResult {
     return {
       success: false,

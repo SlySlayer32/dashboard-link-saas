@@ -79,7 +79,7 @@ export const QueryBoundary = <TData, TError>({
     if (errorFallback) {
       return <>{errorFallback}</>
     }
-    return <DefaultError error={query.error} retry={query.refetch ? () => query.refetch() : undefined} />
+    return <DefaultError error={query.error} retry={query.refetch ? () => query.refetch?.() : undefined} />
   }
 
   // Success state

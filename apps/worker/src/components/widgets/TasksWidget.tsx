@@ -1,7 +1,7 @@
-import type { TaskItem } from '@dashboard-link/shared';
+import type { StandardTaskItem } from '@dashboard-link/shared';
 
 interface TasksWidgetProps {
-  tasks: TaskItem[];
+  tasks: StandardTaskItem[];
 }
 
 function TasksWidget({ tasks }: TasksWidgetProps) {
@@ -48,11 +48,11 @@ function TasksWidget({ tasks }: TasksWidgetProps) {
     }
     acc[priority].push(task);
     return acc;
-  }, {} as Record<string, TaskItem[]>);
+  }, {} as Record<string, StandardTaskItem[]>);
 
   // Sort tasks within each priority group by dueDate
   Object.keys(groupedTasks).forEach(priority => {
-    groupedTasks[priority].sort((a, b) => {
+    groupedTasks[priority].sort((a: StandardTaskItem, b: StandardTaskItem) => {
       if (!a.dueDate) return 1;
       if (!b.dueDate) return -1;
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
@@ -79,7 +79,7 @@ function TasksWidget({ tasks }: TasksWidgetProps) {
                 </h3>
               </div>
             )}
-            {groupedTasks[priority].map((task) => (
+            {groupedTasks[priority].map((task: StandardTaskItem) => (
               <div key={task.id} className="px-6 py-4">
                 <div className="flex items-start">
                   <input

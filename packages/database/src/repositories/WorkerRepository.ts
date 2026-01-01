@@ -59,7 +59,7 @@ export class WorkerRepository extends BaseRepository<Worker> {
     
     try {
       const transformedData = this.transformToDB(data);
-      const result = await this.adapter
+      await this.adapter
         .query(this.tableName)
         .where(transformedData)
         .first();
@@ -144,7 +144,7 @@ export class WorkerRepository extends BaseRepository<Worker> {
     });
   }
 
-  async getWorkerStats(workerId: string): Promise<{
+  async getWorkerStats(_workerId: string): Promise<{
     totalSms: number;
     sentSms: number;
     failedSms: number;

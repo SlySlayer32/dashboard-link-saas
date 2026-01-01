@@ -150,7 +150,7 @@ export class DashboardRepository extends BaseRepository<Dashboard> {
     this.validateId(id);
     
     try {
-      const updateData = this.setUpdateTimestamps({ config });
+      const updateData = this.setUpdateTimestamp({ config });
       const transformedData = this.transformToDB(updateData);
       
       const result = await this.adapter

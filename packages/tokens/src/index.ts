@@ -20,6 +20,17 @@ export type {
     WorkerTokenValidation
 } from '@dashboard-link/shared';
 
+// Import types for use in this file
+import type {
+    TokenConfig,
+    TokenGenerationOptions,
+    TokenResult,
+    TokenValidation,
+    TokenStats,
+    JWTProviderConfig,
+    DatabaseProviderConfig
+} from '@dashboard-link/shared';
+
 // Base provider
 export { BaseTokenProvider } from './providers/BaseTokenProvider';
 
@@ -30,10 +41,16 @@ export { JWTTokenProvider } from './providers/JWTTokenProvider';
 // Token manager
 export { TokenManagerService } from './TokenManager';
 
+// Import TokenManagerService for use in utility functions
+import { TokenManagerService } from './TokenManager';
+
 // Registry
 export {
     TokenRegistryImpl, clearTokenProviders, createDatabaseProvider, createJWTProvider, createProviderFromEnvironment, createTokenProvider, getTokenProvider, hasTokenProvider, listTokenProviders, registerTokenProvider, tokenRegistry, unregisterTokenProvider
 } from './registry/TokenRegistry';
+
+// Import tokenRegistry for use in utility functions
+import { tokenRegistry } from './registry/TokenRegistry';
 
 // Utility functions
 export function createTokenManager(config: TokenConfig): TokenManagerService {
@@ -155,9 +172,11 @@ export function getTokenConfigFromEnvironment(): TokenConfig {
     case 'database':
       return {
         provider: 'database',
-        tableName: process.env.TOKEN_TABLE_NAME || 'tokens',
-        hashTokens: process.env.TOKEN_HASH !== 'false',
-        cleanupExpired: process.env.TOKEN_CLEANUP !== 'false',
+        databaseConfig: {
+          tableName: process.env.TOKEN_TABLE_NAME || 'tokens',
+          hashTokens: process.env.TOKEN_HASH !== 'false',
+          cleanupExpired: process.env.TOKEN_CLEANUP !== 'false'
+        },
         defaultExpiry: parseInt(process.env.TOKEN_DEFAULT_EXPIRY || '3600'),
         refreshExpiry: parseInt(process.env.TOKEN_REFRESH_EXPIRY || '2592000'),
         cleanupInterval: parseInt(process.env.TOKEN_CLEANUP_INTERVAL || '3600')
