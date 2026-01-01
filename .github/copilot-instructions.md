@@ -364,7 +364,7 @@ const result = await asyncFunction(); // T
 - **Conventions**: See `/docs/conventions.md` for detailed patterns
 - **Supabase Docs**: https://supabase.com/docs
 - **Hono.js Docs**: https://hono.dev
-- **TanStack Query**: https://tanstack.com/query/latest
+- **TanStack Query**: https://tanstack.com/query/v5
 
 ## 💡 When Helping the Founder
 
