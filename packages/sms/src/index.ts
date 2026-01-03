@@ -20,5 +20,21 @@ export { TwilioProvider } from './providers/TwilioProvider';
 export { SMSManagerImpl, smsManager } from './manager/SMSManager';
 export { SMSRegistryImpl, smsRegistry } from './registry/SMSRegistry';
 
-// Legacy exports for backward compatibility
-// export { SMSService } from './services/SMSService'; // TODO: Implement SMSService
+// Core Services
+export { SMSService, smsService } from './services/SMSService';
+export { SMSValidationService } from './services/SMSValidationService';
+export { SMSQueueService } from './services/SMSQueueService';
+export { SMSAnalyticsService } from './services/SMSAnalyticsService';
+export { SMSWebhookService, TwilioWebhookHandler, AWSSNSWebhookHandler, MessageBirdWebhookHandler } from './services/SMSWebhookService';
+
+// Service Types
+export type { ValidationResult, BatchValidationResult, PhoneNumberValidationResult } from './services/SMSValidationService';
+export type { MessagePriority, QueueStats } from './services/SMSQueueService';
+export type { DateRange, FailureAnalysisResult, CostOptimizationResult, ProviderPerformanceResult, PeakUsageResult } from './services/SMSAnalyticsService';
+export type { DeliveryReport, WebhookHandler } from './services/SMSWebhookService';
+
+// Utilities
+export * from './utils/phoneUtils';
+export * from './utils/messageUtils';
+export { SMSLogger, smsLogger, measureTime, logSMSOperation, logSMSError } from './utils/logger';
+export type { LogLevel, LogMetadata } from './utils/logger';
