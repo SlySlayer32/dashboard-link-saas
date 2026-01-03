@@ -321,11 +321,14 @@ export function isSpamLike(message: string): boolean {
     /\b(free|win|prize|claim|act now|limited time)\b/gi,
     /\b(click here|download now|buy now)\b/gi,
     /!!!+/,
-    /\$\$\$+/,
-    /ALL CAPS MESSAGE/i
+    /\$\$\$+/
   ];
   
-  const upperCaseRatio = (message.match(/[A-Z]/g) || []).length / message.length;
+  // Check uppercase ratio - calculate based on letters only
+  const upperCaseCount = (message.match(/[A-Z]/g) || []).length;
+  const letterCount = (message.match(/[A-Za-z]/g) || []).length;
+  const upperCaseRatio = letterCount === 0 ? 0 : upperCaseCount / letterCount;
+  
   if (upperCaseRatio > 0.5 && message.length > 20) {
     return true; // Too many uppercase letters
   }

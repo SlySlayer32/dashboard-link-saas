@@ -186,13 +186,24 @@ export class TwilioWebhookHandler implements WebhookHandler {
     };
   }
 
-  verifySignature(_signature: string, _body: string, _authToken: string): boolean {
+  verifySignature(signature: string, body: string, authToken: string): boolean {
     // Twilio uses HMAC SHA-1 for signature verification
-    // This is a simplified version - in production, use Twilio's SDK
-    
-    // For now, return true (implement proper signature verification)
-    // In production: use crypto.createHmac('sha1', authToken).update(body).digest('base64')
-    return true;
+    try {
+      const crypto = require('crypto');
+      const expectedSignature = crypto
+        .createHmac('sha1', authToken)
+        .update(Buffer.from(body, 'utf-8'))
+        .digest('base64');
+      
+      // Use timing-safe comparison to prevent timing attacks
+      return crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(expectedSignature)
+      );
+    } catch (error) {
+      // If signature verification fails, reject the webhook
+      return false;
+    }
   }
 
   private mapTwilioStatus(twilioStatus: string): DeliveryReport['status'] {
@@ -233,10 +244,25 @@ export class AWSSNSWebhookHandler implements WebhookHandler {
     };
   }
 
-  verifySignature(_signature: string, _body: string, _secret: string): boolean {
+  verifySignature(signature: string, body: string, secret: string): boolean {
     // AWS SNS signature verification
-    // This is a simplified version - in production, verify SNS message signature
-    return true;
+    // SNS signs messages with SHA256 HMAC
+    try {
+      const crypto = require('crypto');
+      const expectedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(Buffer.from(body, 'utf-8'))
+        .digest('base64');
+      
+      // Use timing-safe comparison to prevent timing attacks
+      return crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(expectedSignature)
+      );
+    } catch (error) {
+      // If signature verification fails, reject the webhook
+      return false;
+    }
   }
 
   private mapSNSStatus(snsStatus: string): DeliveryReport['status'] {
@@ -270,10 +296,25 @@ export class MessageBirdWebhookHandler implements WebhookHandler {
     };
   }
 
-  verifySignature(_signature: string, _body: string, _secret: string): boolean {
+  verifySignature(signature: string, body: string, secret: string): boolean {
     // MessageBird signature verification
-    // This is a simplified version - in production, verify MessageBird signature
-    return true;
+    // MessageBird uses HMAC SHA256 for signature verification
+    try {
+      const crypto = require('crypto');
+      const expectedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(Buffer.from(body, 'utf-8'))
+        .digest('hex');
+      
+      // Use timing-safe comparison to prevent timing attacks
+      return crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(expectedSignature)
+      );
+    } catch (error) {
+      // If signature verification fails, reject the webhook
+      return false;
+    }
   }
 
   private mapMessageBirdStatus(mbStatus: string): DeliveryReport['status'] {

@@ -193,31 +193,34 @@ export class AWSSNSProvider extends BaseSMSProvider {
 
   /**
    * Make API request to AWS SNS
-   * Note: This is a simplified version - in production, use AWS SDK
+   * 
+   * IMPORTANT: This is a placeholder implementation for demonstration purposes.
+   * In production, you MUST use the AWS SDK for JavaScript (@aws-sdk/client-sns)
+   * to ensure proper AWS Signature Version 4 authentication.
+   * 
+   * Example production implementation:
+   * ```typescript
+   * import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
+   * 
+   * const client = new SNSClient({
+   *   region: this.region,
+   *   credentials: {
+   *     accessKeyId: this.accessKeyId,
+   *     secretAccessKey: this.secretAccessKey
+   *   }
+   * });
+   * 
+   * const command = new PublishCommand({ Message, PhoneNumber });
+   * return await client.send(command);
+   * ```
    */
   private async makeAPIRequest(action: string, params: Record<string, any>): Promise<Response> {
-    // This is a placeholder - in production, use AWS SDK for JavaScript
-    // AWS SNS uses AWS Signature Version 4 for authentication
-    
-    const endpoint = `https://sns.${this.region}.amazonaws.com/`;
-    
-    const body = new URLSearchParams({
-      Action: action,
-      Version: '2010-03-31',
-      ...this.flattenParams(params)
-    }).toString();
-
-    // In production, implement AWS Signature V4
-    // For now, this is a placeholder
-    return fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-Amz-Date': new Date().toISOString(),
-        // Would need proper AWS Signature V4 headers
-      },
-      body
-    });
+    // TODO: Replace with AWS SDK - This placeholder will fail authentication
+    throw new Error(
+      'AWS SNS provider requires AWS SDK for JavaScript (@aws-sdk/client-sns). ' +
+      'This placeholder implementation does not support AWS Signature V4 authentication. ' +
+      'Install @aws-sdk/client-sns and implement proper authentication before using this provider.'
+    );
   }
 
   /**

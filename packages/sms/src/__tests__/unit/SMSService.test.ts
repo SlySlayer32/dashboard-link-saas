@@ -107,7 +107,7 @@ describe('SMSService', () => {
         body: 'Test message'
       };
 
-      const result = await smsService.sendMessage(message, {
+      await smsService.sendMessage(message, {
         providerIds: ['test-provider'],
         skipValidation: true
       });
