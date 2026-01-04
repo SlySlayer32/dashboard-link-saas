@@ -47,6 +47,7 @@ jobs:
         working-directory: scripts/orchestration
         run: |
           npm install
+          npm install -g typescript
       
       - name: Build orchestration scripts
         working-directory: scripts/orchestration
@@ -96,6 +97,7 @@ jobs:
         working-directory: scripts/orchestration
         run: |
           npm install
+          npm install -g typescript
       
       - name: Build orchestration scripts
         working-directory: scripts/orchestration
@@ -176,6 +178,7 @@ jobs:
         working-directory: scripts/orchestration
         run: |
           npm install
+          npm install -g typescript
       
       - name: Build orchestration scripts
         working-directory: scripts/orchestration

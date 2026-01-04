@@ -8,7 +8,6 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import yaml from 'js-yaml';
 
 interface SkillMetadata {
   name: string;
@@ -26,7 +25,7 @@ interface SkillExecutionResult {
   skill: string;
   worker: string;
   status: 'success' | 'failure' | 'skipped';
-  output?: string;
+  output: string;
   error?: string;
   duration: number;
   timestamp: string;
@@ -70,8 +69,16 @@ class SkillRunner {
     const frontmatterText = match[1];
     const bodyText = match[2];
 
-    // Parse YAML frontmatter using js-yaml
-    const metadata = yaml.load(frontmatterText) as SkillMetadata;
+    // Simple YAML parser for frontmatter
+    const metadata: SkillMetadata = { name: '', description: '' };
+    frontmatterText.split('\n').forEach(line => {
+      const colonIndex = line.indexOf(':');
+      if (colonIndex > 0) {
+        const key = line.substring(0, colonIndex).trim();
+        const value = line.substring(colonIndex + 1).trim();
+        metadata[key] = value;
+      }
+    });
 
     // Load references if they exist
     const references: Record<string, string> = {};
@@ -135,6 +142,7 @@ class SkillRunner {
         skill: this.skillName,
         worker: workerName,
         status: 'failure',
+        output: '',
         error: error instanceof Error ? error.message : String(error),
         duration,
         timestamp: new Date().toISOString(),
@@ -148,7 +156,7 @@ class SkillRunner {
 
   /**
    * Generate output for the skill
-   * In a real implementation, this would call an AI API or run automated checks
+   * Uses the skill definition content dynamically instead of hard-coded logic
    */
   private generateOutput(context: any): string {
     const output: string[] = [];
@@ -161,55 +169,43 @@ class SkillRunner {
     output.push('## Analysis');
     output.push('');
     
-    // Basic analysis based on skill type
-    if (this.skillName === 'code-quality-reviewer') {
-      output.push('### Code Quality Review');
-      output.push('');
-      output.push('This skill would perform:');
-      output.push('- TypeScript type checking');
-      output.push('- ESLint analysis');
-      output.push('- React patterns validation');
-      output.push('- Error handling verification');
-      output.push('- Security vulnerability scanning');
-      output.push('');
-      output.push('**Note**: Full analysis requires AI integration or running actual linters.');
-    } else if (this.skillName === 'architecture-guide') {
-      output.push('### Architecture Review');
-      output.push('');
-      output.push('This skill would validate:');
-      output.push('- Zapier-style adapter pattern compliance');
-      output.push('- Service/Contract/Adapter layer separation');
-      output.push('- Row-Level Security (RLS) implementation');
-      output.push('- Plugin adapter contracts');
-      output.push('');
-      output.push('**Note**: Full analysis requires codebase inspection and AI guidance.');
-    } else if (this.skillName === 'error-fixer') {
-      output.push('### Error Analysis');
-      output.push('');
-      output.push('This skill would identify:');
-      output.push('- TypeScript compilation errors');
-      output.push('- Build failures');
-      output.push('- Test failures');
-      output.push('- Runtime errors');
-      output.push('');
-      output.push('**Note**: Full analysis requires running builds and tests.');
-    } else if (this.skillName === 'naming-conventions') {
-      output.push('### Naming Conventions Review');
-      output.push('');
-      output.push('This skill would check:');
-      output.push('- File naming patterns (PascalCase for components, camelCase for hooks)');
-      output.push('- Variable and function naming');
-      output.push('- TypeScript interface/type naming');
-      output.push('- Database naming conventions');
-    } else if (this.skillName === 'next-steps-planner') {
-      output.push('### Next Steps Planning');
-      output.push('');
-      output.push('This skill would suggest:');
-      output.push('- Post-completion tasks');
-      output.push('- Testing requirements');
-      output.push('- Documentation updates');
-      output.push('- Deployment checklist');
+    // Generic output based on skill definition body
+    output.push('This skill provides the following guidance:');
+    output.push('');
+    
+    // Extract key points from skill body (first few headings or bullet points)
+    const bodyLines = this.skillDefinition!.body.split('\n');
+    const keyPoints: string[] = [];
+    
+    for (const line of bodyLines) {
+      // Look for headings (##, ###) or bullet points (-, *)
+      if (line.match(/^#{2,3}\s+(.+)$/)) {
+        const heading = line.replace(/^#{2,3}\s+/, '');
+        keyPoints.push(`- **${heading}**`);
+        if (keyPoints.length >= 5) break;
+      } else if (line.match(/^[-*]\s+(.+)$/) && keyPoints.length < 8) {
+        keyPoints.push(line);
+      }
     }
+    
+    if (keyPoints.length > 0) {
+      output.push(...keyPoints);
+    } else {
+      output.push('- Review and apply skill guidelines');
+      output.push('- Follow best practices documented in skill');
+    }
+    
+    output.push('');
+    output.push('**Note**: This is a placeholder output. Full analysis requires AI integration or automated tooling.');
+    output.push('');
+    output.push('## Skill Content Preview');
+    output.push('');
+    output.push('<details>');
+    output.push('<summary>View Skill Definition</summary>');
+    output.push('');
+    output.push(this.skillDefinition!.body.substring(0, 500) + '...');
+    output.push('');
+    output.push('</details>');
 
     output.push('');
     output.push('## Context');

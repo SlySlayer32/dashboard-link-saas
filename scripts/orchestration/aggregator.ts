@@ -40,7 +40,7 @@ class ResultsAggregator {
       totalDuration,
       recommendations,
       metadata: {
-        eventType: results[0]?.metadata?.eventType || process.env.GITHUB_EVENT_NAME || 'unknown',
+        eventType: results[0]?.timestamp ? 'aggregated' : 'unknown',
         repository: process.env.GITHUB_REPOSITORY || 'unknown',
         timestamp: new Date().toISOString(),
       },
