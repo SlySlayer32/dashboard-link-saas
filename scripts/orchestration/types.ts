@@ -104,6 +104,10 @@ export interface SkillResult {
   error?: string;
   duration?: number;
   timestamp: string;
+  metadata?: {
+    eventType: string;
+    repository: string;
+  };
 }
 
 export interface AggregatedResults {

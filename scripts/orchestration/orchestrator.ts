@@ -419,6 +419,16 @@ function main(): void {
       fs.appendFileSync(githubOutput, `worker-count=${plan.workers.length}\n`);
       fs.appendFileSync(githubOutput, `workers=${workerNames}\n`);
       fs.appendFileSync(githubOutput, `parallel=${plan.parallel}\n`);
+    } else {
+      // When running outside of GitHub Actions, log outputs for local debugging
+      const workerNames = plan.workers.map(w => w.name).join(',');
+      const enabledWorkers = plan.workers.filter(w => w.enabled).map(w => w.name);
+      console.log('ℹ️  GITHUB_OUTPUT not set (running locally)');
+      console.log('   Outputs that would be set:');
+      console.log(`   - worker-matrix: ${JSON.stringify({ worker: enabledWorkers })}`);
+      console.log(`   - worker-count: ${plan.workers.length}`);
+      console.log(`   - workers: ${workerNames}`);
+      console.log(`   - parallel: ${plan.parallel}`);
     }
 
     console.log('✅ Worker plan generated successfully');

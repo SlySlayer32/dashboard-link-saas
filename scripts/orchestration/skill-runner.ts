@@ -8,6 +8,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import yaml from 'js-yaml';
 
 interface SkillMetadata {
   name: string;
@@ -25,7 +26,7 @@ interface SkillExecutionResult {
   skill: string;
   worker: string;
   status: 'success' | 'failure' | 'skipped';
-  output: string;
+  output?: string;
   error?: string;
   duration: number;
   timestamp: string;
@@ -69,16 +70,8 @@ class SkillRunner {
     const frontmatterText = match[1];
     const bodyText = match[2];
 
-    // Simple YAML parser for frontmatter
-    const metadata: SkillMetadata = { name: '', description: '' };
-    frontmatterText.split('\n').forEach(line => {
-      const colonIndex = line.indexOf(':');
-      if (colonIndex > 0) {
-        const key = line.substring(0, colonIndex).trim();
-        const value = line.substring(colonIndex + 1).trim();
-        metadata[key] = value;
-      }
-    });
+    // Parse YAML frontmatter using js-yaml
+    const metadata = yaml.load(frontmatterText) as SkillMetadata;
 
     // Load references if they exist
     const references: Record<string, string> = {};
@@ -142,7 +135,6 @@ class SkillRunner {
         skill: this.skillName,
         worker: workerName,
         status: 'failure',
-        output: '',
         error: error instanceof Error ? error.message : String(error),
         duration,
         timestamp: new Date().toISOString(),

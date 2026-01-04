@@ -72,7 +72,7 @@ class CommentPoster {
         path: apiPath,
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.token}`,
+          'Authorization': `token ${this.token}`,
           'Accept': 'application/vnd.github.v3+json',
           'Content-Type': 'application/json',
           'User-Agent': 'Dashboard-Link-Agent-Orchestrator',
