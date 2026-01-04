@@ -45,3 +45,6 @@ lerna-debug.log*
 
 *storybook.log
 storybook-static
+
+# Skill packages (generated)
+*.skill
