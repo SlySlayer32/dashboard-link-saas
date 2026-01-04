@@ -48,3 +48,11 @@ storybook-static
 
 # Skill packages (generated)
 *.skill
+
+# Orchestration outputs
+outputs/
+scripts/orchestration/dist/
+scripts/orchestration/node_modules/
+
+# Test events
+test-events/
