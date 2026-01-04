@@ -1,5 +1,50 @@
 # GitHub Copilot Instructions for Dashboard Link SaaS
 
+> **Last Updated:** January 4, 2026  
+> **Version:** 1.0  
+> **Maintained for:** Non-technical founder using "vibe coding" approach
+
+---
+
+## ⚡ Quick Reference
+
+### Essential Commands
+```bash
+# Development
+pnpm dev              # Start all apps in development mode
+pnpm build            # Build all apps and packages
+pnpm test             # Run all tests
+pnpm lint             # Check code quality
+pnpm lint:fix         # Auto-fix linting issues
+
+# Database
+pnpm db:start         # Start local Supabase
+pnpm db:migrate       # Apply migrations
+pnpm db:reset         # Reset with seed data
+```
+
+### Project Structure
+```
+dashboard-link-saas/
+├── apps/
+│   ├── admin/        → Admin dashboard (port 5173)
+│   ├── worker/       → Worker mobile view (port 5174)
+│   └── api/          → Backend API (port 3000)
+└── packages/
+    ├── ui/           → Shared React components
+    ├── sms/          → SMS service contracts
+    ├── plugins/      → Plugin adapters
+    └── database/     → Supabase client
+```
+
+### Key Concepts
+- **Plugin-Based**: Like Zapier - external APIs → adapters → standard format
+- **Multi-Tenant**: Every table has `organization_id` + Row-Level Security (RLS)
+- **Token-Based Access**: Workers get time-limited SMS links (no login needed)
+- **Mobile-First**: Workers view dashboards on phones via SMS links
+
+---
+
 ## 🎯 Project Overview
 
 This is **Dashboard Link** - a Zapier-style enterprise SaaS platform that delivers personalized daily dashboards to workers via SMS. The project follows a **plugin-based architecture** similar to Zapier, allowing integration with various data sources (Google Calendar, Airtable, Notion, etc.).
@@ -554,3 +599,47 @@ When reviewing or suggesting code, check:
 - [ ] No hardcoded values (use env vars)
 - [ ] Follows file naming conventions
 - [ ] Imports are clean and organized
+
+---
+
+## 🆘 Getting Help
+
+### For Non-Technical Founders
+- **Ask in plain language** - Copilot understands vague requirements
+- **Iterate on solutions** - Try something, see if it works, refine
+- **Reference existing code** - "Make it work like WorkerList.tsx"
+- **Break down problems** - "First, show me how to fetch data. Then, how to display it."
+
+### Documentation Resources
+- **Architecture Deep Dive**: `/ARCHITECTURE_BLUEPRINT.md`
+- **Setup Guide**: `/README.md`
+- **Orchestration Guide**: `/.github/AGENT_ORCHESTRATION_GUIDE.md`
+- **Skills System**: `/SKILLS_SYSTEM_GUIDE.md`
+
+### Common Questions
+
+**Q: How do I add a new data source plugin?**  
+A: See "Plugin System Architecture" section above. Create an adapter class implementing `PluginAdapter` interface.
+
+**Q: How do I add a new API endpoint?**  
+A: See "API Route Patterns (Hono.js)" section. Add route in `apps/api/src/routes/`.
+
+**Q: How do I test my changes?**  
+A: Run `pnpm dev` to start all apps, then open the admin dashboard at http://localhost:5173.
+
+**Q: Build errors about missing packages?**  
+A: Run `pnpm install` at the root, then `pnpm build` to rebuild dependencies.
+
+**Q: TypeScript errors I don't understand?**  
+A: Ask Copilot: "Why is TypeScript complaining here?" with the error message.
+
+### Getting Unstuck
+1. **Check the error message** - Often tells you exactly what's wrong
+2. **Look at similar code** - Find a working example in the codebase
+3. **Run tests** - `pnpm test` to see what broke
+4. **Start fresh** - `pnpm clean && pnpm install && pnpm build`
+5. **Ask Copilot** - Describe what you're trying to do in plain language
+
+---
+
+> 💡 **Remember**: This is a learning journey. Don't be afraid to experiment, make mistakes, and iterate. The best way to learn is by doing!
