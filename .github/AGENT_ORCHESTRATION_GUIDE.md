@@ -1,8 +1,51 @@
-# Leveraging GitHub Actions, Skills & Sub-Agents for Custom PR/Issue Agents
+# Agent Orchestration System - Implementation Guide
+
+> **Status**: ✅ **IMPLEMENTED** - Production-grade orchestration system is now live!
 
 ## Overview
 
-This guide shows how to create a multi-worker system where custom GitHub Copilot agents (for PRs and issues) can leverage GitHub Actions, skills, and sub-agents to improve their capabilities through parallel execution.
+This repository now has a fully implemented GitHub Actions based agent orchestration system that automatically activates specialized workers in response to issues, PRs, and comments. This guide documents the implementation.
+
+## 🎯 Quick Links
+
+- **Implementation**: See `scripts/orchestration/` for all source code
+- **Quick Reference**: See `scripts/orchestration/QUICK_REFERENCE.md`
+- **Testing Guide**: See `scripts/orchestration/TESTING.md`
+- **Detailed README**: See `scripts/orchestration/README.md`
+
+## 📦 What's Implemented
+
+### GitHub Actions Workflows
+
+1. **Issue Agent** (`.github/workflows/issue-agent.yml`)
+   - Triggers on: `issues` (opened, labeled, edited), `issue_comment` (created)
+   - Bot mentions: Only responds when `@copilot`, `@github-actions`, or `@bot` mentioned
+   - Concurrency: Max 1 execution per issue
+
+2. **PR Agent** (`.github/workflows/pr-agent.yml`)
+   - Triggers on: `pull_request` (opened, synchronize, labeled, edited), `pull_request_review_comment` (created)
+   - Bot mentions: Only responds when bot mentioned in review comments
+   - Concurrency: Max 1 execution per PR
+
+### TypeScript Scripts
+
+All located in `scripts/orchestration/`:
+
+1. **orchestrator.ts** - Parses GitHub events and generates worker execution plans
+2. **skill-runner.ts** - Loads and executes skills with context
+3. **aggregator.ts** - Combines worker results into unified summary
+4. **comment-poster.ts** - Posts aggregated results to GitHub
+5. **types.ts** - TypeScript type definitions for all components
+
+### Features
+
+✅ **Parallel Execution** - Workers run simultaneously using GitHub Actions matrix strategy
+✅ **Graceful Degradation** - Continues with partial results if workers fail
+✅ **Security** - Least-privilege permissions, concurrency controls
+✅ **Modern APIs** - Uses `$GITHUB_OUTPUT` instead of deprecated `::set-output`
+✅ **Intelligent Activation** - Workers activate based on labels, keywords, file changes
+✅ **Bot Mentions** - Explicit control via comment commands
+✅ **Comprehensive Error Handling** - All failures captured and reported
 
 ## Architecture
 
