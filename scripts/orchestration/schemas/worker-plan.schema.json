@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Worker Plan Schema",
+  "description": "Schema for agent orchestration worker execution plan",
+  "type": "object",
+  "required": ["workers", "parallel", "metadata"],
+  "properties": {
+    "workers": {
+      "type": "array",
+      "description": "List of workers to execute",
+      "items": {
+        "type": "object",
+        "required": ["name", "skill", "reason", "priority", "enabled"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique worker identifier",
+            "pattern": "^[a-z0-9-]+$",
+            "examples": ["code-quality-review", "architecture-review"]
+          },
+          "skill": {
+            "type": "string",
+            "description": "Skill to execute (from .github/skills/)",
+            "pattern": "^[a-z0-9-]+$",
+            "examples": ["code-quality-reviewer", "architecture-guide"]
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why this worker was activated",
+            "minLength": 1,
+            "examples": ["PR contains code changes", "Issue labeled as bug"]
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Worker priority (lower = higher priority)",
+            "minimum": 0,
+            "maximum": 999,
+            "examples": [10, 20, 100]
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether to execute this worker",
+            "examples": [true, false]
+          },
+          "timeout": {
+            "type": "integer",
+            "description": "Maximum execution time in seconds (optional)",
+            "minimum": 1,
+            "maximum": 3600,
+            "examples": [180, 300, 600]
+          }
+        }
+      }
+    },
+    "parallel": {
+      "type": "boolean",
+      "description": "Whether to execute workers in parallel",
+      "examples": [true, false]
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Metadata about the plan",
+      "required": ["eventType", "timestamp", "source", "repository"],
+      "properties": {
+        "eventType": {
+          "type": "string",
+          "description": "GitHub event type",
+          "enum": [
+            "issues",
+            "issue_comment",
+            "pull_request",
+            "pull_request_target",
+            "pull_request_review_comment"
+          ],
+          "examples": ["pull_request", "issues"]
+        },
+        "eventAction": {
+          "type": "string",
+          "description": "GitHub event action (optional)",
+          "examples": ["opened", "labeled", "created"]
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when plan was generated",
+          "format": "date-time",
+          "examples": ["2024-01-04T14:00:00.000Z"]
+        },
+        "source": {
+          "type": "string",
+          "description": "Source of the plan",
+          "examples": ["agent-orchestrator"]
+        },
+        "repository": {
+          "type": "string",
+          "description": "Full repository name",
+          "pattern": "^[^/]+/[^/]+$",
+          "examples": ["SlySlayer32/dashboard-link-saas"]
+        }
+      }
+    }
+  }
+}

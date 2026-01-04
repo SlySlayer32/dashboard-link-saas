@@ -123,8 +123,24 @@ jobs:
       - name: Execute skill worker
         working-directory: scripts/orchestration
         run: |
+          # Ensure outputs directory exists
+          mkdir -p ../outputs
+          
+          # Check if plan exists
+          if [ ! -f ../outputs/plan.json ]; then
+            echo "❌ Worker plan not found"
+            exit 1
+          fi
+          
           # Extract skill name from worker plan
           SKILL=$(jq -r '.workers[] | select(.name == "${{ matrix.worker }}") | .skill' ../outputs/plan.json)
+          
+          if [ -z "$SKILL" ]; then
+            echo "❌ Skill not found for worker: ${{ matrix.worker }}"
+            exit 1
+          fi
+          
+          echo "✅ Running skill: $SKILL for worker: ${{ matrix.worker }}"
           npm run run-skill -- --skill "$SKILL" --worker "${{ matrix.worker }}" --output ../outputs/${{ matrix.worker }}.json
         continue-on-error: true
       
