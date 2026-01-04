@@ -15,7 +15,7 @@ This skill provides guidance for creating effective skills.
 
 ## About Skills
 
-Skills are modular, self-contained packages that extend Agenys capabilities by providing
+Skills are modular, self-contained packages that extend Agent's capabilities by providing
 specialized knowledge, workflows, and tools. Think of them as "onboarding guides" for specific
 domains or tasks—they transform Agents from a general-purpose agent into a specialized agent
 equipped with procedural knowledge that no model can fully possess.
