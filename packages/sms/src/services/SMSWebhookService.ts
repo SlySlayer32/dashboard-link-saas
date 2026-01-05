@@ -1,5 +1,3 @@
-import type { SMSDeliveryReport } from '@dashboard-link/shared';
-
 /**
  * Webhook delivery report from providers
  */
@@ -189,6 +187,7 @@ export class TwilioWebhookHandler implements WebhookHandler {
   verifySignature(signature: string, body: string, authToken: string): boolean {
     // Twilio uses HMAC SHA-1 for signature verification
     try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const crypto = require('crypto');
       const expectedSignature = crypto
         .createHmac('sha1', authToken)
@@ -200,7 +199,7 @@ export class TwilioWebhookHandler implements WebhookHandler {
         Buffer.from(signature),
         Buffer.from(expectedSignature)
       );
-    } catch (error) {
+    } catch {
       // If signature verification fails, reject the webhook
       return false;
     }
@@ -248,6 +247,7 @@ export class AWSSNSWebhookHandler implements WebhookHandler {
     // AWS SNS signature verification
     // SNS signs messages with SHA256 HMAC
     try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const crypto = require('crypto');
       const expectedSignature = crypto
         .createHmac('sha256', secret)
@@ -259,7 +259,7 @@ export class AWSSNSWebhookHandler implements WebhookHandler {
         Buffer.from(signature),
         Buffer.from(expectedSignature)
       );
-    } catch (error) {
+    } catch {
       // If signature verification fails, reject the webhook
       return false;
     }
@@ -300,6 +300,7 @@ export class MessageBirdWebhookHandler implements WebhookHandler {
     // MessageBird signature verification
     // MessageBird uses HMAC SHA256 for signature verification
     try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const crypto = require('crypto');
       const expectedSignature = crypto
         .createHmac('sha256', secret)
@@ -311,7 +312,7 @@ export class MessageBirdWebhookHandler implements WebhookHandler {
         Buffer.from(signature),
         Buffer.from(expectedSignature)
       );
-    } catch (error) {
+    } catch {
       // If signature verification fails, reject the webhook
       return false;
     }

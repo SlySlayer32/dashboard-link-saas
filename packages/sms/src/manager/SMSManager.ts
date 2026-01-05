@@ -150,7 +150,6 @@ export class SMSManagerImpl implements ISMSManager {
     if (parallel) {
       // Send all messages in parallel
       const batches = this.chunkArray(messages, batchSize);
-      
       for (const batch of batches) {
         const batchResults = await Promise.all(
           batch.map(message => provider.send(message))
@@ -192,7 +191,7 @@ export class SMSManagerImpl implements ISMSManager {
         try {
           const healthResult = await provider.getHealthCheck();
           health[provider.id] = healthResult.healthy;
-        } catch (error) {
+        } catch {
           health[provider.id] = false;
         }
       })

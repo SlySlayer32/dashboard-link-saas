@@ -35,8 +35,7 @@ export class MessageBirdProvider extends BaseSMSProvider {
         return this.createErrorResult(
           validationErrors.join(', '),
           'permanent',
-          undefined,
-          false
+          undefined
         );
       }
 
@@ -135,7 +134,7 @@ export class MessageBirdProvider extends BaseSMSProvider {
         if (!health.healthy) {
           errors.push('MessageBird connection failed: ' + health.error);
         }
-      } catch (error) {
+      } catch {
         errors.push('MessageBird connection test failed');
       }
     }

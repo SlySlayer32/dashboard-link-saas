@@ -38,8 +38,7 @@ export class TwilioProvider extends BaseSMSProvider {
         return this.createErrorResult(
           validationErrors.join(', '),
           'permanent',
-          undefined,
-          false
+          undefined
         );
       }
 
@@ -150,7 +149,7 @@ export class TwilioProvider extends BaseSMSProvider {
         if (!healthResult.healthy) {
           errors.push('API connection failed: ' + healthResult.error);
         }
-      } catch (error) {
+      } catch {
         errors.push('API connection test failed');
       }
     }

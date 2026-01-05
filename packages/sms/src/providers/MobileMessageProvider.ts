@@ -39,8 +39,7 @@ export class MobileMessageProvider extends BaseSMSProvider {
         return this.createErrorResult(
           validationErrors.join(', '),
           'permanent',
-          undefined,
-          false
+          undefined
         );
       }
 
@@ -146,7 +145,7 @@ export class MobileMessageProvider extends BaseSMSProvider {
         if (!healthResult.healthy) {
           errors.push('API connection failed: ' + healthResult.error);
         }
-      } catch (error) {
+      } catch {
         errors.push('API connection test failed');
       }
     }

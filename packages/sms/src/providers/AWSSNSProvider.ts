@@ -44,8 +44,7 @@ export class AWSSNSProvider extends BaseSMSProvider {
         return this.createErrorResult(
           validationErrors.join(', '),
           'permanent',
-          undefined,
-          false
+          undefined
         );
       }
 
@@ -62,7 +61,7 @@ export class AWSSNSProvider extends BaseSMSProvider {
       };
 
       if (this.defaultSenderId) {
-        payload.MessageAttributes['AWS.SNS.SMS.SenderID'] = {
+        (payload.MessageAttributes as Record<string, any>)['AWS.SNS.SMS.SenderID'] = {
           DataType: 'String',
           StringValue: this.defaultSenderId
         };
@@ -135,7 +134,7 @@ export class AWSSNSProvider extends BaseSMSProvider {
         if (!health.healthy) {
           errors.push('AWS SNS connection failed: ' + health.error);
         }
-      } catch (error) {
+      } catch {
         errors.push('AWS SNS connection test failed');
       }
     }
@@ -214,8 +213,15 @@ export class AWSSNSProvider extends BaseSMSProvider {
    * return await client.send(command);
    * ```
    */
-  private async makeAPIRequest(action: string, params: Record<string, any>): Promise<Response> {
-    // TODO: Replace with AWS SDK - This placeholder will fail authentication
+  private async makeAPIRequest(_action: string, _params: Record<string, any>): Promise<Response> {
+    // TODO: Replace with AWS SDK - This is a placeholder implementation
+    // When implementing, use the stored credentials:
+    // - this.accessKeyId (for AWS authentication)
+    // - this.secretAccessKey (for AWS authentication)
+    // - this.region (for AWS endpoint)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _credentials = { accessKeyId: this.accessKeyId, secretAccessKey: this.secretAccessKey, region: this.region };
+    
     throw new Error(
       'AWS SNS provider requires AWS SDK for JavaScript (@aws-sdk/client-sns). ' +
       'This placeholder implementation does not support AWS Signature V4 authentication. ' +
