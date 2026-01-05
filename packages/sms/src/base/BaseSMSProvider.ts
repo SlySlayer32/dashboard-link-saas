@@ -61,8 +61,7 @@ export abstract class BaseSMSProvider implements SMSProvider {
   protected createErrorResult(
     error: string,
     errorType: SMSError['type'] = 'temporary',
-    providerData?: Record<string, unknown>,
-    _retryable: boolean = true
+    providerData?: Record<string, unknown>
   ): SMSResult {
     return {
       success: false,
@@ -192,6 +191,7 @@ export abstract class BaseSMSProvider implements SMSProvider {
       }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     throw lastError!;
   }
 

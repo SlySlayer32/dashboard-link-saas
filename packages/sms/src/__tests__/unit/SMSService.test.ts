@@ -17,7 +17,7 @@ describe('SMSService', () => {
       id: 'test-provider',
       name: 'Test Provider',
       version: '1.0.0',
-      send: vi.fn(async (message: SMSMessage): Promise<SMSResult> => ({
+      send: vi.fn(async (_message: SMSMessage): Promise<SMSResult> => ({
         success: true,
         messageId: 'test-msg-123',
         provider: 'test-provider',
@@ -144,8 +144,8 @@ describe('SMSService', () => {
         providerId: 'test-provider'
       });
 
-      expect(result.success).toBe(false);
       expect(result.failed).toBe(2);
+      expect(result.successful).toBe(0);
       expect(mockProvider.send).not.toHaveBeenCalled();
     });
   });

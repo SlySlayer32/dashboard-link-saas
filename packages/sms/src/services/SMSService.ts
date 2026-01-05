@@ -124,7 +124,7 @@ export class SMSService {
       const validation = this.validator.validateBatch(messages);
       if (!validation.valid) {
         // Return batch result with all failures
-        const results: SMSResult[] = messages.map((msg, index) => ({
+        const results: SMSResult[] = messages.map((_msg, index) => ({
           success: false,
           messageId: '',
           provider: 'validation',

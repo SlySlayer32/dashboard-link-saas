@@ -223,7 +223,7 @@ export class RateLimitMiddleware {
   /**
    * Update usage for a provider (called after successful send)
    */
-  async updateUsage(providerId: string, count: number): Promise<void> {
+  async updateUsage(_providerId: string, _count: number): Promise<void> {
     // Token bucket already updates on tryConsume
     // This is a no-op but kept for interface compatibility
     return;
