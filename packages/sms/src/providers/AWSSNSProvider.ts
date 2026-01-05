@@ -214,11 +214,13 @@ export class AWSSNSProvider extends BaseSMSProvider {
    * ```
    */
   private async makeAPIRequest(_action: string, _params: Record<string, any>): Promise<Response> {
-    // TODO: Replace with AWS SDK - This placeholder will fail authentication
-    // Referenced to avoid TypeScript unused warnings until AWS SDK is integrated
-    void this.accessKeyId;
-    void this.secretAccessKey;
-    void this.region;
+    // TODO: Replace with AWS SDK - This is a placeholder implementation
+    // When implementing, use the stored credentials:
+    // - this.accessKeyId (for AWS authentication)
+    // - this.secretAccessKey (for AWS authentication)
+    // - this.region (for AWS endpoint)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _credentials = { accessKeyId: this.accessKeyId, secretAccessKey: this.secretAccessKey, region: this.region };
     
     throw new Error(
       'AWS SNS provider requires AWS SDK for JavaScript (@aws-sdk/client-sns). ' +

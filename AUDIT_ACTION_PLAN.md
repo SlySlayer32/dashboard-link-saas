@@ -24,18 +24,16 @@
 // Step 1: Define Hono context type (apps/api/src/types.ts)
 import { Context } from 'hono';
 
-export interface AppContext {
-  Variables: {
-    organizationId: string;
-    user: {
-      id: string;
-      email: string;
-      role: string;
-    };
+export interface AppContextVariables {
+  organizationId: string;
+  user: {
+    id: string;
+    email: string;
+    role: string;
   };
 }
 
-export type AppContext = Context<{ Variables: AppContext['Variables'] }>;
+export type AppContext = Context<{ Variables: AppContextVariables }>;
 
 // Step 2: Update all route handlers
 import type { AppContext } from '../types';
@@ -85,9 +83,9 @@ Mixed ESLint v8 and v9, incompatible configurations
 
 #### Implementation Steps:
 
-```bash
-# Step 1: Update root ESLint config to v9 flat config
-# File: eslint.config.js (update)
+```javascript
+// Step 1: Update root ESLint config to v9 flat config
+// File: eslint.config.js (update)
 
 import js from '@eslint/js';
 import typescript from '@typescript-eslint/eslint-plugin';
