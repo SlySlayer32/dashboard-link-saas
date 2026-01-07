@@ -13,6 +13,7 @@
   "typescript.preferences.importModuleSpecifier": "relative",
   "typescript.suggest.autoImports": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
+  "vitest.maximumConfigs": 20,
   "files.exclude": {
     "**/node_modules": true,
     "**/dist": true,
