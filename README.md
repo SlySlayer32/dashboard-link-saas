@@ -103,7 +103,7 @@ pnpm install
 
 #### 2️⃣ Environment Variables
 ```bash
-cp .env.example .env
+cp ENV.example .env
 ```
 
 Edit `.env` with your keys:
@@ -118,9 +118,9 @@ SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_KEY=your-service-key
 
 # MobileMessage.com.au SMS
-MOBILEMESSAGE_USERNAME=your-username
-MOBILEMESSAGE_PASSWORD=your-password
-MOBILEMESSAGE_SENDER_ID=DashLink
+MOBILE_MESSAGE_USERNAME=your-username
+MOBILE_MESSAGE_PASSWORD=your-password
+MOBILE_MESSAGE_SENDER_ID=DashLink
 
 # Optional plugins
 GOOGLE_CLIENT_ID=your-client-id
@@ -264,6 +264,15 @@ docker-compose up -d
 ---
 
 ## 📚 Documentation
+
+## 📘 Developer Docs
+
+- [INSTRUCTIONS.md](./INSTRUCTIONS.md)
+- [SETUP.md](./SETUP.md)
+- [ENV.example](./ENV.example)
+
+The project follows a Zapier-style architecture (see [Architecture Blueprint](./docs/ARCHITECTURE_BLUEPRINT.md)).
+
 
 - **[Architecture](./docs/ARCHITECTURE.md)** – System design
 - **[Development Guide](./docs/DEVELOPMENT_ENVIRONMENT.md)** – Local setup
