@@ -145,9 +145,9 @@ graph TB
     AuthService --> Redis
     Queue --> Redis
     
-    All[All Services] -.-> Logs
-    All -.-> Metrics
-    All -.-> Tracing
+    ApplicationServices[Application Services] -.-> Logs
+    ApplicationServices -.-> Metrics
+    ApplicationServices -.-> Tracing
     Metrics --> Alerts
 
     style PluginEngine fill:#e1f5fe
@@ -523,7 +523,7 @@ graph LR
         end
         
         subgraph "Output (Your Format)"
-            StandardItems[StandardScheduleItem[]<br/>├─ id: "event_123"<br/>├─ title: "Team Meeting"<br/>├─ startTime: "2026-01-01T10:00:00Z"<br/>├─ endTime: "2026-01-01T11:00:00Z"<br/>├─ location: "Room 1"<br/>├─ description: "Weekly sync"<br/>├─ metadata: {<br/>│  googleEventId: "event_123",<br/>│  htmlLink: "...",<br/>│  attendees: [...]<br/>│}]
+            StandardItems[StandardScheduleItem[]<br/>├─ id: "event_123"<br/>├─ title: "Team Meeting"<br/>├─ startTime: "2027-06-15T10:00:00Z"<br/>├─ endTime: "2027-06-15T11:00:00Z"<br/>├─ location: "Room 1"<br/>├─ description: "Weekly sync"<br/>├─ metadata: {<br/>│  googleEventId: "event_123",<br/>│  htmlLink: "...",<br/>│  attendees: [...]<br/>│}]
         end
     end
     
@@ -1314,7 +1314,7 @@ const smsQueueConfig = {
       type: 'exponential',
       delay: 5000,                // 5s, 10s, 20s
     },
-    removeOnComplete: 1000,       // Audit trail
+    removeOnComplete: false,       // Keep all for audit trail
     removeOnFail: false,          // Keep all failures
     timeout: 30000,               // 30s per SMS
   },
@@ -1589,9 +1589,9 @@ Following **Stripe's API design principles**.
 
 **Versioning Strategy:**
 - **URL Versioning**: `/api/v1/workers`, `/api/v2/workers`
-- **Header Versioning**: `API-Version: 2024-01-07`
-- **Backward Compatibility**: Maintain old versions for 12 months
-- **Deprecation Notices**: `Deprecation: true`, `Sunset: 2026-12-31` headers
+- **Header Versioning**: `API-Version: 2026-01-07`
+- **Backward Compatibility**: Maintain old versions for at least 24 months
+- **Deprecation Notices**: `Deprecation: true`, `Sunset: 2028-01-07` headers
 
 ```typescript
 /**
@@ -2067,7 +2067,7 @@ async function deleteUserData(userId: string, tenantId: string): Promise<void> {
 - **CI/CD**: GitHub Actions
 
 ### External Services
-- **SMS**: MobileMessage.com.au (2-3¢/SMS, Australia-focused)
+- **SMS**: MobileMessage.au (2-3¢/SMS, Australia-focused)
 - **Email**: Resend (developer-friendly, great deliverability)
 - **Storage**: Supabase Storage (S3-compatible)
 - **Analytics**: PostHog (open-source, privacy-focused)
@@ -2113,7 +2113,7 @@ async function deleteUserData(userId: string, tenantId: string): Promise<void> {
 
 4. **API Versioning**
    - URL-based versioning (`/api/v1`, `/api/v2`)
-   - Header-based versioning (`API-Version: 2024-01-07`)
+   - Header-based versioning (`API-Version: 2026-01-07`)
    - Deprecation notices with sunset dates
 
 5. **Observability (Three Pillars)**
@@ -2469,13 +2469,13 @@ This architecture blueprint represents an **enterprise-grade, production-ready**
 
 **Document Owner**: Engineering Team  
 **Last Review**: 2026-01-07  
-**Next Review**: 2026-04-07 (Quarterly)
+**Next Review**: 2026-04-07 (Quarterly review cycle per architecture governance policy)
 
 **For Questions or Feedback:**
 - Technical discussions: #architecture channel in Slack
 - Propose changes: Create ADR in `docs/adr/` directory
-- Security concerns: security@dashboard-link.com
-- Compliance questions: compliance@dashboard-link.com
+- Security concerns: Follow the security incident response process documented in the Security Runbook
+- Compliance questions: Contact the compliance team via internal helpdesk
 
 **Change Process:**
 1. Propose change via ADR (Architecture Decision Record)
