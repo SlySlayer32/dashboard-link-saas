@@ -1,27 +1,36 @@
-# Developer Instructions
+# Dashboard Link SaaS — Root Agent Instructions
 
-## Zapier-Style Architecture
-This project follows a Zapier-style layered architecture as described in `docs/ARCHITECTURE_BLUEPRINT.md`:
-- **Core services** are stable.
-- **Contracts** define integration boundaries.
-- **Adapters** implement vendor-specific logic.
-- **External services** are only accessed via adapters.
+## Architecture (Zapier-style)
+This repo follows a Zapier-style, layered architecture (see `docs/ARCHITECTURE_BLUEPRINT.md`).
+- **Core services** are stable and do not depend on vendors directly.
+- **Contracts** (interfaces) define how adapters plug in.
+- **Adapters** implement vendor-specific behavior (SMS, plugins, storage).
+- **External services** live outside the core and are accessed only through adapters.
 
-Keep UI and API code free of vendor SDKs; use packages (`plugins`, `sms`, `tokens`, `auth`, `database`) to access external services.
+## Project Overview
+Dashboard Link is a multi-tenant SaaS that delivers worker dashboards via SMS links.
+Monorepo layout:
+- `apps/admin`: Admin dashboard (React + Vite)
+- `apps/worker`: Worker dashboard (React + Vite)
+- `apps/api`: Hono API service
+- `packages/*`: shared libraries (auth, database, plugins, shared, sms, tokens, ui)
+- `packages/database/migrations`: Supabase SQL migrations
+- `supabase/`: local Supabase config
 
-## Prerequisites
+## Developer Setup
+### Prerequisites
 - Node.js 18+
 - pnpm 9+
 - Supabase CLI (for local database operations)
 
-## Install
+### Install
 ```bash
 git clone https://github.com/SlySlayer32/dashboard-link-saas.git
 cd dashboard-link-saas
 pnpm install
 ```
 
-## Environment Setup
+### Environment Setup
 Copy the template and fill required variables:
 ```bash
 cp ENV.example .env
@@ -31,7 +40,7 @@ Frontend apps also need Vite envs:
 - `apps/admin/.env` (at least `VITE_API_URL`)
 - `apps/worker/.env` (at least `VITE_API_URL`)
 
-## Run (Development)
+### Run (Development)
 ```bash
 pnpm dev
 ```
@@ -41,14 +50,14 @@ Ports:
 - Worker: http://localhost:5174
 - API: http://localhost:3000
 
-## Run (Individual Apps)
+### Run (Individual Apps)
 ```bash
 pnpm --filter @dashboard-link/api dev
 pnpm --filter @dashboard-link/admin dev
 pnpm --filter @dashboard-link/worker dev
 ```
 
-## Database Operations (Supabase)
+### Database Operations (Supabase)
 ```bash
 pnpm db:start
 pnpm db:migrate
@@ -56,7 +65,7 @@ pnpm db:seed
 pnpm db:stop
 ```
 
-## Testing
+### Testing
 ```bash
 pnpm test
 pnpm --filter @dashboard-link/api test
@@ -64,13 +73,13 @@ pnpm --filter @dashboard-link/admin test
 pnpm --filter @dashboard-link/ui test
 ```
 
-## Linting & Formatting
+### Linting & Formatting
 ```bash
 pnpm lint
 pnpm format
 ```
 
-## Build
+### Build
 ```bash
 pnpm build
 ```
@@ -88,7 +97,6 @@ These behaviors are currently placeholders and must be implemented for productio
 - **New SMS provider**: add in `packages/sms/src/providers` and register in `SMSProviderFactory`.
 
 ## Scripts & Automation
-
 Root scripts (from `package.json`):
 - `pnpm dev` — run all apps via Turbo
 - `pnpm build` — build all packages/apps
@@ -105,3 +113,26 @@ Orchestration scripts (see `scripts/orchestration`):
 - `pnpm --dir scripts/orchestration run-skill`
 - `pnpm --dir scripts/orchestration aggregate`
 - `pnpm --dir scripts/orchestration post-comment`
+
+## Global Standards
+- TypeScript everywhere.
+- ESM (`"type": "module"`).
+- Linting: `eslint.config.js` (flat config).
+- Formatting: Prettier (`.prettierrc.json`).
+- Use pnpm workspaces + Turborepo.
+
+## Global Rules
+- Prefer shared types from `@dashboard-link/shared`.
+- Keep vendor-specific code in adapters under `packages/*/src`.
+- Keep services clean of vendor SDKs—use contracts/registries instead.
+
+## Testing Philosophy
+- Unit/integration tests with Vitest.
+- React Testing Library for UI components.
+- Avoid real external API calls in tests.
+
+## Git Conventions
+No explicit convention is defined in-repo. Use clear, imperative commit messages.
+
+## Directory-Specific Agents
+See `agents.md` files in subdirectories for scoped rules.
