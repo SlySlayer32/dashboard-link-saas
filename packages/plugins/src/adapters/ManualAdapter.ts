@@ -1,48 +1,48 @@
-import {
-    PluginConfig,
-    StandardScheduleItem,
-    StandardTaskItem
-} from '@dashboard-link/shared';
-import { BasePluginAdapter } from '../base/BasePluginAdapter';
+import { PluginConfig, StandardScheduleItem, StandardTaskItem } from '../contracts'
+import { BasePluginAdapter } from '../base/BasePluginAdapter'
 
 // Manual data interfaces (from database)
 interface ManualScheduleItem {
-  id: string;
-  worker_id: string;
-  title: string;
-  start_time: string;
-  end_time: string;
-  location?: string;
-  description?: string;
-  metadata?: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
+  id: string
+  worker_id: string
+  title: string
+  start_time: string
+  end_time: string
+  location?: string
+  description?: string
+  metadata?: Record<string, unknown>
+  created_at: string
+  updated_at: string
 }
 
 interface ManualTaskItem {
-  id: string;
-  worker_id: string;
-  title: string;
-  description?: string;
-  due_date?: string;
-  priority: 'low' | 'medium' | 'high';
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  metadata?: Record<string, unknown>;
-  tags?: string[];
-  estimated_time?: number;
-  created_at: string;
-  updated_at: string;
+  id: string
+  worker_id: string
+  title: string
+  description?: string
+  due_date?: string
+  priority: 'low' | 'medium' | 'high'
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+  metadata?: Record<string, unknown>
+  tags?: string[]
+  estimated_time?: number
+  created_at: string
+  updated_at: string
 }
 
 // Manual adapter implementation - uses database directly
 export class ManualAdapter extends BasePluginAdapter {
-  readonly id = 'manual';
-  readonly name = 'Manual Entry';
-  readonly version = '1.0.0';
-  readonly description = 'Manually entered schedule and task data';
+  readonly id = 'manual'
+  readonly name = 'Manual Entry'
+  readonly version = '1.0.0'
+  readonly description = 'Manually entered schedule and task data'
 
   // Required abstract method implementations
-  protected async fetchExternalSchedule(workerId: string, config: PluginConfig): Promise<unknown[]> {
+  protected async fetchExternalSchedule(
+    workerId: string,
+    _dateRange: import('../contracts').DateRange,
+    _config: PluginConfig
+  ): Promise<unknown[]> {
     // In a real implementation, this would query the database
     // For now, we'll return mock data
     const mockData: ManualScheduleItem[] = [
@@ -56,7 +56,7 @@ export class ManualAdapter extends BasePluginAdapter {
         description: 'Daily team standup meeting',
         metadata: { type: 'meeting' },
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       },
       {
         id: '2',
@@ -68,14 +68,14 @@ export class ManualAdapter extends BasePluginAdapter {
         description: 'Weekly client check-in',
         metadata: { type: 'client' },
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    ];
+        updated_at: new Date().toISOString(),
+      },
+    ]
 
-    return mockData;
+    return mockData
   }
 
-  protected async fetchExternalTasks(workerId: string, config: PluginConfig): Promise<unknown[]> {
+  protected async fetchExternalTasks(workerId: string, _config: PluginConfig): Promise<unknown[]> {
     // Mock task data
     const mockData: ManualTaskItem[] = [
       {
@@ -90,7 +90,7 @@ export class ManualAdapter extends BasePluginAdapter {
         tags: ['project', 'urgent'],
         estimated_time: 120,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       },
       {
         id: '2',
@@ -104,16 +104,16 @@ export class ManualAdapter extends BasePluginAdapter {
         tags: ['code', 'team'],
         estimated_time: 60,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    ];
+        updated_at: new Date().toISOString(),
+      },
+    ]
 
-    return mockData;
+    return mockData
   }
 
   protected transformScheduleItem(item: unknown): StandardScheduleItem {
-    const manualItem = item as ManualScheduleItem;
-    
+    const manualItem = item as ManualScheduleItem
+
     return {
       id: manualItem.id,
       title: manualItem.title,
@@ -125,16 +125,16 @@ export class ManualAdapter extends BasePluginAdapter {
         ...manualItem.metadata,
         source: 'manual',
         createdAt: manualItem.created_at,
-        updatedAt: manualItem.updated_at
+        updatedAt: manualItem.updated_at,
       },
       priority: 'medium', // Default priority for manual items
-      status: 'scheduled'
-    };
+      status: 'scheduled',
+    }
   }
 
   protected transformTaskItem(item: unknown): StandardTaskItem {
-    const manualItem = item as ManualTaskItem;
-    
+    const manualItem = item as ManualTaskItem
+
     return {
       id: manualItem.id,
       title: manualItem.title,
@@ -147,11 +147,11 @@ export class ManualAdapter extends BasePluginAdapter {
         ...manualItem.metadata,
         source: 'manual',
         createdAt: manualItem.created_at,
-        updatedAt: manualItem.updated_at
+        updatedAt: manualItem.updated_at,
       },
       tags: manualItem.tags,
-      estimatedTime: manualItem.estimated_time
-    };
+      estimatedTime: manualItem.estimated_time,
+    }
   }
 
   // Configuration schema - manual adapter doesn't need much config
@@ -163,10 +163,10 @@ export class ManualAdapter extends BasePluginAdapter {
           type: 'boolean' as const,
           title: 'Enabled',
           description: 'Whether manual entries are enabled',
-          required: false
-        }
+          required: false,
+        },
       },
-      required: [] as string[]
-    };
+      required: [] as string[],
+    }
   }
 }

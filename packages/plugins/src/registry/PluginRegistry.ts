@@ -1,77 +1,78 @@
-import { PluginAdapter, PluginRegistry } from '@dashboard-link/shared';
+import { PluginAdapter, PluginRegistry } from '../contracts'
 
 // Plugin registry implementation - singleton pattern
 export class PluginRegistryImpl implements PluginRegistry {
-  private static instance: PluginRegistryImpl;
-  private plugins: Map<string, PluginAdapter> = new Map();
+  private static instance: PluginRegistryImpl
+  private plugins: Map<string, PluginAdapter> = new Map()
 
   private constructor() {}
 
   static getInstance(): PluginRegistryImpl {
     if (!PluginRegistryImpl.instance) {
-      PluginRegistryImpl.instance = new PluginRegistryImpl();
+      PluginRegistryImpl.instance = new PluginRegistryImpl()
     }
-    return PluginRegistryImpl.instance;
+    return PluginRegistryImpl.instance
   }
 
   register(plugin: PluginAdapter): void {
     if (this.plugins.has(plugin.id)) {
-      console.warn(`Plugin with id '${plugin.id}' is already registered. Overwriting.`);
+      console.warn(`Plugin with id '${plugin.id}' is already registered. Overwriting.`)
     }
-    
-    this.plugins.set(plugin.id, plugin);
-    console.log(`Plugin registered: ${plugin.name} (${plugin.id}) v${plugin.version}`);
+
+    this.plugins.set(plugin.id, plugin)
+    console.log(`Plugin registered: ${plugin.name} (${plugin.id}) v${plugin.version}`)
   }
 
   unregister(pluginId: string): void {
     if (this.plugins.delete(pluginId)) {
-      console.log(`Plugin unregistered: ${pluginId}`);
+      console.log(`Plugin unregistered: ${pluginId}`)
     } else {
-      console.warn(`Plugin with id '${pluginId}' was not found for unregistration.`);
+      console.warn(`Plugin with id '${pluginId}' was not found for unregistration.`)
     }
   }
 
   get(pluginId: string): PluginAdapter | undefined {
-    return this.plugins.get(pluginId);
+    return this.plugins.get(pluginId)
   }
 
   getAll(): PluginAdapter[] {
-    return Array.from(this.plugins.values());
+    return Array.from(this.plugins.values())
   }
 
   getEnabled(): PluginAdapter[] {
-    // For now, return all plugins. In a real implementation, 
+    // For now, return all plugins. In a real implementation,
     // this would check against a configuration store
-    return this.getAll();
+    return this.getAll()
   }
 
   // Additional utility methods
   has(pluginId: string): boolean {
-    return this.plugins.has(pluginId);
+    return this.plugins.has(pluginId)
   }
 
   clear(): void {
-    this.plugins.clear();
-    console.log('All plugins unregistered');
+    this.plugins.clear()
+    console.log('All plugins unregistered')
   }
 
   getPluginIds(): string[] {
-    return Array.from(this.plugins.keys());
+    return Array.from(this.plugins.keys())
   }
 
   // Plugin discovery
   findByVersion(version: string): PluginAdapter[] {
-    return this.getAll().filter(plugin => plugin.version === version);
+    return this.getAll().filter((plugin) => plugin.version === version)
   }
 
   searchByName(query: string): PluginAdapter[] {
-    const lowerQuery = query.toLowerCase();
-    return this.getAll().filter(plugin => 
-      plugin.name.toLowerCase().includes(lowerQuery) ||
-      plugin.description.toLowerCase().includes(lowerQuery)
-    );
+    const lowerQuery = query.toLowerCase()
+    return this.getAll().filter(
+      (plugin) =>
+        plugin.name.toLowerCase().includes(lowerQuery) ||
+        plugin.description.toLowerCase().includes(lowerQuery)
+    )
   }
 }
 
 // Export singleton instance
-export const pluginRegistry = PluginRegistryImpl.getInstance();
+export const pluginRegistry = PluginRegistryImpl.getInstance()

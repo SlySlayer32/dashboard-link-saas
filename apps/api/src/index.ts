@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
+import type { AppContext } from './types'
 
 // Import middleware and config
 import { validateRuntimeDependencies } from './config/env'
@@ -28,7 +29,7 @@ dotenv.config()
 // Validate critical environment variables
 validateRuntimeDependencies()
 
-const app = new Hono()
+const app = new Hono<AppContext>()
 
 // Middleware
 app.use('*', honoLogger())

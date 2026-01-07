@@ -14,13 +14,14 @@
   },
   "scripts": {
     "build": "tsc",
-    "lint": "eslint src --ext .ts,.tsx",
+    "lint": "eslint --config ../../eslint.config.js src --ext .ts,.tsx",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "@dashboard-link/shared": "workspace:*",
     "@supabase/supabase-js": "^2.39.0",
-    "supabase": "^2.67.3"
+    "supabase": "^2.67.3",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",

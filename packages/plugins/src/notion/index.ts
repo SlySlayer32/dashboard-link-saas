@@ -1,4 +1,10 @@
-import { DateRange, PluginConfig, StandardScheduleItem, StandardTaskItem, ValidationResult } from '@dashboard-link/shared'
+import {
+  DateRange,
+  PluginConfig,
+  StandardScheduleItem,
+  StandardTaskItem,
+  ValidationResult,
+} from '../contracts'
 import { BasePluginAdapter } from '../base/adapter'
 
 interface NotionPage {
@@ -23,11 +29,11 @@ export class NotionAdapter extends BasePluginAdapter {
     config: PluginConfig
   ): Promise<unknown[]> {
     const { settings } = config
-    const { 
-      integrationSecret, 
+    const {
+      integrationSecret,
       scheduleDatabaseId,
       workerProperty = 'Worker',
-      dateProperty = 'Date'
+      dateProperty = 'Date',
     } = settings as {
       integrationSecret: string
       scheduleDatabaseId: string
@@ -48,30 +54,33 @@ export class NotionAdapter extends BasePluginAdapter {
         {
           property: workerProperty,
           rich_text: {
-            equals: workerId
-          }
+            equals: workerId,
+          },
         },
         {
           property: dateProperty,
           date: {
-            equals: startDate
-          }
-        }
-      ]
+            equals: startDate,
+          },
+        },
+      ],
     }
 
     // Fetch pages from Notion database
-    const response = await fetch(`https://api.notion.com/v1/databases/${scheduleDatabaseId}/query`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${integrationSecret}`,
-        'Content-Type': 'application/json',
-        'Notion-Version': '2022-06-28',
-      },
-      body: JSON.stringify({
-        filter,
-      }),
-    })
+    const response = await fetch(
+      `https://api.notion.com/v1/databases/${scheduleDatabaseId}/query`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${integrationSecret}`,
+          'Content-Type': 'application/json',
+          'Notion-Version': '2022-06-28',
+        },
+        body: JSON.stringify({
+          filter,
+        }),
+      }
+    )
 
     if (!response.ok) {
       throw new Error(`Notion API error: ${response.statusText}`)
@@ -81,16 +90,13 @@ export class NotionAdapter extends BasePluginAdapter {
     return data.results || []
   }
 
-  protected async fetchExternalTasks(
-    workerId: string,
-    config: PluginConfig
-  ): Promise<unknown[]> {
+  protected async fetchExternalTasks(workerId: string, config: PluginConfig): Promise<unknown[]> {
     const { settings } = config
-    const { 
-      integrationSecret, 
+    const {
+      integrationSecret,
       taskDatabaseId,
       workerProperty = 'Worker',
-      dueDateProperty = 'Due Date'
+      dueDateProperty = 'Due Date',
     } = settings as {
       integrationSecret: string
       taskDatabaseId: string
@@ -111,23 +117,23 @@ export class NotionAdapter extends BasePluginAdapter {
         {
           property: workerProperty,
           rich_text: {
-            equals: workerId
-          }
+            equals: workerId,
+          },
         },
         {
           property: dueDateProperty,
           date: {
-            on_or_before: today
-          }
-        }
-      ]
+            on_or_before: today,
+          },
+        },
+      ],
     }
 
     // Fetch pages from Notion database
     const response = await fetch(`https://api.notion.com/v1/databases/${taskDatabaseId}/query`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${integrationSecret}`,
+        Authorization: `Bearer ${integrationSecret}`,
         'Content-Type': 'application/json',
         'Notion-Version': '2022-06-28',
       },
@@ -147,18 +153,19 @@ export class NotionAdapter extends BasePluginAdapter {
   protected transformScheduleItem(externalItem: unknown): StandardScheduleItem | null {
     const page = externalItem as NotionPage
     const properties = page.properties
-    
+
     // Extract property values (simplified - in production you'd handle different property types)
     const title = this.extractTextProperty(properties['Title'])
     const time = this.extractTextProperty(properties['Time'])
     const location = this.extractTextProperty(properties['Location'])
     const description = this.extractTextProperty(properties['Description'])
-    const date = this.extractDateProperty(properties['Date']) || new Date().toISOString().split('T')[0]
-    
+    const date =
+      this.extractDateProperty(properties['Date']) || new Date().toISOString().split('T')[0]
+
     // Parse time and create datetime
     let startTime: string
     let endTime: string
-    
+
     if (time && date) {
       startTime = `${date}T${time.padStart(5, '0')}:00`
       // Default to 1 hour duration if no end time specified
@@ -189,17 +196,20 @@ export class NotionAdapter extends BasePluginAdapter {
   protected transformTaskItem(externalItem: unknown): StandardTaskItem | null {
     const page = externalItem as NotionPage
     const properties = page.properties
-    
+
     const title = this.extractTextProperty(properties['Title'])
     const status = this.extractSelectProperty(properties['Status']) || 'todo'
     const priority = this.extractSelectProperty(properties['Priority']) || 'medium'
     const dueDate = this.extractDateProperty(properties['Due Date'])
-    
+
     // Map Notion status to standard status
     let standardStatus: 'pending' | 'in_progress' | 'completed' = 'pending'
     if (status?.toLowerCase().includes('complete') || status?.toLowerCase().includes('done')) {
       standardStatus = 'completed'
-    } else if (status?.toLowerCase().includes('progress') || status?.toLowerCase().includes('working')) {
+    } else if (
+      status?.toLowerCase().includes('progress') ||
+      status?.toLowerCase().includes('working')
+    ) {
       standardStatus = 'in_progress'
     }
 
@@ -229,15 +239,15 @@ export class NotionAdapter extends BasePluginAdapter {
 
   async validateConfig(config: PluginConfig): Promise<ValidationResult> {
     const { settings } = config
-    const { integrationSecret, scheduleDatabaseId } = settings as { 
+    const { integrationSecret, scheduleDatabaseId } = settings as {
       integrationSecret?: string
-      scheduleDatabaseId?: string 
+      scheduleDatabaseId?: string
     }
-    
+
     if (!integrationSecret || !scheduleDatabaseId) {
       return {
         valid: false,
-        errors: ['Integration Secret and Database ID are required']
+        errors: ['Integration Secret and Database ID are required'],
       }
     }
 
@@ -245,7 +255,7 @@ export class NotionAdapter extends BasePluginAdapter {
       // Test the integration secret by fetching database info
       const response = await fetch(`https://api.notion.com/v1/databases/${scheduleDatabaseId}`, {
         headers: {
-          'Authorization': `Bearer ${integrationSecret}`,
+          Authorization: `Bearer ${integrationSecret}`,
           'Notion-Version': '2022-06-28',
         },
       })
@@ -253,7 +263,7 @@ export class NotionAdapter extends BasePluginAdapter {
       if (!response.ok) {
         return {
           valid: false,
-          errors: ['Failed to connect to Notion']
+          errors: ['Failed to connect to Notion'],
         }
       }
 
@@ -261,7 +271,7 @@ export class NotionAdapter extends BasePluginAdapter {
     } catch (error) {
       return {
         valid: false,
-        errors: [error instanceof Error ? error.message : 'Connection failed']
+        errors: [error instanceof Error ? error.message : 'Connection failed'],
       }
     }
   }
@@ -269,71 +279,82 @@ export class NotionAdapter extends BasePluginAdapter {
   // Helper methods for extracting different Notion property types
   private extractTextProperty(property: unknown): string | undefined {
     if (!property || typeof property !== 'object') return undefined
-    
+
     const prop = property as Record<string, unknown>
-    if ((prop.type as string) === 'title' && (prop.title as Array<Record<string, unknown>>)?.[0]?.text) {
-      return (((prop.title as Array<Record<string, unknown>>)[0].text as Record<string, unknown>).content as string)
+    if (
+      (prop.type as string) === 'title' &&
+      (prop.title as Array<Record<string, unknown>>)?.[0]?.text
+    ) {
+      return ((prop.title as Array<Record<string, unknown>>)[0].text as Record<string, unknown>)
+        .content as string
     }
-    if ((prop.type as string) === 'rich_text' && (prop.rich_text as Array<Record<string, unknown>>)?.[0]?.text) {
-      return (((prop.rich_text as Array<Record<string, unknown>>)[0].text as Record<string, unknown>).content as string)
+    if (
+      (prop.type as string) === 'rich_text' &&
+      (prop.rich_text as Array<Record<string, unknown>>)?.[0]?.text
+    ) {
+      return ((prop.rich_text as Array<Record<string, unknown>>)[0].text as Record<string, unknown>)
+        .content as string
     }
     if ((prop.type as string) === 'text' && (prop.text as Record<string, unknown>)?.content) {
-      return ((prop.text as Record<string, unknown>).content as string)
+      return (prop.text as Record<string, unknown>).content as string
     }
     return undefined
   }
 
   private extractSelectProperty(property: unknown): string | undefined {
     if (!property || typeof property !== 'object') return undefined
-    
+
     const prop = property as Record<string, unknown>
     if ((prop.type as string) === 'select' && (prop.select as Record<string, unknown>)?.name) {
-      return ((prop.select as Record<string, unknown>).name as string)
+      return (prop.select as Record<string, unknown>).name as string
     }
     return undefined
   }
 
   private extractDateProperty(property: unknown): string | undefined {
     if (!property || typeof property !== 'object') return undefined
-    
+
     const prop = property as Record<string, unknown>
-    if ((prop.type as string) === 'date' && ((prop.date as Record<string, unknown>)?.start as string)) {
-      return ((prop.date as Record<string, unknown>).start as string)
+    if (
+      (prop.type as string) === 'date' &&
+      ((prop.date as Record<string, unknown>)?.start as string)
+    ) {
+      return (prop.date as Record<string, unknown>).start as string
     }
     return undefined
   }
 
-  getConfigSchema(): import('@dashboard-link/shared').PluginConfigSchema {
+  getConfigSchema(): import('../contracts').PluginConfigSchema {
     return {
       type: 'object',
       properties: {
         integrationSecret: {
           type: 'string',
           title: 'Integration Secret',
-          description: 'Notion API integration secret'
+          description: 'Notion API integration secret',
         },
         scheduleDatabaseId: {
           type: 'string',
           title: 'Schedule Database ID',
-          description: 'Notion database ID for schedule data'
+          description: 'Notion database ID for schedule data',
         },
         tasksDatabaseId: {
           type: 'string',
           title: 'Tasks Database ID',
-          description: 'Notion database ID for task data (optional)'
+          description: 'Notion database ID for task data (optional)',
         },
         workerProperty: {
           type: 'string',
           title: 'Worker Property',
-          description: 'Property name for worker assignment'
+          description: 'Property name for worker assignment',
         },
         dateProperty: {
           type: 'string',
           title: 'Date Property',
-          description: 'Property name for date filtering'
-        }
+          description: 'Property name for date filtering',
+        },
       },
-      required: ['integrationSecret', 'scheduleDatabaseId']
-    };
+      required: ['integrationSecret', 'scheduleDatabaseId'],
+    }
   }
 }

@@ -1,4 +1,10 @@
-import { DateRange, PluginConfig, StandardScheduleItem, StandardTaskItem, ValidationResult } from '@dashboard-link/shared'
+import {
+  DateRange,
+  PluginConfig,
+  StandardScheduleItem,
+  StandardTaskItem,
+  ValidationResult,
+} from '../contracts'
 import { BasePluginAdapter } from '../base/adapter'
 
 interface AirtableRecord {
@@ -23,12 +29,12 @@ export class AirtableAdapter extends BasePluginAdapter {
     config: PluginConfig
   ): Promise<unknown[]> {
     const { settings } = config
-    const { 
-      apiKey, 
-      baseId, 
+    const {
+      apiKey,
+      baseId,
       scheduleTable = 'Schedule',
       workerField = 'Worker',
-      dateField = 'Date'
+      dateField = 'Date',
     } = settings as {
       apiKey: string
       baseId: string
@@ -50,12 +56,12 @@ export class AirtableAdapter extends BasePluginAdapter {
     // Fetch records from Airtable
     const response = await fetch(
       `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(scheduleTable)}?` +
-      new URLSearchParams({
-        filterByFormula: filterFormula,
-      }),
+        new URLSearchParams({
+          filterByFormula: filterFormula,
+        }),
       {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
       }
@@ -69,17 +75,14 @@ export class AirtableAdapter extends BasePluginAdapter {
     return data.records || []
   }
 
-  protected async fetchExternalTasks(
-    workerId: string,
-    config: PluginConfig
-  ): Promise<unknown[]> {
+  protected async fetchExternalTasks(workerId: string, config: PluginConfig): Promise<unknown[]> {
     const { settings } = config
-    const { 
-      apiKey, 
-      baseId, 
+    const {
+      apiKey,
+      baseId,
       taskTable = 'Tasks',
       workerField = 'Worker',
-      dueDateField = 'Due Date'
+      dueDateField = 'Due Date',
     } = settings as {
       apiKey: string
       baseId: string
@@ -96,17 +99,17 @@ export class AirtableAdapter extends BasePluginAdapter {
     const today = new Date().toISOString().split('T')[0]
 
     // Build Airtable formula to filter by worker and due date (today or before)
-    const filterFormula = `AND({${workerField}}='${workerId}', OR(IS_BEFORE({${dueDateField}}, '${today}'), IS_SAME({${dueDateField}}, '${today}')))` 
+    const filterFormula = `AND({${workerField}}='${workerId}', OR(IS_BEFORE({${dueDateField}}, '${today}'), IS_SAME({${dueDateField}}, '${today}')))`
 
     // Fetch records from Airtable
     const response = await fetch(
       `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(taskTable)}?` +
-      new URLSearchParams({
-        filterByFormula: filterFormula,
-      }),
+        new URLSearchParams({
+          filterByFormula: filterFormula,
+        }),
       {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
       }
@@ -123,15 +126,15 @@ export class AirtableAdapter extends BasePluginAdapter {
   protected transformScheduleItem(externalItem: unknown): StandardScheduleItem | null {
     const record = externalItem as AirtableRecord
     const fields = record.fields
-    
+
     // Extract field values from config - these should come from the config
     const timeStr = fields['Time'] as string
     const dateStr = fields['Date'] as string
-    
+
     // Parse time and create datetime
     let startTime: string
     let endTime: string
-    
+
     if (timeStr && dateStr) {
       startTime = `${dateStr}T${timeStr.padStart(5, '0')}:00`
       // Default to 1 hour duration if no end time specified
@@ -162,7 +165,7 @@ export class AirtableAdapter extends BasePluginAdapter {
   protected transformTaskItem(externalItem: unknown): StandardTaskItem | null {
     const record = externalItem as AirtableRecord
     const fields = record.fields
-    
+
     // Map Airtable priority to standard priority
     let priority: 'low' | 'medium' | 'high' = 'medium'
     const airtablePriority = (fields['Priority'] as string)?.toLowerCase()
@@ -200,11 +203,11 @@ export class AirtableAdapter extends BasePluginAdapter {
   async validateConfig(config: PluginConfig): Promise<ValidationResult> {
     const { settings } = config
     const { apiKey, baseId } = settings as { apiKey?: string; baseId?: string }
-    
+
     if (!apiKey || !baseId) {
       return {
         valid: false,
-        errors: ['API Key and Base ID are required']
+        errors: ['API Key and Base ID are required'],
       }
     }
 
@@ -212,14 +215,14 @@ export class AirtableAdapter extends BasePluginAdapter {
       // Test the API key by fetching base metadata
       const response = await fetch(`https://api.airtable.com/v0/${baseId}`, {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
       })
 
       if (!response.ok) {
         return {
           valid: false,
-          errors: ['Failed to connect to Airtable']
+          errors: ['Failed to connect to Airtable'],
         }
       }
 
@@ -227,47 +230,47 @@ export class AirtableAdapter extends BasePluginAdapter {
     } catch (error) {
       return {
         valid: false,
-        errors: [error instanceof Error ? error.message : 'Connection failed']
+        errors: [error instanceof Error ? error.message : 'Connection failed'],
       }
     }
   }
 
-  getConfigSchema(): import('@dashboard-link/shared').PluginConfigSchema {
+  getConfigSchema(): import('../contracts').PluginConfigSchema {
     return {
       type: 'object',
       properties: {
         apiKey: {
           type: 'string',
           title: 'API Key',
-          description: 'Airtable API key'
+          description: 'Airtable API key',
         },
         baseId: {
           type: 'string',
           title: 'Base ID',
-          description: 'Airtable base ID'
+          description: 'Airtable base ID',
         },
         scheduleTable: {
           type: 'string',
           title: 'Schedule Table',
-          description: 'Table name for schedule data'
+          description: 'Table name for schedule data',
         },
         tasksTable: {
           type: 'string',
           title: 'Tasks Table',
-          description: 'Table name for task data'
+          description: 'Table name for task data',
         },
         workerField: {
           type: 'string',
           title: 'Worker Field',
-          description: 'Field name for worker assignment'
+          description: 'Field name for worker assignment',
         },
         dateField: {
           type: 'string',
           title: 'Date Field',
-          description: 'Field name for date filtering'
-        }
+          description: 'Field name for date filtering',
+        },
       },
-      required: ['apiKey', 'baseId']
-    };
+      required: ['apiKey', 'baseId'],
+    }
   }
 }

@@ -1,4 +1,10 @@
-import { DateRange, PluginConfig, StandardScheduleItem, StandardTaskItem, ValidationResult } from '@dashboard-link/shared'
+import {
+  DateRange,
+  PluginConfig,
+  StandardScheduleItem,
+  StandardTaskItem,
+  ValidationResult,
+} from '../contracts'
 import { BasePluginAdapter } from '../base/adapter'
 
 /**
@@ -29,15 +35,15 @@ export class GoogleCalendarAdapter extends BasePluginAdapter {
     // Fetch events from Google Calendar API
     const response = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?` +
-      new URLSearchParams({
-        timeMin: dateRange.start,
-        timeMax: dateRange.end,
-        singleEvents: 'true',
-        orderBy: 'startTime',
-      }),
+        new URLSearchParams({
+          timeMin: dateRange.start,
+          timeMax: dateRange.end,
+          singleEvents: 'true',
+          orderBy: 'startTime',
+        }),
       {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       }
@@ -51,10 +57,7 @@ export class GoogleCalendarAdapter extends BasePluginAdapter {
     return data.items || []
   }
 
-  protected async fetchExternalTasks(
-    _workerId: string,
-    _config: PluginConfig
-  ): Promise<unknown[]> {
+  protected async fetchExternalTasks(_workerId: string, _config: PluginConfig): Promise<unknown[]> {
     // Google Calendar doesn't have tasks, return empty
     return []
   }
@@ -119,7 +122,7 @@ export class GoogleCalendarAdapter extends BasePluginAdapter {
     if (!calendarId || !accessToken) {
       return {
         valid: false,
-        errors: ['Calendar ID and Access Token are required']
+        errors: ['Calendar ID and Access Token are required'],
       }
     }
 
@@ -129,7 +132,7 @@ export class GoogleCalendarAdapter extends BasePluginAdapter {
         `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}`,
         {
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       )
@@ -137,7 +140,7 @@ export class GoogleCalendarAdapter extends BasePluginAdapter {
       if (!response.ok) {
         return {
           valid: false,
-          errors: ['Failed to connect to Google Calendar']
+          errors: ['Failed to connect to Google Calendar'],
         }
       }
 
@@ -145,27 +148,27 @@ export class GoogleCalendarAdapter extends BasePluginAdapter {
     } catch (error) {
       return {
         valid: false,
-        errors: [error instanceof Error ? error.message : 'Connection failed']
+        errors: [error instanceof Error ? error.message : 'Connection failed'],
       }
     }
   }
 
-  getConfigSchema(): import('@dashboard-link/shared').PluginConfigSchema {
+  getConfigSchema(): import('../contracts').PluginConfigSchema {
     return {
       type: 'object',
       properties: {
         calendarId: {
           type: 'string',
           title: 'Calendar ID',
-          description: 'Google Calendar ID (defaults to primary)'
+          description: 'Google Calendar ID (defaults to primary)',
         },
         accessToken: {
           type: 'string',
           title: 'Access Token',
-          description: 'Google Calendar API access token'
-        }
+          description: 'Google Calendar API access token',
+        },
       },
-      required: ['accessToken']
-    };
+      required: ['accessToken'],
+    }
   }
 }

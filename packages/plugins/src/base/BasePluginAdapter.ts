@@ -1,52 +1,98 @@
 import {
-    PluginAdapter,
-    PluginConfig,
-    PluginHealthResult,
-    PluginResponse,
-    PluginValidationResult,
-    StandardScheduleItem,
-    StandardTaskItem
-} from '@dashboard-link/shared';
+  DateRange,
+  PluginAdapter,
+  PluginConfig,
+  PluginHealthResult,
+  PluginResponse,
+  PluginValidationResult,
+  StandardScheduleItem,
+  StandardTaskItem,
+  dateRangeSchema,
+  pluginConfigSchema,
+  pluginResponseSchema,
+  standardScheduleItemSchema,
+  standardTaskItemSchema,
+} from '../contracts'
 
 // Abstract base class that all plugin adapters should extend
 // This provides the standard implementation pattern and error handling
 export abstract class BasePluginAdapter implements PluginAdapter {
-  abstract readonly id: string;
-  abstract readonly name: string;
-  abstract readonly version: string;
-  abstract readonly description: string;
+  abstract readonly id: string
+  abstract readonly name: string
+  abstract readonly version: string
+  abstract readonly description: string
 
   // Abstract methods that each plugin must implement
-  protected abstract fetchExternalSchedule(workerId: string, config: PluginConfig): Promise<unknown[]>;
-  protected abstract fetchExternalTasks(workerId: string, config: PluginConfig): Promise<unknown[]>;
-  protected abstract transformScheduleItem(item: unknown): StandardScheduleItem;
-  protected abstract transformTaskItem(item: unknown): StandardTaskItem;
+  protected abstract fetchExternalSchedule(
+    workerId: string,
+    dateRange: DateRange,
+    config: PluginConfig
+  ): Promise<unknown[]>
+  protected abstract fetchExternalTasks(workerId: string, config: PluginConfig): Promise<unknown[]>
+  protected abstract transformScheduleItem(item: unknown): StandardScheduleItem
+  protected abstract transformTaskItem(item: unknown): StandardTaskItem
 
   // Standardized implementation - plugins don't need to reimplement this
-  async getTodaySchedule(workerId: string, config: PluginConfig): Promise<PluginResponse<StandardScheduleItem>> {
-    const startTime = Date.now();
-    
+  async getSchedule(
+    workerId: string,
+    dateRange: DateRange,
+    config: PluginConfig
+  ): Promise<PluginResponse<StandardScheduleItem>> {
+    const startTime = Date.now()
+
     try {
-      // Validate config first
-      const validation = await this.validateConfig(config);
+      const configResult = pluginConfigSchema.safeParse(config)
+      const dateRangeResult = dateRangeSchema.safeParse(dateRange)
+
+      if (!configResult.success) {
+        return this.createErrorResponse<StandardScheduleItem>(
+          'CONFIG_INVALID',
+          `Plugin configuration is invalid: ${configResult.error.errors.map((e) => e.message).join(', ')}`,
+          startTime
+        )
+      }
+
+      if (!dateRangeResult.success) {
+        return this.createErrorResponse<StandardScheduleItem>(
+          'DATE_RANGE_INVALID',
+          dateRangeResult.error.errors.map((e) => e.message).join(', '),
+          startTime
+        )
+      }
+
+      const validation = await this.validateConfig(configResult.data)
       if (!validation.valid) {
         return this.createErrorResponse<StandardScheduleItem>(
           'CONFIG_INVALID',
           `Plugin configuration is invalid: ${validation.errors?.join(', ')}`,
           startTime
-        );
+        )
       }
 
       // Fetch external data
-      const externalData = await this.fetchExternalSchedule(workerId, config);
-      
+      const externalData = await this.fetchExternalSchedule(
+        workerId,
+        dateRangeResult.data,
+        configResult.data
+      )
+
       // Transform to standard format
-      const standardItems = externalData.map(item => this.transformScheduleItem(item));
-      
+      const standardItems = externalData
+        .map((item) => this.transformScheduleItem(item))
+        .map((item) => standardScheduleItemSchema.safeParse(item))
+        .filter(
+          (
+            result
+          ): result is ReturnType<(typeof standardScheduleItemSchema)['safeParse']> & {
+            success: true
+          } => result.success
+        )
+        .map((result) => result.data)
+
       // Validate transformed items
-      const validItems = standardItems.filter(item => this.validateScheduleItem(item));
-      
-      return {
+      const validItems = standardItems.filter((item) => this.validateScheduleItem(item))
+
+      const response = {
         success: true,
         data: validItems,
         metadata: {
@@ -54,43 +100,56 @@ export abstract class BasePluginAdapter implements PluginAdapter {
           timestamp: new Date().toISOString(),
           version: this.version,
           totalItems: externalData.length,
-          processingTime: Date.now() - startTime
-        }
-      };
+          processingTime: Date.now() - startTime,
+        },
+      }
+
+      pluginResponseSchema(standardScheduleItemSchema).parse(response)
+      return response
     } catch (error) {
       return this.createErrorResponse<StandardScheduleItem>(
         'FETCH_ERROR',
         error instanceof Error ? error.message : 'Unknown error fetching schedule',
         startTime,
         error
-      );
+      )
     }
   }
 
-  async getTodayTasks(workerId: string, config: PluginConfig): Promise<PluginResponse<StandardTaskItem>> {
-    const startTime = Date.now();
-    
+  async getTodaySchedule(
+    workerId: string,
+    config: PluginConfig
+  ): Promise<PluginResponse<StandardScheduleItem>> {
+    return this.getSchedule(workerId, this.getTodayRange(), config)
+  }
+
+  async getTasks(
+    workerId: string,
+    config: PluginConfig
+  ): Promise<PluginResponse<StandardTaskItem>> {
+    const startTime = Date.now()
+
     try {
       // Validate config first
-      const validation = await this.validateConfig(config);
+      const validation = await this.validateConfig(config)
       if (!validation.valid) {
         return this.createErrorResponse<StandardTaskItem>(
           'CONFIG_INVALID',
           `Plugin configuration is invalid: ${validation.errors?.join(', ')}`,
           startTime
-        );
+        )
       }
 
       // Fetch external data
-      const externalData = await this.fetchExternalTasks(workerId, config);
-      
+      const externalData = await this.fetchExternalTasks(workerId, config)
+
       // Transform to standard format
-      const standardItems = externalData.map(item => this.transformTaskItem(item));
-      
+      const standardItems = externalData.map((item) => this.transformTaskItem(item))
+
       // Validate transformed items
-      const validItems = standardItems.filter(item => this.validateTaskItem(item));
-      
-      return {
+      const validItems = standardItems.filter((item) => this.validateTaskItem(item))
+
+      const response = {
         success: true,
         data: validItems,
         metadata: {
@@ -98,97 +157,111 @@ export abstract class BasePluginAdapter implements PluginAdapter {
           timestamp: new Date().toISOString(),
           version: this.version,
           totalItems: externalData.length,
-          processingTime: Date.now() - startTime
-        }
-      };
+          processingTime: Date.now() - startTime,
+        },
+      }
+
+      pluginResponseSchema(standardTaskItemSchema).parse(response)
+      return response
     } catch (error) {
       return this.createErrorResponse<StandardTaskItem>(
         'FETCH_ERROR',
         error instanceof Error ? error.message : 'Unknown error fetching tasks',
         startTime,
         error
-      );
+      )
     }
+  }
+
+  async getTodayTasks(
+    workerId: string,
+    config: PluginConfig
+  ): Promise<PluginResponse<StandardTaskItem>> {
+    return this.getTasks(workerId, config)
   }
 
   // Default validation implementation - can be overridden
   async validateConfig(config: PluginConfig): Promise<PluginValidationResult> {
-    const schema = this.getConfigSchema();
-    const errors: string[] = [];
-    const warnings: string[] = [];
+    const schema = this.getConfigSchema()
+    const errors: string[] = []
+    const warnings: string[] = []
 
     // Check required fields
     for (const requiredField of schema.required) {
       if (!(requiredField in config.settings)) {
-        errors.push(`Missing required field: ${requiredField}`);
+        errors.push(`Missing required field: ${requiredField}`)
       }
     }
 
     // Validate field types
     for (const [fieldName, fieldSchema] of Object.entries(schema.properties)) {
-      const value = config.settings[fieldName];
-      
+      const value = config.settings[fieldName]
+
       if (value !== undefined && !this.validateFieldType(value, fieldSchema.type)) {
-        errors.push(`Invalid type for field ${fieldName}: expected ${fieldSchema.type}, got ${typeof value}`);
+        errors.push(
+          `Invalid type for field ${fieldName}: expected ${fieldSchema.type}, got ${typeof value}`
+        )
       }
     }
 
     return {
       valid: errors.length === 0,
       errors: errors.length > 0 ? errors : undefined,
-      warnings: warnings.length > 0 ? warnings : undefined
-    };
+      warnings: warnings.length > 0 ? warnings : undefined,
+    }
   }
 
   // Default health check - can be overridden
   async healthCheck(config: PluginConfig): Promise<PluginHealthResult> {
-    const startTime = Date.now();
-    
+    const startTime = Date.now()
+
     try {
       // Try a simple validation to check if the plugin is responsive
-      await this.validateConfig(config);
-      
+      await this.validateConfig(config)
+
       return {
         healthy: true,
         status: 'healthy',
         message: 'Plugin is operating normally',
         lastChecked: new Date().toISOString(),
-        responseTime: Date.now() - startTime
-      };
+        responseTime: Date.now() - startTime,
+      }
     } catch (error) {
       return {
         healthy: false,
         status: 'unhealthy',
         message: error instanceof Error ? error.message : 'Unknown health check error',
         lastChecked: new Date().toISOString(),
-        responseTime: Date.now() - startTime
-      };
+        responseTime: Date.now() - startTime,
+      }
     }
   }
 
   // Helper methods
   protected createErrorResponse<T>(
-    code: string, 
-    message: string, 
-    startTime: number, 
+    code: string,
+    message: string,
+    startTime: number,
     originalError?: unknown
   ): PluginResponse<T> {
     return {
       success: false,
       data: [],
-      errors: [{
-        code,
-        message,
-        details: originalError instanceof Error ? { stack: originalError.stack } : undefined,
-        retryable: this.isRetryableError(code)
-      }],
+      errors: [
+        {
+          code,
+          message,
+          details: originalError instanceof Error ? { stack: originalError.stack } : undefined,
+          retryable: this.isRetryableError(code),
+        },
+      ],
       metadata: {
         source: this.id,
         timestamp: new Date().toISOString(),
         version: this.version,
-        processingTime: Date.now() - startTime
-      }
-    };
+        processingTime: Date.now() - startTime,
+      },
+    }
   }
 
   protected validateScheduleItem(item: StandardScheduleItem): boolean {
@@ -200,7 +273,7 @@ export abstract class BasePluginAdapter implements PluginAdapter {
       this.isValidISODate(item.startTime) &&
       this.isValidISODate(item.endTime) &&
       new Date(item.startTime) < new Date(item.endTime)
-    );
+    )
   }
 
   protected validateTaskItem(item: StandardTaskItem): boolean {
@@ -210,59 +283,59 @@ export abstract class BasePluginAdapter implements PluginAdapter {
       ['low', 'medium', 'high'].includes(item.priority) &&
       ['pending', 'in_progress', 'completed', 'cancelled'].includes(item.status) &&
       (!item.dueDate || this.isValidISODate(item.dueDate))
-    );
+    )
   }
 
   protected validateFieldType(value: unknown, expectedType: string): boolean {
     switch (expectedType) {
       case 'string':
-        return typeof value === 'string';
+        return typeof value === 'string'
       case 'number':
-        return typeof value === 'number';
+        return typeof value === 'number'
       case 'boolean':
-        return typeof value === 'boolean';
+        return typeof value === 'boolean'
       case 'array':
-        return Array.isArray(value);
+        return Array.isArray(value)
       case 'object':
-        return typeof value === 'object' && value !== null && !Array.isArray(value);
+        return typeof value === 'object' && value !== null && !Array.isArray(value)
       default:
-        return true; // Unknown type, assume valid
+        return true // Unknown type, assume valid
     }
   }
 
   protected isValidISODate(dateString: string): boolean {
-    const date = new Date(dateString);
-    return !isNaN(date.getTime()) && dateString === date.toISOString();
+    const date = new Date(dateString)
+    return !isNaN(date.getTime()) && dateString === date.toISOString()
   }
 
   protected isRetryableError(code: string): boolean {
     // Define which errors are retryable
-    const retryableCodes = ['NETWORK_ERROR', 'TIMEOUT_ERROR', 'RATE_LIMIT_ERROR'];
-    return retryableCodes.includes(code);
+    const retryableCodes = ['NETWORK_ERROR', 'TIMEOUT_ERROR', 'RATE_LIMIT_ERROR']
+    return retryableCodes.includes(code)
   }
 
   // Utility methods for date handling
   protected getTodayRange(): { start: string; end: string } {
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-    
+    const now = new Date()
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+
     return {
       start: startOfDay.toISOString(),
-      end: endOfDay.toISOString()
-    };
+      end: endOfDay.toISOString(),
+    }
   }
 
   protected isToday(dateString: string): boolean {
-    const date = new Date(dateString);
-    const now = new Date();
+    const date = new Date(dateString)
+    const now = new Date()
     return (
       date.getDate() === now.getDate() &&
       date.getMonth() === now.getMonth() &&
       date.getFullYear() === now.getFullYear()
-    );
+    )
   }
 
   // Abstract method that must be implemented by concrete plugins
-  abstract getConfigSchema(): import('@dashboard-link/shared').PluginConfigSchema;
+  abstract getConfigSchema(): import('../contracts').PluginConfigSchema
 }

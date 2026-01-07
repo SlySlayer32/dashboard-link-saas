@@ -1,4 +1,10 @@
-import { DateRange, PluginConfig, StandardScheduleItem, StandardTaskItem, ValidationResult } from '@dashboard-link/shared'
+import {
+  DateRange,
+  PluginConfig,
+  StandardScheduleItem,
+  StandardTaskItem,
+  ValidationResult,
+} from '../contracts'
 import { createClient } from '@supabase/supabase-js'
 import { BasePluginAdapter } from '../base/adapter'
 
@@ -36,10 +42,7 @@ export class ManualAdapter extends BasePluginAdapter {
     return data || []
   }
 
-  protected async fetchExternalTasks(
-    workerId: string,
-    _config: PluginConfig
-  ): Promise<unknown[]> {
+  protected async fetchExternalTasks(workerId: string, _config: PluginConfig): Promise<unknown[]> {
     // Get today's date range
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0)
@@ -62,13 +65,13 @@ export class ManualAdapter extends BasePluginAdapter {
 
   protected transformScheduleItem(externalItem: unknown): StandardScheduleItem | null {
     const item = externalItem as {
-      id: string;
-      title: string;
-      start_time: string;
-      end_time: string;
-      location?: string;
-      description?: string;
-      metadata?: Record<string, unknown>;
+      id: string
+      title: string
+      start_time: string
+      end_time: string
+      location?: string
+      description?: string
+      metadata?: Record<string, unknown>
     }
 
     if (!item.start_time || !item.end_time) {
@@ -92,13 +95,13 @@ export class ManualAdapter extends BasePluginAdapter {
 
   protected transformTaskItem(externalItem: unknown): StandardTaskItem | null {
     const item = externalItem as {
-      id: string;
-      title: string;
-      description?: string;
-      due_date?: string;
-      priority?: 'low' | 'medium' | 'high';
-      status?: 'pending' | 'in_progress' | 'completed';
-      metadata?: Record<string, unknown>;
+      id: string
+      title: string
+      description?: string
+      due_date?: string
+      priority?: 'low' | 'medium' | 'high'
+      status?: 'pending' | 'in_progress' | 'completed'
+      metadata?: Record<string, unknown>
     }
 
     return {
@@ -121,11 +124,11 @@ export class ManualAdapter extends BasePluginAdapter {
     return { valid: true }
   }
 
-  getConfigSchema(): import('@dashboard-link/shared').PluginConfigSchema {
+  getConfigSchema(): import('../contracts').PluginConfigSchema {
     return {
       type: 'object',
       properties: {},
-      required: []
-    };
+      required: [],
+    }
   }
 }

@@ -1,16 +1,17 @@
-import { createTokenManager } from '@dashboard-link/tokens';
-import { createClient } from '@supabase/supabase-js';
-import { Hono } from 'hono';
-import { authMiddleware } from '../middleware/auth';
-import { smsRateLimitMiddleware } from '../middleware/rateLimit';
-import { SMSService } from '../services/sms.service';
+import { createTokenManager } from '@dashboard-link/tokens'
+import { createClient } from '@supabase/supabase-js'
+import { Hono } from 'hono'
+import { authMiddleware } from '../middleware/auth'
+import { smsRateLimitMiddleware } from '../middleware/rateLimit'
+import { SMSService } from '../services/sms.service'
+import type { AppContext } from '../types'
 import type {
-    SMSDashboardLinkRequest,
-    SMSDashboardLinkResponse,
-    SMSLogsResponse,
-    SendSMSRequest,
-} from '../types/sms';
-import { logger } from '../utils/logger.js';
+  SMSDashboardLinkRequest,
+  SMSDashboardLinkResponse,
+  SMSLogsResponse,
+  SendSMSRequest,
+} from '../types/sms'
+import { logger } from '../utils/logger.js'
 
 // Initialize token manager with environment configuration
 const tokenManager = createTokenManager({
@@ -19,10 +20,10 @@ const tokenManager = createTokenManager({
   hashTokens: true,
   cleanupExpired: true,
   defaultExpiry: 86400, // 1 day for worker tokens
-  refreshExpiry: 2592000 // 30 days
-});
+  refreshExpiry: 2592000, // 30 days
+})
 
-const sms = new Hono()
+const sms = new Hono<AppContext>()
 
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
@@ -37,9 +38,21 @@ sms.use('*', smsRateLimitMiddleware)
  * Send dashboard link to a worker
  */
 sms.post('/send-dashboard-link', async (c) => {
-  // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId')
   const { workerId, expiresIn, customMessage }: SMSDashboardLinkRequest = await c.req.json()
+
+  if (!userId) {
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Not authorized',
+        },
+      },
+      401
+    )
+  }
 
   try {
     // Validate input
@@ -130,8 +143,8 @@ sms.post('/send-dashboard-link', async (c) => {
       permissions: ['worker:access', 'sms:receive'],
       metadata: {
         expiresIn,
-        generatedFor: 'sms_dashboard_link'
-      }
+        generatedFor: 'sms_dashboard_link',
+      },
     })
 
     // Generate dashboard link
@@ -178,7 +191,10 @@ sms.post('/send-dashboard-link', async (c) => {
 
     return c.json(response)
   } catch (error) {
-    logger.error('Send dashboard link error', error as Error)
+    logger.error(
+      'Send dashboard link error',
+      error instanceof Error ? error : new Error(String(error))
+    )
     return c.json(
       {
         success: false,
@@ -196,16 +212,28 @@ sms.post('/send-dashboard-link', async (c) => {
  * Get SMS logs for the organization
  */
 sms.get('/logs', async (c) => {
-  // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId')
-  const { 
-    page = '1', 
-    limit = '20', 
-    workerId, 
+  if (!userId) {
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Not authorized',
+        },
+      },
+      401
+    )
+  }
+
+  const {
+    page = '1',
+    limit = '20',
+    workerId,
     status,
     dateFrom,
     dateTo,
-    search
+    search,
   }: Record<string, string> = c.req.query()
 
   try {
@@ -290,7 +318,7 @@ sms.get('/logs', async (c) => {
 
     return c.json(response)
   } catch (error) {
-    logger.error('Get SMS logs error', error as Error)
+    logger.error('Get SMS logs error', error instanceof Error ? error : new Error(String(error)))
     return c.json(
       {
         success: false,
@@ -308,9 +336,21 @@ sms.get('/logs', async (c) => {
  * Send custom SMS to a worker
  */
 sms.post('/send', async (c) => {
-  // @ts-expect-error - Supabase client type issue
   const userId = c.get('userId')
   const { workerId, message }: SendSMSRequest = await c.req.json()
+
+  if (!userId) {
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Not authorized',
+        },
+      },
+      401
+    )
+  }
 
   try {
     // Validate input
@@ -406,7 +446,7 @@ sms.post('/send', async (c) => {
       },
     })
   } catch (error) {
-    logger.error('Send SMS error', error as Error)
+    logger.error('Send SMS error', error instanceof Error ? error : new Error(String(error)))
     return c.json(
       {
         success: false,

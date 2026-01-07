@@ -1,13 +1,18 @@
 import {
-    DateRange,
-    PluginConfig,
-    PluginError,
-    PluginResponse,
-    StandardScheduleItem,
-    StandardTaskItem,
-    ValidationResult,
-    WebhookResponse
-} from '@dashboard-link/shared'
+  DateRange,
+  PluginConfig,
+  PluginResponse,
+  StandardScheduleItem,
+  StandardTaskItem,
+  PluginError,
+  ValidationResult,
+  WebhookResponse,
+  dateRangeSchema,
+  pluginConfigSchema,
+  pluginResponseSchema,
+  standardScheduleItemSchema,
+  standardTaskItemSchema,
+} from '../contracts'
 
 /**
  * Base adapter class that handles common concerns
@@ -25,18 +30,11 @@ export abstract class BasePluginAdapter {
     config: PluginConfig
   ): Promise<unknown[]>
 
-  protected abstract fetchExternalTasks(
-    workerId: string,
-    config: PluginConfig
-  ): Promise<unknown[]>
+  protected abstract fetchExternalTasks(workerId: string, config: PluginConfig): Promise<unknown[]>
 
-  protected abstract transformScheduleItem(
-    externalItem: unknown
-  ): StandardScheduleItem | null
+  protected abstract transformScheduleItem(externalItem: unknown): StandardScheduleItem | null
 
-  protected abstract transformTaskItem(
-    externalItem: unknown
-  ): StandardTaskItem | null
+  protected abstract transformTaskItem(externalItem: unknown): StandardTaskItem | null
 
   // Public methods your app calls - these never change
   async getSchedule(
@@ -44,18 +42,40 @@ export abstract class BasePluginAdapter {
     dateRange: DateRange,
     config: PluginConfig
   ): Promise<PluginResponse<StandardScheduleItem>> {
+    const parsedConfig = pluginConfigSchema.safeParse(config)
+    if (!parsedConfig.success) {
+      const errors = parsedConfig.error.errors.map((err) => err.message)
+      return this.createValidationErrorResponse(errors)
+    }
+
+    const parsedRange = dateRangeSchema.safeParse(dateRange)
+    if (!parsedRange.success) {
+      const errors = parsedRange.error.errors.map((err) => err.message)
+      return this.createValidationErrorResponse(errors)
+    }
+
     try {
       const externalItems = await this.fetchExternalSchedule(
         workerId,
-        dateRange,
-        config
+        parsedRange.data,
+        parsedConfig.data
       )
 
       const standardItems = externalItems
-        .map(item => this.transformScheduleItem(item))
-        .filter((item): item is StandardScheduleItem => item !== null)
+        .map((item) => this.transformScheduleItem(item))
+        .map((item) => standardScheduleItemSchema.safeParse(item))
+        .filter(
+          (
+            result
+          ): result is ReturnType<(typeof standardScheduleItemSchema)['safeParse']> & {
+            success: true
+          } => result.success
+        )
+        .map((result) => result.data)
 
-      return this.createSuccessResponse(standardItems)
+      const response = this.createSuccessResponse(standardItems)
+      pluginResponseSchema(standardScheduleItemSchema).parse(response)
+      return response
     } catch (error) {
       return this.createErrorResponse(error)
     }
@@ -65,24 +85,37 @@ export abstract class BasePluginAdapter {
     workerId: string,
     config: PluginConfig
   ): Promise<PluginResponse<StandardTaskItem>> {
+    const parsedConfig = pluginConfigSchema.safeParse(config)
+    if (!parsedConfig.success) {
+      const errors = parsedConfig.error.errors.map((err) => err.message)
+      return this.createValidationErrorResponse(errors)
+    }
+
     try {
-      const externalItems = await this.fetchExternalTasks(workerId, config)
+      const externalItems = await this.fetchExternalTasks(workerId, parsedConfig.data)
 
       const standardItems = externalItems
-        .map(item => this.transformTaskItem(item))
-        .filter((item): item is StandardTaskItem => item !== null)
+        .map((item) => this.transformTaskItem(item))
+        .map((item) => standardTaskItemSchema.safeParse(item))
+        .filter(
+          (
+            result
+          ): result is ReturnType<(typeof standardTaskItemSchema)['safeParse']> & {
+            success: true
+          } => result.success
+        )
+        .map((result) => result.data)
 
-      return this.createSuccessResponse(standardItems)
+      const response = this.createSuccessResponse(standardItems)
+      pluginResponseSchema(standardTaskItemSchema).parse(response)
+      return response
     } catch (error) {
       return this.createErrorResponse(error)
     }
   }
 
   // Optional webhook handler - override if supported
-  async handleWebhook(
-    _payload: unknown,
-    _config: PluginConfig
-  ): Promise<WebhookResponse> {
+  async handleWebhook(_payload: unknown, _config: PluginConfig): Promise<WebhookResponse> {
     throw new Error(`Webhook not implemented for ${this.name}`)
   }
 
@@ -90,17 +123,15 @@ export abstract class BasePluginAdapter {
   abstract validateConfig(config: PluginConfig): Promise<ValidationResult>
 
   // Helper methods for creating standardized responses
-  protected createSuccessResponse<T>(
-    data: T[]
-  ): PluginResponse<T> {
+  protected createSuccessResponse<T>(data: T[]): PluginResponse<T> {
     return {
       success: true,
       data,
       metadata: {
         source: this.id,
         timestamp: new Date().toISOString(),
-        version: this.version
-      }
+        version: this.version,
+      },
     }
   }
 
@@ -108,7 +139,7 @@ export abstract class BasePluginAdapter {
     const pluginError: PluginError = {
       code: 'PLUGIN_ERROR',
       message: error instanceof Error ? error.message : 'Unknown error',
-      retryable: true
+      retryable: true,
     }
 
     return {
@@ -118,8 +149,8 @@ export abstract class BasePluginAdapter {
       metadata: {
         source: this.id,
         timestamp: new Date().toISOString(),
-        version: this.version
-      }
+        version: this.version,
+      },
     }
   }
 
@@ -127,7 +158,7 @@ export abstract class BasePluginAdapter {
     const pluginError: PluginError = {
       code: 'VALIDATION_ERROR',
       message: errors.join(', '),
-      retryable: false
+      retryable: false,
     }
 
     return {
@@ -137,9 +168,8 @@ export abstract class BasePluginAdapter {
       metadata: {
         source: this.id,
         timestamp: new Date().toISOString(),
-        version: this.version
-      }
+        version: this.version,
+      },
     }
   }
-
-  }
+}
