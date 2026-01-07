@@ -101,7 +101,7 @@ approval_policy = "on-request"
 # - read-only (default)
 # - workspace-write
 # - danger-full-access (no sandbox; extremely risky)
-sandbox_mode = "read-only"
+sandbox_mode = "workspace-write"
 
 # Extra settings used only when sandbox_mode = "workspace-write".
 [sandbox_workspace_write]
@@ -210,13 +210,13 @@ project_doc_fallback_filenames = []
 
 [tools]
 # Enable web search tool (alias: web_search_request). Default: false
-web_search = false
+web_search = true
 
 # Enable the view_image tool so the agent can attach local images. Default: true
 view_image = true
 
 # (Alias accepted) You can also write:
-# web_search_request = false
+# web_search_request = true
 
 ################################################################################
 # Centralized Feature Flags (preferred)
@@ -227,9 +227,9 @@ view_image = true
 unified_exec = false
 apply_patch_freeform = false
 view_image_tool = true
-web_search_request = false
+web_search_request = true
 enable_experimental_windows_sandbox = false
-skills = false
+skills = true
 
 ################################################################################
 # Experimental toggles (legacy; prefer [features])
@@ -315,7 +315,7 @@ experimental_use_freeform_apply_patch = false
 # model = "gpt-5.2-codex"
 # model_provider = "openai"
 # approval_policy = "on-request"
-# sandbox_mode = "read-only"
+# sandbox_mode = "workspace-write"
 # model_reasoning_effort = "medium"
 # model_reasoning_summary = "auto"
 # model_verbosity = "medium"
@@ -323,7 +323,7 @@ experimental_use_freeform_apply_patch = false
 # experimental_compact_prompt_file = "./compact_prompt.txt"
 # include_apply_patch_tool = false
 # experimental_use_freeform_apply_patch = false
-# tools_web_search = false
+# tools_web_search = true
 # tools_view_image = true
 # features = { unified_exec = false }
 
@@ -333,7 +333,7 @@ experimental_use_freeform_apply_patch = false
 
 # Mark specific worktrees as trusted. Only "trusted" is recognized.
 [projects]
-# [projects."/absolute/path/to/project"]
+# [projects."e:\\CleanConnect"]
 # trust_level = "trusted"
 
 ################################################################################
