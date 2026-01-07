@@ -143,7 +143,7 @@ persistence = "save-all"
 # max_bytes = 0
 
 # URI scheme for clickable citations: vscode (default) | vscode-insiders | windsurf | cursor | none
-file_opener = "vscode"
+file_opener = "cursor"
 
 ################################################################################
 # UI, Notifications, and Misc
@@ -202,7 +202,8 @@ mcp_oauth_credentials_store = "auto"
 project_doc_max_bytes = 32768
 
 # Ordered fallbacks when AGENTS.md is missing at a directory level. Default: []
-project_doc_fallback_filenames = []
+project_doc_fallback_filenames = ["agents.md"]
+
 
 ################################################################################
 # Tools (legacy toggles kept for compatibility)

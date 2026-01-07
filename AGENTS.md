@@ -107,13 +107,6 @@ Root scripts (from `package.json`):
 - `pnpm db:start` / `pnpm db:stop` — Supabase local
 - `pnpm db:migrate` / `pnpm db:seed` / `pnpm db:reset`
 
-Orchestration scripts (see `scripts/orchestration`):
-- `pnpm --dir scripts/orchestration build`
-- `pnpm --dir scripts/orchestration orchestrate`
-- `pnpm --dir scripts/orchestration run-skill`
-- `pnpm --dir scripts/orchestration aggregate`
-- `pnpm --dir scripts/orchestration post-comment`
-
 ## Global Standards
 - TypeScript everywhere.
 - ESM (`"type": "module"`).
