@@ -1,11 +1,17 @@
-# Admin App
+# Admin App Agent Guide
 
-## Purpose
-Admin dashboard for managing organizations, workers, plugins, tokens, and SMS.
+## Scope
+Admin dashboard for managing orgs, workers, plugins, tokens, and SMS. Start with root `AGENTS.md`.
 
-## Zapier-style Guidance
-- Admin UI should call API routes that interact with services/contracts.
-- Do not add vendor-specific integrations directly in the UI.
+## Rules
+- Admin UI calls API routes only; never embed vendor integrations in the UI.
+- Keep tenant boundaries in mind when building admin flows.
+- Use shared UI from `@dashboard-link/ui` and shared types from `@dashboard-link/shared`.
 
-## Key Tech
-React 18, Vite, Tailwind, Zustand, TanStack Query.
+## Touchpoints
+- Source: `apps/admin/src`
+- API base URL: `VITE_API_URL` in `apps/admin/.env`
+- Auth helpers and API client: `apps/admin/src/services`, `apps/admin/src/utils`
+
+## Tests
+- Use Vitest + Testing Library under `apps/admin/src/test`.

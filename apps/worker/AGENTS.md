@@ -1,8 +1,16 @@
-# Worker App
+# Worker App Agent Guide
 
-## Purpose
-Mobile-first worker dashboard for schedules and tasks.
+## Scope
+Mobile-first worker dashboard delivered via SMS links. Start with root `AGENTS.md`.
 
-## Zapier-style Guidance
-- Worker UI only talks to API for data (token validation + plugin outputs).
-- No vendor SDK usage in the worker app.
+## Rules
+- Worker UI only talks to API; never embed vendor integrations.
+- Keep UX optimized for small screens and intermittent connectivity.
+- Use shared types from `@dashboard-link/shared` where possible.
+
+## Touchpoints
+- Source: `apps/worker/src`
+- API base URL: `VITE_API_URL` in `apps/worker/.env`
+
+## Tests
+- Add Vitest/RTL tests in `apps/worker/src/test` if/when added.

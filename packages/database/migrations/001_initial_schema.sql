@@ -39,6 +39,12 @@ CREATE TABLE workers (
 );
 
 -- Worker tokens for SMS links
+-- TODO(tokens): Current app code uses @dashboard-link/tokens DatabaseTokenProvider with hashTokens=true,
+-- but this table stores `token` plaintext and does not match the provider's expected schema
+-- (token_hash, payload, organization_id, last_used_at, refresh tokens, etc.).
+-- Decide one:
+-- 1) Replace/expand this table to match the token provider schema, OR
+-- 2) Point the token provider at a dedicated tokens table and stop using worker_tokens.
 CREATE TABLE worker_tokens (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     worker_id UUID NOT NULL REFERENCES workers(id) ON DELETE CASCADE,
@@ -53,6 +59,9 @@ CREATE INDEX idx_worker_tokens_token ON worker_tokens(token);
 CREATE INDEX idx_worker_tokens_expires ON worker_tokens(expires_at);
 
 -- Plugin configurations
+-- TODO(secrets): `config` may contain credentials (OAuth refresh tokens, API keys).
+-- Do not store secrets plaintext in JSONB long-term. Decide on Supabase Vault / KMS encryption
+-- and tighten RLS/DB access patterns for secrets.
 CREATE TABLE plugin_configs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -125,6 +134,9 @@ CREATE TABLE manual_task_items (
 CREATE INDEX idx_manual_task_worker_date ON manual_task_items(worker_id, due_date);
 
 -- SMS logs (for tracking sent messages)
+-- TODO(sms-logs): API/service layer attempts to insert a `provider` field and likely needs richer
+-- delivery/debug fields (provider_message_id, error_code/message, delivered_at, etc.).
+-- Align this schema to match apps/api SMS logging.
 CREATE TABLE sms_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -257,3 +269,6 @@ CREATE POLICY sms_log_policy ON sms_logs
 -- Public policy for worker token validation (for dashboard access)
 -- Workers accessing their dashboard via token don't have auth.uid()
 -- This is handled in the API layer with service role key
+-- TODO(rls): Document and validate the service-role-only access paths for worker dashboard flows.
+-- Consider whether any worker-facing reads should be possible via RLS + anon/auth, rather than
+-- depending entirely on the service role.

@@ -1,8 +1,16 @@
-# API App
+# API App Agent Guide
 
-## Purpose
-Hono API service backing admin + worker apps.
+## Scope
+Hono API service backing admin and worker apps. Start with root `AGENTS.md`.
 
-## Zapier-style Guidance
-- API services call contracts and registries (plugins/SMS/tokens).
-- No vendor SDK calls inside route handlers; use services/adapters.
+## Rules
+- Route handlers stay thin; use services and repositories from packages.
+- Use adapters/registries for external vendors (SMS, plugins, tokens).
+- Enforce tenant scoping and return appropriate HTTP status codes.
+
+## Touchpoints
+- Source: `apps/api/src`
+- Env config: `apps/api/src/config/env.ts`
+
+## Tests
+- Use Vitest tests under `apps/api/src/test`.

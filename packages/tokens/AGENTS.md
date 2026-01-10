@@ -1,7 +1,16 @@
-# Tokens Package
+# Tokens Package Agent Guide
 
-## Purpose
-Token generation/validation and providers.
+## Scope
+Token generation, validation, and provider abstraction.
 
 ## Rules
-- Token providers must conform to shared contracts.
+- Providers must conform to shared token contracts.
+- Never log raw tokens or secrets.
+- Ensure expirations and revocation are handled consistently.
+
+## Touchpoints
+- Source: `packages/tokens/src`
+- Shared types: `packages/shared`
+
+## Tests
+- Add unit tests for token providers and validators.

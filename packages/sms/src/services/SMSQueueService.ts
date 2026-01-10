@@ -37,6 +37,8 @@ interface QueuedMessage {
  * Following Zapier's queue-based architecture for reliability
  */
 export class SMSQueueService {
+  // TODO(phase2-queues): This is an in-memory queue. For production and Phase 2 reliability,
+  // replace with BullMQ + Redis, run workers in a separate process, and add retries/DLQ metrics.
   private queues: Map<MessagePriority, QueuedMessage[]>;
   private processingLocks: Map<string, boolean>;
   private readonly priorityOrder: MessagePriority[] = ['urgent', 'high', 'normal', 'low'];

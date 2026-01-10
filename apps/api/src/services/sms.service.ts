@@ -248,6 +248,9 @@ export class SMSService {
         process.env.SUPABASE_SERVICE_KEY || ''
       )
 
+      // TODO(sms-logs): migrations define `sms_logs` without a `provider` column (and without common
+      // delivery/error fields). This insert can fail and is currently swallowed by the catch below.
+      // Update migrations to match logging needs.
       await supabase.from('sms_logs').insert({
         organization_id: data.organizationId,
         worker_id: data.workerId,

@@ -1,13 +1,15 @@
-import { PluginRegistry } from '@dashboard-link/plugins'
-import { logger } from '../utils/logger.js'
 import { createClient } from '@supabase/supabase-js'
 import { WebhookEvent, WebhookEventStatus, WebhookJob, WebhookProvider } from '../types/webhooks'
+import { logger } from '../utils/logger.js'
 
 // Queue interface for abstraction
 interface JobQueue {
   add(job: WebhookJob): Promise<void>
   process(): Promise<void>
 }
+
+// TODO(phase2-queues): This file uses an in-memory queue. For real deployments (especially serverless),
+// implement BullMQ + Redis, move processing to a worker service, and add DLQ + observability.
 
 // In-memory queue implementation
 class InMemoryQueue implements JobQueue {

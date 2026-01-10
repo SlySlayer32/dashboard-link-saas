@@ -1,13 +1,17 @@
-# Apps Directory
+# Apps Agent Guide
 
 ## Scope
-Contains deployable applications: `admin`, `worker`, `api`.
+Deployable applications: admin, worker, api. Start with root `AGENTS.md` for global rules.
 
-## Zapier-style Guidance
-- App layers must talk to core services via contracts and registries.
-- Avoid embedding vendor SDK logic in app code; use `packages/*` adapters.
+## Rules
+- Apps orchestrate UI or API but should stay thin; business logic lives in services and packages.
+- Do not call vendor SDKs inside apps; use contracts/adapters from packages.
+- Use shared types from `@dashboard-link/shared` and shared UI from `@dashboard-link/ui` where possible.
 
-## Common Commands
-- `pnpm --filter @dashboard-link/admin dev`
-- `pnpm --filter @dashboard-link/worker dev`
-- `pnpm --filter @dashboard-link/api dev`
+## Touchpoints
+- Admin: `apps/admin`
+- Worker: `apps/worker`
+- API: `apps/api`
+
+## Tests
+- Use app-specific test commands in the root guide.

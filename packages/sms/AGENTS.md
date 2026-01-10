@@ -1,8 +1,16 @@
-# SMS Package
+# SMS Package Agent Guide
 
-## Purpose
-SMS provider abstraction and adapters.
+## Scope
+SMS provider abstraction, registry, and services.
 
-## Zapier-style Guidance
-- Providers implement `SMSProvider` contract.
-- Default provider selection is env-driven.
+## Rules
+- Providers implement the SMS contract and return normalized responses.
+- Register new providers in the SMS registry/factory.
+- Do not log full message bodies or PII.
+
+## Touchpoints
+- Source: `packages/sms/src`
+- Registry: `packages/sms/src/registry`
+
+## Tests
+- Mock provider clients in tests.

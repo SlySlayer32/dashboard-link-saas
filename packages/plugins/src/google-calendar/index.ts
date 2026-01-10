@@ -1,11 +1,11 @@
-import {
-  DateRange,
-  PluginConfig,
-  StandardScheduleItem,
-  StandardTaskItem,
-  ValidationResult,
-} from '../contracts'
 import { BasePluginAdapter } from '../base/adapter'
+import {
+    DateRange,
+    PluginConfig,
+    StandardScheduleItem,
+    StandardTaskItem,
+    ValidationResult,
+} from '../contracts'
 
 /**
  * Google Calendar Plugin Adapter
@@ -31,6 +31,9 @@ export class GoogleCalendarAdapter extends BasePluginAdapter {
     if (!accessToken) {
       throw new Error('Google Calendar access token is required')
     }
+
+    // TODO(google-calendar): Confirm OAuth token acquisition/refresh flow.
+    // API keys are not sufficient for accessing private/primary calendars.
 
     // Fetch events from Google Calendar API
     const response = await fetch(

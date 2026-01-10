@@ -268,7 +268,7 @@ docker-compose up -d
 ## 📘 Developer Docs
 
 - [INSTRUCTIONS.md](./INSTRUCTIONS.md)
-- [SETUP.md](./SETUP.md)
+- [docs/SETUP_CHECKLIST.md](./docs/SETUP_CHECKLIST.md)
 - [ENV.example](./ENV.example)
 
 The project follows a Zapier-style architecture (see [Architecture Blueprint](./docs/ARCHITECTURE_BLUEPRINT.md)).

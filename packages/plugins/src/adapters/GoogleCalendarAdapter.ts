@@ -1,11 +1,11 @@
-import {
-  PluginConfig,
-  PluginConfigSchema,
-  PluginValidationResult,
-  StandardScheduleItem,
-  StandardTaskItem,
-} from '../contracts'
 import { BasePluginAdapter } from '../base/BasePluginAdapter'
+import {
+    PluginConfig,
+    PluginConfigSchema,
+    PluginValidationResult,
+    StandardScheduleItem,
+    StandardTaskItem,
+} from '../contracts'
 
 // Google Calendar API response types
 interface GoogleCalendarEvent {
@@ -52,6 +52,9 @@ export class GoogleCalendarAdapter extends BasePluginAdapter {
     _dateRange: import('../contracts').DateRange,
     config: PluginConfig
   ): Promise<unknown[]> {
+    // TODO(google-calendar): This adapter uses an API key, but elsewhere we require OAuth access tokens
+    // and env/docs reference GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET. API keys generally cannot access
+    // private/primary calendars. Pick a single auth strategy (likely OAuth) and delete/replace the other.
     const apiKey = config.settings.apiKey as string
     const calendarId = (config.settings.calendarId as string) || 'primary'
 

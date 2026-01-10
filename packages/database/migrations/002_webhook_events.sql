@@ -29,6 +29,8 @@ CREATE TABLE webhook_configs (
     plugin_id TEXT NOT NULL,
     endpoint_url TEXT NOT NULL,
     secret TEXT NOT NULL,
+    -- TODO(secrets): `secret` is stored plaintext. Decide on Supabase Vault / encryption-at-rest
+    -- strategy and restrict access. Consider storing only a vault reference or encrypted value.
     active BOOLEAN DEFAULT true,
     rate_limit_per_minute INTEGER NOT NULL DEFAULT 60,
     retry_attempts INTEGER NOT NULL DEFAULT 3,

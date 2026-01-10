@@ -1,5 +1,15 @@
-# UI Components
+# UI Components Agent Guide
+
+## Scope
+Reusable React components for all apps.
 
 ## Rules
-- Export new components from `src/index.ts`.
-- Keep components themeable and accessible.
+- Keep components accessible, themeable, and composable.
+- Accept `className` and spread props where appropriate.
+- Avoid side effects, data fetching, and app-specific assumptions.
+
+## Touchpoints
+- Export in `packages/ui/src/index.ts`.
+
+## Tests
+- Add component tests in `packages/ui/src/test`.

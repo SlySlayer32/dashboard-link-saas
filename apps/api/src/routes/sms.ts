@@ -6,10 +6,10 @@ import { smsRateLimitMiddleware } from '../middleware/rateLimit'
 import { SMSService } from '../services/sms.service'
 import type { AppContext } from '../types'
 import type {
-  SMSDashboardLinkRequest,
-  SMSDashboardLinkResponse,
-  SMSLogsResponse,
-  SendSMSRequest,
+    SMSDashboardLinkRequest,
+    SMSDashboardLinkResponse,
+    SMSLogsResponse,
+    SendSMSRequest,
 } from '../types/sms'
 import { logger } from '../utils/logger.js'
 
@@ -23,12 +23,19 @@ const tokenManager = createTokenManager({
   refreshExpiry: 2592000, // 30 days
 })
 
+// TODO(tokens): @dashboard-link/tokens DatabaseTokenProvider expects a different table shape than
+// `worker_tokens` in the initial migration (token_hash/payload/etc vs token TEXT). Align schema or
+// point this token manager at the correct table.
+
 const sms = new Hono<AppContext>()
 
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_KEY || ''
 )
+
+// TODO(sms-logs): sms_logs schema in migrations is missing fields the service layer writes (e.g.
+// `provider`). Keep migrations and inserts in sync so logging doesn't silently fail.
 
 // All routes require authentication and rate limiting
 sms.use('*', authMiddleware)

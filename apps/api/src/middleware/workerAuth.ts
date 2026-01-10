@@ -70,6 +70,10 @@ export const workerAuthMiddleware = async (c: Context, next: () => Promise<void>
     // Token is valid, create session
     const workerId = tokenValidation.payload.metadata?.workerId || tokenValidation.payload.userId
     const organizationId = tokenValidation.payload.organizationId || 'org-placeholder'
+
+    // TODO(tokens/rls): Remove placeholder org resolution. Ensure worker tokens always include
+    // organizationId in payload metadata, or resolve organizationId from workerId via DB.
+    // This also impacts RLS/service-role access assumptions for worker dashboard reads.
     
     const sessionData = await SessionService.createSession(
       workerId,

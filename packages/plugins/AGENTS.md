@@ -1,7 +1,16 @@
-# Plugins Package
+# Plugins Package Agent Guide
 
-## Purpose
-Plugin registry and adapters.
+## Scope
+Plugin contracts, adapters, and registry.
 
-## Zapier-style Guidance
-- Adapters implement contract interfaces and normalize output.
+## Rules
+- Adapters implement the shared plugin contracts and normalize output.
+- Validate plugin configs with Zod.
+- Register plugins in the registry and export from `src/index.ts`.
+
+## Touchpoints
+- Source: `packages/plugins/src`
+- Registry: `packages/plugins/src/registry`
+
+## Tests
+- Mock external plugin APIs in tests.
