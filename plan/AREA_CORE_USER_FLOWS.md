@@ -1,11 +1,13 @@
-# Phase 1 - V1 core wiring and happy path (Google Calendar + synchronous SMS)
+# Area - Core user flows (admin + worker)
 
-## Frontend
+## Admin flow (frontend)
 - [ ] Implement admin onboarding: org settings, workers CRUD, Google Calendar config, SMS send, SMS logs.
 - [ ] Add form validation with React Hook Form + Zod and surface API errors clearly.
+
+## Worker flow (frontend)
 - [ ] Implement worker dashboard UI for schedule and tasks with friendly expired/invalid token states.
 
-## Backend
+## Core services (backend)
 - [ ] Implement `createAuthService` in `packages/auth` using Supabase provider.
 - [ ] Align auth contract shapes so middleware and routes return the same user/session fields.
 - [ ] Implement repository CRUD in `packages/database/src/repositories/*` for admins, orgs, workers, dashboards, widgets, plugins, manual schedule/tasks, sms logs, and tokens.
@@ -14,7 +16,7 @@
 - [ ] Implement plugin manager service to aggregate schedule/tasks from the active plugin(s).
 - [ ] Ensure SMS service uses the SMS provider contract (no direct vendor SDK use in routes).
 
-## API
+## API (core flows)
 - [ ] Update auth middleware to set `userId` and `organizationId` from the auth service.
 - [ ] Replace placeholder org resolution in `apps/api/src/routes/workers.ts` with organization resolver.
 - [ ] Replace placeholder dashboard creation in `apps/api/src/routes/workers.ts` with dashboard service.
@@ -26,7 +28,7 @@
 - [ ] Implement worker-scoped token revocation for `/tokens/revoke-sessions` and `/tokens/revoke`.
 - [ ] Normalize API responses to `{ success, data, error }` across all routes.
 
-## Third-party
+## Integrations
 - [ ] Implement Google Calendar adapter with config validation, health check, and data mapping.
 - [ ] Register Google Calendar adapter in the plugin registry as the only active V1 plugin.
 - [ ] Configure MobileMessage as the default SMS provider for V1.

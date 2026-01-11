@@ -1,10 +1,14 @@
 # CleanConnect Plan Index
 
 ## How to use
-- Work phases in order; do not start a phase until the prior phase definition of done is met.
+- Work areas in order; start with foundation setup, then core user flows, then platform reliability, security, and deployment.
+- This index is organized user-flow-first: admin + worker flow plans come before platform areas.
 - Keep V1 scope tight unless a Needs decision item expands it.
 - Follow Zapier-style layering (core -> contracts -> adapters) and shared types.
 - Keep vendor SDKs in adapters only; routes call services and contracts.
+
+## Migration note (2026-01-10)
+- Phase-based plan files in `plan/PHASE_*.md` were superseded by the area-based plans below and removed to keep a single source of truth.
 
 ## Docs reviewed
 - AGENTS.md
@@ -73,13 +77,22 @@
 - packages/ui/src/utils/AGENTS.md
 - supabase/AGENTS.md
 
-## Phase files
-- plan/PHASE_0_SETUP.md
-- plan/PHASE_1_V1_CORE.md
-- plan/PHASE_1_5_V1_HARDENING.md
-- plan/PHASE_2_ASYNC_WEBHOOKS_OBSERVABILITY.md
-- plan/PHASE_2_5_SECURITY_DATA_LIFECYCLE.md
-- plan/PHASE_3_DEPLOYMENT_BILLING_OPS.md
+## Area-based plan files
+- plan/AREA_FOUNDATION_SETUP.md
+- plan/AREA_CORE_USER_FLOWS.md
+- plan/AREA_PLATFORM_RELIABILITY_ASYNC.md
+- plan/AREA_SECURITY_DATA_LIFECYCLE.md
+- plan/AREA_DEPLOYMENT_BILLING_OPS.md
+
+Each area file includes its definition of done; use those statements to gate progress to the next area.
+
+## Domain plan files
+- plan/FRONTEND_USER_FLOW.md
+- plan/BACKEND_SERVICES.md
+- plan/DATA_INFRA.md
+- plan/QA_SECURITY.md
+- plan/OPS_OBSERVABILITY.md
+- plan/NEEDS_DECISIONS.md
 
 ## Global constraints
 - TypeScript everywhere, ESM modules, Zod validation for inputs.
@@ -96,6 +109,7 @@
 - Core API routes and repositories have passing tests.
 
 ## Needs decision summary (with suggestions)
+See plan/NEEDS_DECISIONS.md for the canonical list and updates.
 - Needs decision: V1 plugin scope (Google Calendar only vs include Manual data UI). Suggestion: keep UI Google-only for V1, but implement manual data backend CRUD now to remove placeholders and unblock later UI.
 - Needs decision: Token storage schema (worker_tokens vs a dedicated tokens table). Suggestion: add new tokens and refresh_tokens tables matching DatabaseTokenProvider, migrate token manager to the new tables, and keep worker_tokens only if required for legacy links.
 - Needs decision: Google Calendar auth method. Suggestion: V1 uses API key for shared/public calendars; Phase 2 adds OAuth for private calendars and per-user access.

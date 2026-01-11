@@ -1,4 +1,4 @@
-# Phase 0 - Setup and baseline readiness
+# Area - Foundation setup and baseline readiness
 
 ## Frontend
 - [ ] Create `apps/admin/.env` and `apps/worker/.env` with `VITE_API_URL` and Supabase Vite keys.

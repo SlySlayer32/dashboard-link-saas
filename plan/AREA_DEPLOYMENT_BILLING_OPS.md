@@ -1,4 +1,4 @@
-# Phase 3 - Deployment, billing, and operational readiness
+# Area - Deployment, billing, and operational readiness
 
 ## Frontend
 - [ ] Add billing and plan management UI with usage visibility.

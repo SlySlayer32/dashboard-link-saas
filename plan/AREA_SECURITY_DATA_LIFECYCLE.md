@@ -1,4 +1,4 @@
-# Phase 2.5 - Security hardening and data lifecycle
+# Area - Security hardening and data lifecycle
 
 ## Frontend
 - [ ] Add admin UI for audit log viewing and export.
