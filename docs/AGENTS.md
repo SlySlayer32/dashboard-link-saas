@@ -11,7 +11,7 @@ Architecture and project documentation.
 ## Touchpoints
 - Architecture: `docs/ARCHITECTURE_BLUEPRINT.md`
 - Setup: `docs/SETUP_CHECKLIST.md`
-- Plans: `plan/PHASE_*.md`
+- Plans: `plan/PLAN_INDEX.md` (numbered execution order)
 
 ## Tests
 - No direct tests; validate by building/running apps as needed.

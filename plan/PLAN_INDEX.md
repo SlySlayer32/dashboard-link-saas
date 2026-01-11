@@ -1,11 +1,47 @@
 # CleanConnect Plan Index
 
 ## How to use
-- Work areas in order; start with foundation setup, then core user flows, then platform reliability, security, and deployment.
-- This index is organized user-flow-first: admin + worker flow plans come before platform areas.
+- Use the numbered development order below as the default path.
 - Keep V1 scope tight unless a Needs decision item expands it.
 - Follow Zapier-style layering (core -> contracts -> adapters) and shared types.
 - Keep vendor SDKs in adapters only; routes call services and contracts.
+
+## Development order (start here)
+
+1) Foundation setup (local dev works)
+	- plan/1/AREA_FOUNDATION_SETUP.md
+	- plan/1/PLAYBOOK_FOUNDATION_SETUP.md
+	- docs/SETUP_CHECKLIST.md
+	- ENV.example
+
+2) Core user flows (build the thin slice)
+	- plan/2/AREA_CORE_USER_FLOWS.md
+	- plan/2/PLAYBOOK_USER_FLOWS.md
+	- docs/V1_IMPLEMENTATION_CHECKLIST.md
+
+3) Connectors and service boundaries (keep vendor churn isolated)
+	- plan/3/BACKEND_SERVICES.md
+	- plan/3/PLAYBOOK_CONNECTORS.md
+
+4) Data infra foundations (schemas, invariants, replay safety)
+	- plan/4/DATA_INFRA.md
+	- plan/4/PLAYBOOK_DATA_INFRA.md
+
+5) Reliability + async (retries, jobs, rollout safety)
+	- plan/5/AREA_PLATFORM_RELIABILITY_ASYNC.md
+	- plan/5/PLAYBOOK_PLATFORM_RELIABILITY_ASYNC.md
+
+6) Security + QA (RLS, lifecycle, correctness gates)
+	- plan/6/AREA_SECURITY_DATA_LIFECYCLE.md
+	- plan/6/PLAYBOOK_SECURITY_DATA_LIFECYCLE.md
+
+7) Deployment, billing, ops (ship and run it)
+	- plan/7/AREA_DEPLOYMENT_BILLING_OPS.md
+	- plan/7/PLAYBOOK_DEPLOYMENT_BILLING_OPS.md
+
+8) Decisions log (when something is ambiguous)
+	- plan/8/NEEDS_DECISIONS.md
+	- plan/8/PLAYBOOK_DECISIONS.md
 
 ## Migration note (2026-01-10)
 - Phase-based plan files in `plan/PHASE_*.md` were superseded by the area-based plans below and removed to keep a single source of truth.
@@ -78,21 +114,26 @@
 - supabase/AGENTS.md
 
 ## Area-based plan files
-- plan/AREA_FOUNDATION_SETUP.md
-- plan/AREA_CORE_USER_FLOWS.md
-- plan/AREA_PLATFORM_RELIABILITY_ASYNC.md
-- plan/AREA_SECURITY_DATA_LIFECYCLE.md
-- plan/AREA_DEPLOYMENT_BILLING_OPS.md
+- plan/1/AREA_FOUNDATION_SETUP.md
+- plan/2/AREA_CORE_USER_FLOWS.md
+- plan/3/BACKEND_SERVICES.md
+- plan/4/DATA_INFRA.md
+- plan/5/AREA_PLATFORM_RELIABILITY_ASYNC.md
+- plan/6/AREA_SECURITY_DATA_LIFECYCLE.md
+- plan/7/AREA_DEPLOYMENT_BILLING_OPS.md
+- plan/8/NEEDS_DECISIONS.md
 
 Each area file includes its definition of done; use those statements to gate progress to the next area.
 
-## Domain plan files
-- plan/FRONTEND_USER_FLOW.md
-- plan/BACKEND_SERVICES.md
-- plan/DATA_INFRA.md
-- plan/QA_SECURITY.md
-- plan/OPS_OBSERVABILITY.md
-- plan/NEEDS_DECISIONS.md
+## Playbooks (canonical how-to)
+- plan/1/PLAYBOOK_FOUNDATION_SETUP.md
+- plan/2/PLAYBOOK_USER_FLOWS.md
+- plan/3/PLAYBOOK_CONNECTORS.md
+- plan/4/PLAYBOOK_DATA_INFRA.md
+- plan/5/PLAYBOOK_PLATFORM_RELIABILITY_ASYNC.md
+- plan/6/PLAYBOOK_SECURITY_DATA_LIFECYCLE.md
+- plan/7/PLAYBOOK_DEPLOYMENT_BILLING_OPS.md
+- plan/8/PLAYBOOK_DECISIONS.md
 
 ## Global constraints
 - TypeScript everywhere, ESM modules, Zod validation for inputs.
@@ -108,13 +149,5 @@ Each area file includes its definition of done; use those statements to gate pro
 - SMS logs are recorded per organization and visible in admin.
 - Core API routes and repositories have passing tests.
 
-## Needs decision summary (with suggestions)
-See plan/NEEDS_DECISIONS.md for the canonical list and updates.
-- Needs decision: V1 plugin scope (Google Calendar only vs include Manual data UI). Suggestion: keep UI Google-only for V1, but implement manual data backend CRUD now to remove placeholders and unblock later UI.
-- Needs decision: Token storage schema (worker_tokens vs a dedicated tokens table). Suggestion: add new tokens and refresh_tokens tables matching DatabaseTokenProvider, migrate token manager to the new tables, and keep worker_tokens only if required for legacy links.
-- Needs decision: Google Calendar auth method. Suggestion: V1 uses API key for shared/public calendars; Phase 2 adds OAuth for private calendars and per-user access.
-- Needs decision: Dashboard model usage. Suggestion: create one dashboard per worker with a single Google Calendar widget in V1; expand widgets when multiple plugins are enabled.
-- Needs decision: Plugin config secret storage. Suggestion: use Supabase Vault or field-level encryption with KMS and service-role access; avoid plaintext JSONB.
-- Needs decision: Redis hosting for BullMQ. Suggestion: use managed Redis (Upstash or Redis Cloud) with TLS and per-environment databases.
-- Needs decision: Observability stack. Suggestion: start with structured JSON logs and Sentry; add Grafana Cloud for metrics and tracing in Phase 2.
-- Needs decision: Billing provider and limits. Suggestion: Stripe with metered usage for SMS and worker counts, enforced by app quotas.
+## Decisions log
+See `plan/8/NEEDS_DECISIONS.md` for the canonical list and updates.

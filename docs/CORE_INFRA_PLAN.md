@@ -41,18 +41,18 @@ Intent: deliver the V1 SaaS aligned to the architecture blueprint with a tight s
 - [ ] Deployment pipeline (CI/CD, env promotion, blue/green or canary).
 - [ ] External integrations expansion (Airtable/Notion, OAuth refresh/token management).
 
-TODO(phase2-redis): Confirm hosting choice (Upstash/Redis Cloud/ElastiCache/etc), network/TLS, backups,
-and where BullMQ workers will run (separate service vs API process).
+Decision: use managed Redis (Upstash or Redis Cloud) with TLS and per-environment databases.
+Define network/TLS, backups, and where BullMQ workers will run (separate service vs API process).
 
-TODO(observability): Make concrete decisions: Sentry (errors), metrics (Prometheus+Grafana vs managed),
-tracing (OpenTelemetry), logging backend, retention, and alert routing.
+Decision: start with Sentry for errors and JSON logs; add Grafana Cloud for metrics/tracing.
+Define logging backend, retention, and alert routing.
 
 ### Phase 3: Billing + ops
 - [ ] Billing/subscriptions and quota enforcement tied to plans.
 - [ ] Incident response runbooks aligned to the blueprint and operational drills.
 
-TODO(billing-stripe): Confirm Stripe as provider, pricing tiers, and enforceable limits (workers/org, SMS/month,
-plugins enabled, sync frequency). Decide where enforcement lives (API middleware vs DB) and how usage is metered.
+Decision: Stripe provider with metered usage (SMS count + active workers).
+Define pricing tiers and enforceable limits; decide where enforcement lives and how usage is metered.
 
 ## Milestones (4-week path)
 - Week 1: Auth + data layer wired; org/worker resolution works; repositories CRUD complete.

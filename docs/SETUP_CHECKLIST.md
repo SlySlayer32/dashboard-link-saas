@@ -29,11 +29,16 @@ Purpose: get local dev running end-to-end with the smallest amount of friction.
 - [ ] SMS credentials are set if you want real SMS delivery:
   - `MOBILE_MESSAGE_USERNAME` + `MOBILE_MESSAGE_PASSWORD` or `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN`.
 
-## 5) Google Calendar API key (V1)
+## 5) Google Calendar connector (OAuth-first)
+- [ ] Follow the canonical connector setup in `plan/3/PLAYBOOK_CONNECTORS.md`.
 - [ ] Create a Google Cloud project.
-- [ ] Enable the Google Calendar API.
-- [ ] Create an API key and restrict it to the Calendar API.
-- [ ] Paste the API key into the admin Google Calendar plugin config.
+- [ ] Configure an OAuth consent screen (development/testing is fine for local).
+- [ ] Create OAuth client credentials and set these in `.env`:
+  - `GOOGLE_CLIENT_ID`
+  - `GOOGLE_CLIENT_SECRET`
+- [ ] Ensure your OAuth redirect URI(s) match your app/API flow.
+
+Note: API keys are only appropriate if you deliberately build a separate “public calendars” connector; do not mix API-key and OAuth config in the same connector.
 
 ## 6) Run apps
 - [ ] `pnpm dev`.

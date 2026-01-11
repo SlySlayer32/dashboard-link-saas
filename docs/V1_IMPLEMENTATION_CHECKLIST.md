@@ -16,7 +16,7 @@ How to use:
 - [ ] Implement `createAuthService` in `packages/auth/src/index.ts` using Supabase client.
 - [ ] Align return shapes in `packages/auth/src/services/AuthService.ts`.
 - [ ] Implement `apps/api/src/services/plugin-manager.ts` to aggregate schedule/tasks.
-- [ ] Ensure `packages/tokens` uses the `worker_tokens` table.
+- [ ] Ensure `packages/tokens` uses `tokens` + `refresh_tokens` tables (keep `worker_tokens` only for legacy links if required).
 
 Done when:
 - Auth middleware and auth routes return the same user/session shape.
@@ -34,6 +34,7 @@ Done when:
 ### API - routes and middleware
 - [ ] Update `apps/api/src/middleware/auth.ts` and `apps/api/src/routes/auth.ts` to match auth contract shapes.
 - [ ] Remove placeholder logic in `apps/api/src/routes/workers.ts` and `apps/api/src/routes/organizations.ts`.
+- [ ] Remove placeholder logic in `apps/api/src/routes/manual-data.ts` (backend CRUD only; UI deferred).
 - [ ] Ensure `GET /dashboards/:token` returns plugin manager output.
 - [ ] Ensure `POST /sms/send-dashboard-link` creates token -> sends SMS -> logs to `sms_logs`.
 
@@ -44,7 +45,8 @@ Done when:
 ### Third-party integrations
 - [ ] Implement `packages/plugins/src/adapters/GoogleCalendarAdapter.ts`.
 - [ ] Validate config in `validateConfig` and add health checks.
-- [ ] Configure the admin UI to store the Google Calendar API key and calendar ID.
+- [ ] Configure the admin UI to run an OAuth-first Google Calendar connect flow (store refresh token securely, org-scoped).
+- [ ] Follow the canonical connector contract + registration guidance in `plan/3/PLAYBOOK_CONNECTORS.md`.
 - [ ] Configure SMS provider credentials in `.env` or accept failed sends in dev.
 
 Done when:
@@ -79,7 +81,7 @@ Done when:
 2) Run dev: `pnpm dev`.
 3) Create an admin account in the admin UI.
 4) Create an org and add at least one worker.
-5) Add a Google Calendar API key in the plugin config.
+5) Connect Google Calendar via OAuth (see `plan/3/PLAYBOOK_CONNECTORS.md`).
 6) Send a dashboard SMS (or use the response `dashboardUrl` if SMS fails).
 7) Open the dashboard link and verify schedule/tasks.
 8) Check the SMS logs screen for the new entry.
