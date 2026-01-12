@@ -39,6 +39,95 @@ Acceptance check:
 
 ---
 
+## Migration examples (canonical + wrapper pattern)
+
+Use these as reference snippets when adding new migrations. The canonical SQL belongs in
+`packages/database/migrations/00X_some_change.sql`, and the Supabase wrapper in
+`supabase/migrations/00X_some_change.sql` should include it (follow the wrapper pattern used in
+existing files).
+
+```sql
+-- supabase/migrations/00X_some_change.sql
+\ir ../../packages/database/migrations/00X_some_change.sql
+```
+
+### Tokens + refresh tokens (sample canonical SQL)
+
+```sql
+-- packages/database/migrations/00X_tokens.sql
+create table if not exists tokens (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id),
+  user_id uuid references admins(id),
+  session_id text,
+  token_hash text not null,
+  payload jsonb,
+  expires_at timestamptz not null,
+  last_used_at timestamptz,
+  revoked boolean not null default false,
+  revoked_at timestamptz,
+  revoked_by uuid references admins(id),
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create unique index if not exists tokens_token_hash_uq on tokens(token_hash);
+create index if not exists tokens_org_expires_idx on tokens(organization_id, expires_at);
+
+create table if not exists refresh_tokens (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id),
+  access_token_id uuid not null references tokens(id),
+  token_hash text not null,
+  expires_at timestamptz not null,
+  revoked boolean not null default false,
+  revoked_at timestamptz,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create unique index if not exists refresh_tokens_token_hash_uq on refresh_tokens(token_hash);
+create index if not exists refresh_tokens_access_token_idx on refresh_tokens(access_token_id);
+```
+
+### Plugin configs (settings + credentials + config schema version)
+
+```sql
+-- packages/database/migrations/00X_plugin_configs.sql
+create table if not exists plugin_configs (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id),
+  plugin_id text not null,
+  settings jsonb not null default '{}'::jsonb,
+  credentials jsonb not null default '{}'::jsonb,
+  config_schema_version integer not null default 1,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create unique index if not exists plugin_configs_org_plugin_uq
+  on plugin_configs(organization_id, plugin_id);
+```
+
+### SMS logs + webhook idempotency indexes
+
+```sql
+-- packages/database/migrations/00X_sms_webhook_indexes.sql
+create index if not exists sms_logs_org_created_idx
+  on sms_logs(organization_id, created_at);
+create index if not exists sms_logs_worker_created_idx
+  on sms_logs(worker_id, created_at);
+
+-- webhook idempotency is typically defined on the events table
+create unique index if not exists webhook_events_idempotency_uq
+  on webhook_events(idempotency_key);
+```
+
+---
+
 ## Step 2 - Baseline schema verification
 
 Confirm these tables exist in Supabase (Studio or SQL editor):

@@ -54,6 +54,109 @@ Boundary rule: routes -> services -> contracts -> adapters -> vendors.
 
 ---
 
+## Minimal working example
+
+### 1) Adapter stub (`packages/plugins/src/adapters/<Example>Adapter.ts`)
+
+```ts
+import { z } from "zod";
+import { BasePluginAdapter } from "../base/BasePluginAdapter";
+import type {
+  PluginConfig,
+  PluginResponse,
+  StandardScheduleItem,
+} from "../contracts";
+
+const ExampleConfigSchema = z.object({
+  settings: z.object({
+    calendarId: z.string().min(1),
+    timezone: z.string().min(1),
+  }),
+  credentials: z.object({
+    apiKey: z.string().min(1),
+  }),
+});
+
+export class ExampleAdapter extends BasePluginAdapter {
+  constructor() {
+    super({
+      id: "example",
+      name: "Example",
+      version: "0.1.0",
+    });
+  }
+
+  getConfigSchema() {
+    return ExampleConfigSchema;
+  }
+
+  validateConfig(config: PluginConfig) {
+    return ExampleConfigSchema.parse(config);
+  }
+
+  async fetchExternalSchedule(
+    config: PluginConfig
+  ): Promise<PluginResponse<StandardScheduleItem[]>> {
+    const { settings, credentials } = this.validateConfig(config);
+
+    // Vendor SDK calls live here (adapters only).
+    // Use settings + credentials to fetch data from the external service.
+    const items: StandardScheduleItem[] = [
+      {
+        id: "example-1",
+        title: "Example Item",
+        startTime: new Date().toISOString(),
+        endTime: new Date().toISOString(),
+        metadata: {
+          calendarId: settings.calendarId,
+        },
+      },
+    ];
+
+    return { success: true, data: items };
+  }
+}
+```
+
+### 2) Registry setup (`apps/api/src/plugins/register-builtins.ts`)
+
+```ts
+import { pluginRegistry } from "@dashboard-link/plugins";
+import { ExampleAdapter } from "@dashboard-link/plugins/adapters";
+
+export const registerBuiltins = () => {
+  // Single registry setup module: call once at API startup.
+  pluginRegistry.register(new ExampleAdapter());
+};
+```
+
+### 3) Service boundary in a route (`apps/api/src/routes/dashboards.ts`)
+
+```ts
+import { pluginManagerService } from "../services/plugin-manager";
+
+// ...inside a route handler
+const organizationId = authContext.organizationId; // derive from auth, never client input
+const scheduleResponse = await pluginManagerService.fetchSchedule({
+  organizationId,
+  // error normalization happens in the service so routes return stable error codes
+});
+
+if (!scheduleResponse.success) {
+  return c.json(
+    {
+      success: false,
+      error: scheduleResponse.error,
+    },
+    400
+  );
+}
+
+return c.json({ success: true, data: scheduleResponse.data });
+```
+
+---
+
 ## Non-negotiable rules (prevents drift/conflicts)
 
 1. **Vendor SDKs only live in adapters.**

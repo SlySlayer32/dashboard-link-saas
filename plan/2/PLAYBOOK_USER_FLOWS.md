@@ -199,6 +199,120 @@ Acceptance checks:
 
 ---
 
+## Implementation examples
+
+### Endpoint group file locations
+
+- Organizations: `apps/api/src/routes/organizations.ts`
+- Workers: `apps/api/src/routes/workers.ts`
+- SMS: `apps/api/src/routes/sms.ts`
+- Manual data: `apps/api/src/routes/manual-data.ts`
+
+### Standard response shape + org scoping (handler sketch)
+
+```ts
+import { z } from "zod";
+
+const inputSchema = z.object({
+  name: z.string().min(1),
+});
+
+app.post("/example", async (c) => {
+  const organizationId = c.get("organizationId");
+  const parsed = inputSchema.safeParse(await c.req.json());
+
+  if (!parsed.success) {
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid input.",
+          details: parsed.error.flatten(),
+        },
+      },
+      400
+    );
+  }
+
+  const record = await db.example.create({
+    data: {
+      organizationId,
+      name: parsed.data.name,
+    },
+  });
+
+  return c.json({ success: true, data: record });
+});
+```
+
+### Worker creation creates dashboard + widget (service call sketch)
+
+```ts
+await db.transaction(async (tx) => {
+  const worker = await workerService.createWorker(tx, {
+    organizationId,
+    name: payload.name,
+    phone: payload.phone,
+  });
+
+  const dashboard = await dashboardService.createDefaultDashboard(tx, {
+    organizationId,
+    workerId: worker.id,
+  });
+
+  await widgetService.createDefaultWidget(tx, {
+    organizationId,
+    dashboardId: dashboard.id,
+    type: "google_calendar",
+  });
+
+  return worker;
+});
+```
+
+### Manual data CRUD (create/list) with Zod + org scoping
+
+```ts
+const createSchema = z.object({
+  title: z.string().min(1),
+  payload: z.record(z.unknown()),
+});
+
+app.post("/manual-data", async (c) => {
+  const organizationId = c.get("organizationId");
+  const parsed = createSchema.safeParse(await c.req.json());
+
+  if (!parsed.success) {
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid input.",
+          details: parsed.error.flatten(),
+        },
+      },
+      400
+    );
+  }
+
+  const record = await manualDataService.create(c, {
+    organizationId,
+    ...parsed.data,
+  });
+
+  return c.json({ success: true, data: record });
+});
+
+app.get("/manual-data", async (c) => {
+  const organizationId = c.get("organizationId");
+  const items = await manualDataService.list(c, { organizationId });
+
+  return c.json({ success: true, data: items });
+});
+```
+
 ## Part B — Worker flow
 
 ### Current repo surfaces

@@ -63,6 +63,120 @@ Acceptance check:
 - Verify webhook signatures and protect against replay.
 - Add rate limiting for webhook and SMS endpoints.
 
+Implementation notes (examples for `apps/api/src/routes/webhooks.ts` and `apps/api/src/routes/sms.ts`):
+
+1) Webhook signature verification (middleware + HMAC check)
+
+```ts
+// apps/api/src/routes/webhooks.ts
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { z } from "zod";
+
+const webhookSignatureSchema = z.object({
+  "x-webhook-signature": z.string().min(1),
+  "x-webhook-timestamp": z.string().min(1),
+});
+
+const WEBHOOK_SIGNATURE_SECRET = process.env.WEBHOOK_SIGNATURE_SECRET;
+
+function verifyWebhookSignature(body: string, signature: string, timestamp: string) {
+  if (!WEBHOOK_SIGNATURE_SECRET) {
+    throw new Error("WEBHOOK_SIGNATURE_SECRET is not configured");
+  }
+
+  const payload = `${timestamp}.${body}`;
+  const expected = createHmac("sha256", WEBHOOK_SIGNATURE_SECRET)
+    .update(payload)
+    .digest("hex");
+
+  const expectedBuffer = Buffer.from(expected, "hex");
+  const signatureBuffer = Buffer.from(signature, "hex");
+
+  if (
+    expectedBuffer.length !== signatureBuffer.length ||
+    !timingSafeEqual(expectedBuffer, signatureBuffer)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+// Mount early in the route handler before any side effects.
+router.post("/", async (c) => {
+  const rawBody = await c.req.text();
+  const headers = webhookSignatureSchema.safeParse(c.req.header());
+
+  if (!headers.success) {
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "WEBHOOK_SIGNATURE_MISSING",
+          message: "Missing webhook signature headers.",
+        },
+      },
+      400,
+    );
+  }
+
+  const signature = headers.data["x-webhook-signature"];
+  const timestamp = headers.data["x-webhook-timestamp"];
+
+  if (!verifyWebhookSignature(rawBody, signature, timestamp)) {
+    return c.json(
+      {
+        success: false,
+        error: {
+          code: "WEBHOOK_SIGNATURE_INVALID",
+          message: "Invalid webhook signature.",
+        },
+      },
+      401,
+    );
+  }
+
+  // Continue with existing webhook handler...
+});
+```
+
+2) Rate-limit middleware for webhook and SMS endpoints
+
+```ts
+// apps/api/src/routes/webhooks.ts
+import { rateLimiter } from "@/middleware/rateLimiter";
+
+// Mount on the webhooks router before defining routes.
+router.use(
+  rateLimiter({
+    keyPrefix: "rate:webhook",
+    windowSeconds: 60,
+    maxRequests: 60,
+  }),
+);
+```
+
+```ts
+// apps/api/src/routes/sms.ts
+import { rateLimiter } from "@/middleware/rateLimiter";
+
+// Mount on the SMS router before defining routes (e.g., before POST /send).
+router.use(
+  rateLimiter({
+    keyPrefix: "rate:sms",
+    windowSeconds: 60,
+    maxRequests: 20,
+  }),
+);
+```
+
+Required env vars and failure response shape:
+
+- `WEBHOOK_SIGNATURE_SECRET` is required for HMAC signature verification.
+- If `WEBHOOK_SIGNATURE_SECRET` is missing, return `{ success: false, error: { code: "WEBHOOK_SIGNATURE_SECRET_MISSING", message } }` with a 500 status.
+- Missing/invalid signature or timestamp headers should return `{ success: false, error: { code, message } }` with 400 (missing) or 401 (invalid) status.
+- Rate-limit responses should return `{ success: false, error: { code: "RATE_LIMITED", message, details? } }` with 429 status.
+
 Acceptance check:
 - Unsigned or replayed webhooks are rejected.
 
