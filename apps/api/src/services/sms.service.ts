@@ -149,7 +149,7 @@ export class SMSService {
    * Get SMS delivery status
    * TODO: Implement status checking
    */
-  static async getStatus(messageId: string): Promise<SMSStatus> {
+  static async getStatus(_messageId: string): Promise<SMSStatus> {
     // Placeholder implementation
     return 'sent'
   }
