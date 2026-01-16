@@ -9,7 +9,28 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.js",
-      "default": "./dist/index.js"
+      "default": "./dist/index.js",
+      "source": "./src/index.ts"
+    },
+    "./src/*": {
+      "types": "./src/*.ts",
+      "import": "./src/*.ts",
+      "require": "./src/*.ts",
+      "default": "./src/*.ts"
+    },
+    "./contracts": {
+      "types": "./dist/contracts/index.d.ts",
+      "import": "./dist/contracts/index.js",
+      "require": "./dist/contracts/index.js",
+      "default": "./dist/contracts/index.js",
+      "source": "./src/contracts/index.ts"
+    },
+    "./schemas": {
+      "types": "./dist/schemas/index.d.ts",
+      "import": "./dist/schemas/index.js",
+      "require": "./dist/schemas/index.js",
+      "default": "./dist/schemas/index.js",
+      "source": "./src/schemas/index.ts"
     }
   },
   "scripts": {

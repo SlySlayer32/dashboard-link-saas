@@ -1,4 +1,6 @@
-import { createTokenManager } from '@dashboard-link/tokens'
+// Temporarily commented out to get API running
+// TODO: Fix tokens package module resolution
+// import { createTokenManager } from '@dashboard-link/tokens'
 import { createClient } from '@supabase/supabase-js'
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
@@ -6,22 +8,23 @@ import { smsRateLimitMiddleware } from '../middleware/rateLimit'
 import { SMSService } from '../services/sms.service'
 import type { AppContext } from '../types'
 import type {
-    SMSDashboardLinkRequest,
-    SMSDashboardLinkResponse,
-    SMSLogsResponse,
-    SendSMSRequest,
+  SMSDashboardLinkRequest,
+  SMSDashboardLinkResponse,
+  SMSLogsResponse,
+  SendSMSRequest,
 } from '../types/sms'
 import { logger } from '../utils/logger.js'
 
 // Initialize token manager with environment configuration
-const tokenManager = createTokenManager({
-  provider: 'database',
-  tableName: 'worker_tokens',
-  hashTokens: true,
-  cleanupExpired: true,
-  defaultExpiry: 86400, // 1 day for worker tokens
-  refreshExpiry: 2592000, // 30 days
-})
+// TODO: Fix tokens package module resolution
+// const tokenManager = createTokenManager({
+//   provider: 'database',
+//   tableName: 'worker_tokens',
+//   hashTokens: true,
+//   cleanupExpired: true,
+//   defaultExpiry: 86400, // 1 day for worker tokens
+//   refreshExpiry: 2592000, // 30 days
+// })
 
 // TODO(tokens): @dashboard-link/tokens DatabaseTokenProvider expects a different table shape than
 // `worker_tokens` in the initial migration (token_hash/payload/etc vs token TEXT). Align schema or
@@ -145,14 +148,21 @@ sms.post('/send-dashboard-link', async (c) => {
       )
     }
 
-    // Generate token
-    const tokenData = await tokenManager.generateWorkerToken(workerId, admin.organization_id, {
-      permissions: ['worker:access', 'sms:receive'],
-      metadata: {
-        expiresIn,
-        generatedFor: 'sms_dashboard_link',
-      },
-    })
+    // Generate token - TODO: Implement proper token generation
+    // const tokenData = await tokenManager.generateWorkerToken(workerId, admin.organization_id, {
+    //   permissions: ['worker:access', 'sms:receive'],
+    //   metadata: {
+    //     expiresIn,
+    //     generatedFor: 'sms_dashboard_link',
+    //   },
+    // })
+
+    // Temporary placeholder token
+    const tokenData = {
+      token: `temp-token-${Date.now()}`,
+      dashboardUrl: `http://localhost:5174/dashboard?token=temp-token-${Date.now()}`,
+      expiresAt: new Date(Date.now() + (expiresIn || 86400) * 1000).toISOString(),
+    }
 
     // Generate dashboard link
     const dashboardUrl = tokenData.dashboardUrl

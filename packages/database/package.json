@@ -6,7 +6,13 @@
   "description": "Database migrations and schema for Dashboard Link SaaS",
   "scripts": {
     "build": "tsc",
-    "clean": "rm -rf dist"
+    "clean": "rd /s /q dist 2>nul || echo No dist directory to clean"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "dependencies": {
     "@dashboard-link/shared": "workspace:*",

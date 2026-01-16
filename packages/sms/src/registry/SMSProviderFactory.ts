@@ -1,9 +1,9 @@
-import { SMSProvider } from '@dashboard-link/shared/contracts'
+import { SMSProvider } from '@dashboard-link/shared'
+import { SMSManagerImpl, smsManager } from '../manager/SMSManager'
 import { AWSSNSProvider } from '../providers/AWSSNSProvider'
 import { MessageBirdProvider } from '../providers/MessageBirdProvider'
 import { MobileMessageProvider } from '../providers/MobileMessageProvider'
 import { TwilioProvider } from '../providers/TwilioProvider'
-import { SMSManagerImpl, smsManager } from '../manager/SMSManager'
 
 type SMSProviderFactory = () => SMSProvider
 

@@ -10,7 +10,7 @@ import type {
   AuthProvider,
   AuthProviderFactory,
   AuthProviderRegistry,
-} from '@dashboard-link/shared/contracts'
+} from '@dashboard-link/shared'
 import { createClient } from '@supabase/supabase-js'
 import { MockAuthProvider } from '../providers/MockAuthProvider'
 import { SupabaseAuthProvider } from '../providers/SupabaseAuthProvider'

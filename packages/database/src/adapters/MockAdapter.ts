@@ -1,65 +1,65 @@
 /**
  * Mock Database Adapter
- * 
+ *
  * In-memory database adapter for testing and development
  * Provides fast, isolated database operations without external dependencies
  */
 
 import type {
-    AdapterHealthCheck,
-    DatabaseAdapter,
-    QueryBuilder,
-    RepositoryConfig,
-    Transaction
-} from '@dashboard-link/shared';
+  AdapterHealthCheck,
+  DatabaseAdapter,
+  QueryBuilder,
+  RepositoryConfig,
+  Transaction,
+} from '@dashboard-link/shared'
 
 export class MockAdapter implements DatabaseAdapter {
-  private data = new Map<string, unknown[]>();
-  private config: RepositoryConfig;
+  private data = new Map<string, unknown[]>()
+  private config: RepositoryConfig
 
   constructor(initialData?: Record<string, unknown[]>, config: Partial<RepositoryConfig> = {}) {
     this.config = {
       adapter: 'mock',
       caching: {
         enabled: false,
-        ttl: 300
+        ttl: 300,
       },
-      ...config
-    };
+      ...config,
+    }
 
     if (initialData) {
       Object.entries(initialData).forEach(([table, rows]) => {
-        this.data.set(table, [...rows]);
-      });
+        this.data.set(table, [...rows])
+      })
     }
   }
 
   query(table: string): QueryBuilder {
-    return new MockQueryBuilder(this.data.get(table) || [], table);
+    return new MockQueryBuilder(this.data.get(table) || [], table)
   }
 
   async transaction<T>(callback: (trx: Transaction) => Promise<T>): Promise<T> {
-    const trx = new MockTransaction(this.data);
+    const trx = new MockTransaction(this.data)
     try {
-      const result = await callback(trx);
-      await trx.commit();
-      return result;
+      const result = await callback(trx)
+      await trx.commit()
+      return result
     } catch (error) {
-      await trx.rollback();
-      throw error;
+      await trx.rollback()
+      throw error
     }
   }
 
   async healthCheck(): Promise<boolean> {
-    return true; // Mock adapter is always healthy
+    return true // Mock adapter is always healthy
   }
 
   async close(): Promise<void> {
-    this.data.clear();
+    this.data.clear()
   }
 
   getConfig(): RepositoryConfig {
-    return this.config;
+    return this.config
   }
 
   async getDetailedHealthCheck(): Promise<AdapterHealthCheck> {
@@ -68,227 +68,228 @@ export class MockAdapter implements DatabaseAdapter {
       status: 'healthy' as const,
       lastChecked: new Date().toISOString(),
       responseTime: 0,
-      message: 'Mock adapter is always healthy'
-    };
+      message: 'Mock adapter is always healthy',
+    }
   }
 
   // Helper methods for testing
   addData(table: string, rows: unknown[]): void {
-    const existing = this.data.get(table) || [];
-    this.data.set(table, [...existing, ...rows]);
+    const existing = this.data.get(table) || []
+    this.data.set(table, [...existing, ...rows])
   }
 
   clearTable(table: string): void {
-    this.data.set(table, []);
+    this.data.set(table, [])
   }
 
   getTableData(table: string): unknown[] {
-    return this.data.get(table) || [];
+    return this.data.get(table) || []
   }
 
   reset(): void {
-    this.data.clear();
+    this.data.clear()
   }
 }
 
 export class MockQueryBuilder implements QueryBuilder {
-  private data: unknown[];
-  private conditions: Array<(row: unknown) => boolean> = [];
-  private sortFields: Array<{ field: string; direction: 'asc' | 'desc' }> = [];
-  private limitCount?: number;
-  private offsetCount = 0;
+  private data: unknown[]
+  private conditions: Array<(row: unknown) => boolean> = []
+  private sortFields: Array<{ field: string; direction: 'asc' | 'desc' }> = []
+  private limitCount?: number
+  private offsetCount = 0
 
   constructor(data: unknown[], _table: string) {
-    this.data = [...data];
+    this.data = [...data]
   }
 
   select(fields?: string[]): QueryBuilder {
     if (fields) {
-      this.data = this.data.map(row => {
-        const selected: Record<string, unknown> = {};
-        fields.forEach(field => {
+      this.data = this.data.map((row) => {
+        const selected: Record<string, unknown> = {}
+        fields.forEach((field) => {
           if (field in (row as Record<string, unknown>)) {
-            selected[field] = (row as Record<string, unknown>)[field];
+            selected[field] = (row as Record<string, unknown>)[field]
           }
-        });
-        return selected;
-      });
+        })
+        return selected
+      })
     }
-    return this;
+    return this
   }
 
   where(conditions: Record<string, unknown>): QueryBuilder {
-    this.conditions.push(row => {
+    this.conditions.push((row) => {
       return Object.entries(conditions).every(([key, value]) => {
-        const rowValue = (row as Record<string, unknown>)[key];
-        return rowValue === value;
-      });
-    });
-    return this;
+        const rowValue = (row as Record<string, unknown>)[key]
+        return rowValue === value
+      })
+    })
+    return this
   }
 
   whereIn(field: string, values: unknown[]): QueryBuilder {
-    this.conditions.push(row => {
-      const rowValue = (row as Record<string, unknown>)[field];
-      return values.includes(rowValue);
-    });
-    return this;
+    this.conditions.push((row) => {
+      const rowValue = (row as Record<string, unknown>)[field]
+      return values.includes(rowValue)
+    })
+    return this
   }
 
   whereNot(conditions: Record<string, unknown>): QueryBuilder {
-    this.conditions.push(row => {
+    this.conditions.push((row) => {
       return Object.entries(conditions).every(([key, value]) => {
-        const rowValue = (row as Record<string, unknown>)[key];
-        return rowValue !== value;
-      });
-    });
-    return this;
+        const rowValue = (row as Record<string, unknown>)[key]
+        return rowValue !== value
+      })
+    })
+    return this
   }
 
   whereNotIn(field: string, values: unknown[]): QueryBuilder {
-    this.conditions.push(row => {
-      const rowValue = (row as Record<string, unknown>)[field];
-      return !values.includes(rowValue);
-    });
-    return this;
+    this.conditions.push((row) => {
+      const rowValue = (row as Record<string, unknown>)[field]
+      return !values.includes(rowValue)
+    })
+    return this
   }
 
   whereBetween(field: string, values: [unknown, unknown]): QueryBuilder {
-    this.conditions.push(row => {
-      const rowValue = (row as Record<string, unknown>)[field];
-      return typeof rowValue === 'number' && typeof values[0] === 'number' && typeof values[1] === 'number' 
+    this.conditions.push((row) => {
+      const rowValue = (row as Record<string, unknown>)[field]
+      return typeof rowValue === 'number' &&
+        typeof values[0] === 'number' &&
+        typeof values[1] === 'number'
         ? rowValue >= values[0] && rowValue <= values[1]
-        : String(rowValue) >= String(values[0]) && String(rowValue) <= String(values[1]);
-    });
-    return this;
+        : String(rowValue) >= String(values[0]) && String(rowValue) <= String(values[1])
+    })
+    return this
   }
 
   whereNull(field: string): QueryBuilder {
-    this.conditions.push(row => {
-      const rowValue = (row as Record<string, unknown>)[field];
-      return rowValue === null || rowValue === undefined;
-    });
-    return this;
+    this.conditions.push((row) => {
+      const rowValue = (row as Record<string, unknown>)[field]
+      return rowValue === null || rowValue === undefined
+    })
+    return this
   }
 
   whereNotNull(field: string): QueryBuilder {
-    this.conditions.push(row => {
-      const rowValue = (row as Record<string, unknown>)[field];
-      return rowValue !== null && rowValue !== undefined;
-    });
-    return this;
+    this.conditions.push((row) => {
+      const rowValue = (row as Record<string, unknown>)[field]
+      return rowValue !== null && rowValue !== undefined
+    })
+    return this
   }
 
   orderBy(field: string, direction: 'asc' | 'desc'): QueryBuilder {
-    this.sortFields.push({ field, direction });
-    return this;
+    this.sortFields.push({ field, direction })
+    return this
   }
 
   limit(count: number): QueryBuilder {
-    this.limitCount = count;
-    return this;
+    this.limitCount = count
+    return this
   }
 
   offset(count: number): QueryBuilder {
-    this.offsetCount = count;
-    return this;
+    this.offsetCount = count
+    return this
   }
 
   search(fields: string[], query: string): QueryBuilder {
-    const lowerQuery = query.toLowerCase();
-    this.conditions.push(row => {
-      return fields.some(field => {
-        const rowValue = (row as Record<string, unknown>)[field];
-        return typeof rowValue === 'string' && 
-               rowValue.toLowerCase().includes(lowerQuery);
-      });
-    });
-    return this;
+    const lowerQuery = query.toLowerCase()
+    this.conditions.push((row) => {
+      return fields.some((field) => {
+        const rowValue = (row as Record<string, unknown>)[field]
+        return typeof rowValue === 'string' && rowValue.toLowerCase().includes(lowerQuery)
+      })
+    })
+    return this
   }
 
   async build(): Promise<unknown[]> {
-    let result = [...this.data];
+    let result = [...this.data]
 
     // Apply conditions
-    this.conditions.forEach(condition => {
-      result = result.filter(condition);
-    });
+    this.conditions.forEach((condition) => {
+      result = result.filter(condition)
+    })
 
     // Apply sorting
     if (this.sortFields.length > 0) {
       result.sort((a, b) => {
         for (const { field, direction } of this.sortFields) {
-          const aValue = (a as Record<string, unknown>)[field];
-          const bValue = (b as Record<string, unknown>)[field];
-          
+          const aValue = (a as Record<string, unknown>)[field]
+          const bValue = (b as Record<string, unknown>)[field]
+
           if (aValue !== bValue) {
-            const comparison = String(aValue) < String(bValue) ? -1 : 1;
-            return direction === 'desc' ? -comparison : comparison;
+            const comparison = String(aValue) < String(bValue) ? -1 : 1
+            return direction === 'desc' ? -comparison : comparison
           }
         }
-        return 0;
-      });
+        return 0
+      })
     }
 
     // Apply offset and limit
     if (this.offsetCount > 0) {
-      result = result.slice(this.offsetCount);
-    }
-    
-    if (this.limitCount !== undefined) {
-      result = result.slice(0, this.limitCount);
+      result = result.slice(this.offsetCount)
     }
 
-    return result;
+    if (this.limitCount !== undefined) {
+      result = result.slice(0, this.limitCount)
+    }
+
+    return result
   }
 
   async first(): Promise<unknown> {
-    const results = await this.build();
-    return results[0] || null;
+    const results = await this.build()
+    return results[0] || null
   }
 
   async count(): Promise<number> {
-    const results = await this.build();
-    return results.length;
+    const results = await this.build()
+    return results.length
   }
 
   async exists(): Promise<boolean> {
-    const count = await this.count();
-    return count > 0;
+    const count = await this.count()
+    return count > 0
   }
 }
 
 export class MockTransaction implements Transaction {
-  private data: Map<string, unknown[]>;
-  private originalData: Map<string, unknown[]>;
-  private committed = false;
+  private data: Map<string, unknown[]>
+  private originalData: Map<string, unknown[]>
+  private committed = false
 
   constructor(data: Map<string, unknown[]>) {
-    this.data = data;
-    this.originalData = new Map();
-    
+    this.data = data
+    this.originalData = new Map()
+
     // Deep copy original data for rollback
     data.forEach((rows, table) => {
-      this.originalData.set(table, JSON.parse(JSON.stringify(rows)));
-    });
+      this.originalData.set(table, JSON.parse(JSON.stringify(rows)) as unknown[])
+    })
   }
 
   query(table: string): QueryBuilder {
-    return new MockQueryBuilder(this.data.get(table) || [], table);
+    return new MockQueryBuilder(this.data.get(table) || [], table)
   }
 
   async commit(): Promise<void> {
-    this.committed = true;
-    this.originalData.clear();
+    this.committed = true
+    this.originalData.clear()
   }
 
   async rollback(): Promise<void> {
     if (!this.committed) {
       // Restore original data
-      this.data.clear();
+      this.data.clear()
       this.originalData.forEach((rows, table) => {
-        this.data.set(table, JSON.parse(JSON.stringify(rows)));
-      });
+        this.data.set(table, JSON.parse(JSON.stringify(rows)) as unknown[])
+      })
     }
   }
 }
@@ -306,7 +307,7 @@ export function createMockAdapter(): MockAdapter {
         active: true,
         metadata: {},
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
+        updated_at: '2024-01-01T00:00:00Z',
       },
       {
         id: 'worker-2',
@@ -317,8 +318,8 @@ export function createMockAdapter(): MockAdapter {
         active: true,
         metadata: {},
         created_at: '2024-01-02T00:00:00Z',
-        updated_at: '2024-01-02T00:00:00Z'
-      }
+        updated_at: '2024-01-02T00:00:00Z',
+      },
     ],
     organizations: [
       {
@@ -327,23 +328,23 @@ export function createMockAdapter(): MockAdapter {
         settings: {
           sms_sender_id: 'TestOrg',
           default_token_expiry: 3600,
-          custom_metadata: {}
+          custom_metadata: {},
         },
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      }
+        updated_at: '2024-01-01T00:00:00Z',
+      },
     ],
     dashboards: [
       {
         id: 'dashboard-1',
-        name: 'John\'s Dashboard',
+        name: "John's Dashboard",
         worker_id: 'worker-1',
         organization_id: 'org-1',
         active: true,
         config: {},
         created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      }
+        updated_at: '2024-01-01T00:00:00Z',
+      },
     ],
     sms_logs: [
       {
@@ -359,15 +360,15 @@ export function createMockAdapter(): MockAdapter {
         cost: 0.05,
         metadata: {},
         created_at: '2024-01-01T12:00:00Z',
-        updated_at: '2024-01-01T12:00:00Z'
-      }
-    ]
-  };
+        updated_at: '2024-01-01T12:00:00Z',
+      },
+    ],
+  }
 
-  return new MockAdapter(testData);
+  return new MockAdapter(testData)
 }
 
 // Utility for creating empty mock adapter
 export function createEmptyMockAdapter(): MockAdapter {
-  return new MockAdapter();
+  return new MockAdapter()
 }

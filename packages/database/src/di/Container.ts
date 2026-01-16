@@ -1,71 +1,67 @@
 /**
  * Dependency Injection Container
- * 
+ *
  * Manages repository instances and dependencies
  * Provides singleton access to repositories throughout the application
  */
 
-import type { DatabaseAdapter as LocalDatabaseAdapter } from '../adapters/DatabaseAdapter.js';
-import { createMockAdapter } from '../adapters/MockAdapter.js';
-import { createSupabaseAdapter } from '../adapters/SupabaseAdapter.js';
-import { DashboardRepository } from '../repositories/DashboardRepository.js';
-import { OrganizationRepository } from '../repositories/OrganizationRepository.js';
-import { SMSLogRepository } from '../repositories/SMSLogRepository.js';
-import { WorkerRepository } from '../repositories/WorkerRepository.js';
+import type { DatabaseAdapter as LocalDatabaseAdapter } from '../adapters/DatabaseAdapter.js'
+import { createMockAdapter } from '../adapters/MockAdapter.js'
+import { createSupabaseAdapter } from '../adapters/SupabaseAdapter.js'
+import { DashboardRepository } from '../repositories/DashboardRepository.js'
+import { OrganizationRepository } from '../repositories/OrganizationRepository.js'
+import { SMSLogRepository } from '../repositories/SMSLogRepository.js'
+import { WorkerRepository } from '../repositories/WorkerRepository.js'
 
 export interface RepositoryContainer {
-  worker: WorkerRepository;
-  organization: OrganizationRepository;
-  dashboard: DashboardRepository;
-  smsLog: SMSLogRepository;
+  worker: WorkerRepository
+  organization: OrganizationRepository
+  dashboard: DashboardRepository
+  smsLog: SMSLogRepository
 }
 
 export interface ContainerConfig {
   database: {
-    type: 'supabase' | 'postgresql' | 'mock';
-    connection: unknown;
+    type: 'supabase' | 'postgresql' | 'mock'
+    connection: unknown
     config?: {
       caching?: {
-        enabled: boolean;
-        ttl: number;
-      };
-    };
-  };
+        enabled: boolean
+        ttl: number
+      }
+    }
+  }
 }
 
 export class DIContainer {
-  private repositories: RepositoryContainer;
-  private adapter: LocalDatabaseAdapter;
-  private config: ContainerConfig;
+  private repositories: RepositoryContainer
+  private adapter: LocalDatabaseAdapter
+  private config: ContainerConfig
 
   constructor(config: ContainerConfig) {
-    this.config = config;
-    this.adapter = this.createAdapter();
-    this.repositories = this.setupRepositories();
+    this.config = config
+    this.adapter = this.createAdapter()
+    this.repositories = this.setupRepositories()
   }
 
   private createAdapter(): LocalDatabaseAdapter {
-    const { database } = this.config;
-    
+    const { database } = this.config
+
     switch (database.type) {
       case 'supabase': {
-        // Import the SupabaseClient type from SupabaseAdapter
-        type SupabaseClient = Parameters<typeof createSupabaseAdapter>[0];
-        return createSupabaseAdapter(
-          database.connection as SupabaseClient,
-          database.config || {}
-        );
+        // Type assertion for Supabase client
+        return createSupabaseAdapter(database.connection as unknown, database.config || {})
       }
-      
+
       case 'postgresql':
         // Will be implemented when PostgreSQLAdapter is created
-        throw new Error('PostgreSQL adapter not yet implemented');
-      
+        throw new Error('PostgreSQL adapter not yet implemented')
+
       case 'mock':
-        return createMockAdapter();
-      
+        return createMockAdapter()
+
       default:
-        throw new Error(`Unknown database type: ${database.type}`);
+        throw new Error(`Unknown database type: ${database.type}`)
     }
   }
 
@@ -74,124 +70,124 @@ export class DIContainer {
       worker: new WorkerRepository(this.adapter),
       organization: new OrganizationRepository(this.adapter),
       dashboard: new DashboardRepository(this.adapter),
-      smsLog: new SMSLogRepository(this.adapter)
-    };
+      smsLog: new SMSLogRepository(this.adapter),
+    }
   }
 
   // Repository getters
   getWorkerRepository(): WorkerRepository {
-    return this.repositories.worker;
+    return this.repositories.worker
   }
 
   getOrganizationRepository(): OrganizationRepository {
-    return this.repositories.organization;
+    return this.repositories.organization
   }
 
   getDashboardRepository(): DashboardRepository {
-    return this.repositories.dashboard;
+    return this.repositories.dashboard
   }
 
   getSMSLogRepository(): SMSLogRepository {
-    return this.repositories.smsLog;
+    return this.repositories.smsLog
   }
 
   // Adapter access
   getAdapter(): LocalDatabaseAdapter {
-    return this.adapter;
+    return this.adapter
   }
 
   // Health check for all repositories
   async healthCheck(): Promise<{
-    database: boolean;
-    repositories: Record<string, boolean>;
-    overall: boolean;
+    database: boolean
+    repositories: Record<string, boolean>
+    overall: boolean
   }> {
-    const databaseHealthy = await this.adapter.healthCheck();
-    
+    const databaseHealthy = await this.adapter.healthCheck()
+
     const repositoryHealth = {
       worker: await this.checkRepository(this.repositories.worker),
       organization: await this.checkRepository(this.repositories.organization),
       dashboard: await this.checkRepository(this.repositories.dashboard),
-      smsLog: await this.checkRepository(this.repositories.smsLog)
-    };
+      smsLog: await this.checkRepository(this.repositories.smsLog),
+    }
 
-    const overall = databaseHealthy && Object.values(repositoryHealth).every(healthy => healthy);
+    const overall = databaseHealthy && Object.values(repositoryHealth).every((healthy) => healthy)
 
     return {
       database: databaseHealthy,
       repositories: repositoryHealth,
-      overall
-    };
+      overall,
+    }
   }
 
   private async checkRepository(repository: { count(): Promise<number> }): Promise<boolean> {
     try {
       // Simple existence check
-      await repository.count();
-      return true;
+      await repository.count()
+      return true
     } catch {
-      return false;
+      return false
     }
   }
 
   // Close all connections
   async close(): Promise<void> {
-    await this.adapter.close();
+    await this.adapter.close()
   }
 
   // Reconfigure container
   reconfigure(config: ContainerConfig): void {
-    this.config = config;
-    this.adapter = this.createAdapter();
-    this.repositories = this.setupRepositories();
+    this.config = config
+    this.adapter = this.createAdapter()
+    this.repositories = this.setupRepositories()
   }
 
   // Get configuration
   getConfig(): ContainerConfig {
-    return this.config;
+    return this.config
   }
 }
 
 // Default container instance
-let defaultContainer: DIContainer | null = null;
+let defaultContainer: DIContainer | null = null
 
 export function initializeContainer(config: ContainerConfig): DIContainer {
   if (defaultContainer) {
-    console.warn('Container already initialized. Reinitializing...');
-    void defaultContainer.close();
+    console.warn('Container already initialized. Reinitializing...')
+    void defaultContainer.close()
   }
-  
-  defaultContainer = new DIContainer(config);
-  return defaultContainer;
+
+  defaultContainer = new DIContainer(config)
+  return defaultContainer
 }
 
 export function getContainer(): DIContainer {
   if (!defaultContainer) {
-    throw new Error('Container not initialized. Call initializeContainer() first.');
+    throw new Error('Container not initialized. Call initializeContainer() first.')
   }
-  
-  return defaultContainer;
+
+  return defaultContainer
 }
 
 export function isContainerInitialized(): boolean {
-  return defaultContainer !== null;
+  return defaultContainer !== null
 }
 
 // Convenience functions for direct repository access
 export function getWorkerRepository(): WorkerRepository {
-  return getContainer().getWorkerRepository();
+  return getContainer().getWorkerRepository()
 }
 
 export function getOrganizationRepository(): OrganizationRepository {
-  return getContainer().getOrganizationRepository();
+  return getContainer().getOrganizationRepository()
 }
 
 export function getDashboardRepository(): DashboardRepository {
-  return getContainer().getDashboardRepository();
+  return getContainer().getDashboardRepository()
 }
 
 export function getSMSLogRepository(): SMSLogRepository {
-  return getContainer().getSMSLogRepository();
+  return getContainer().getSMSLogRepository()
 }
 
 // Factory for creating container with environment-based configuration
@@ -203,11 +199,11 @@ export function createContainerFromEnvironment(): DIContainer {
       config: {
         caching: {
           enabled: process.env.DB_CACHE_ENABLED === 'true',
-          ttl: parseInt(process.env.DB_CACHE_TTL || '300', 10)
-        }
-      }
-    }
-  };
+          ttl: parseInt(process.env.DB_CACHE_TTL || '300', 10),
+        },
+      },
+    },
+  }
 
   // Set up connection based on type
   if (config.database.type === 'supabase') {
@@ -216,9 +212,9 @@ export function createContainerFromEnvironment(): DIContainer {
       config.database.connection = createClient(
         process.env.SUPABASE_URL || '',
         process.env.SUPABASE_SERVICE_KEY || ''
-      );
-    });
+      )
+    })
   }
 
-  return new DIContainer(config);
+  return new DIContainer(config)
 }

@@ -1,228 +1,256 @@
 /**
  * Worker Service (Refactored)
- * 
+ *
  * Business logic for worker operations using the repository pattern
  * Replaces direct database queries with repository abstraction
  */
 
-import { WorkerRepository } from '@dashboard-link/database';
-import type { Worker } from '@dashboard-link/shared';
-import { formatAustralianPhone } from '@dashboard-link/shared';
+// Temporarily copied phone utils to get API running
+// TODO: Fix module resolution and revert to @dashboard-link/shared import
+
+/**
+ * Format Australian phone number to E.164 format
+ */
+function formatAustralianPhone(phone: string): string {
+  // Remove all spaces, dashes, and parentheses
+  const cleaned = phone.replace(/[\s\-()]/g, '')
+
+  // If already in E.164 format with +61
+  if (cleaned.startsWith('+61')) {
+    return cleaned
+  }
+
+  // If starts with 61 (without +)
+  if (cleaned.startsWith('61') && cleaned.length === 11) {
+    return `+${cleaned}`
+  }
+
+  // If starts with 0 (Australian format)
+  if (cleaned.startsWith('0') && cleaned.length === 10) {
+    return `+61${cleaned.substring(1)}`
+  }
+
+  // If it's just the number without country code or leading 0
+  if (cleaned.length === 9) {
+    return `+61${cleaned}`
+  }
+
+  throw new Error(`Invalid Australian phone number: ${phone}`)
+}
+
+// Import types and repositories
+import { WorkerRepository } from '@dashboard-link/database'
+import type { Worker } from '@dashboard-link/shared'
 
 export interface CreateWorkerRequest {
-  name: string;
-  phone: string;
-  email?: string;
-  metadata?: Record<string, unknown>;
+  name: string
+  phone: string
+  email?: string
+  metadata?: Record<string, unknown>
 }
 
 export interface UpdateWorkerRequest {
-  name?: string;
-  phone?: string;
-  email?: string;
-  active?: boolean;
-  metadata?: Record<string, unknown>;
+  name?: string
+  phone?: string
+  email?: string
+  active?: boolean
+  metadata?: Record<string, unknown>
 }
 
 export interface WorkerStats {
-  totalSms: number;
-  sentSms: number;
-  failedSms: number;
-  smsToday: number;
-  smsThisWeek: number;
+  totalSms: number
+  sentSms: number
+  failedSms: number
+  smsToday: number
+  smsThisWeek: number
 }
 
 export class WorkerService {
   constructor(private workerRepo: WorkerRepository) {}
 
   async getWorkers(organizationId: string): Promise<Worker[]> {
-    return this.workerRepo.findByOrganizationId(organizationId);
+    return this.workerRepo.findByOrganizationId(organizationId)
   }
 
   async getWorkerById(id: string, organizationId: string): Promise<Worker | null> {
-    const worker = await this.workerRepo.findById(id);
-    
+    const worker = await this.workerRepo.findById(id)
+
     if (!worker || worker.organizationId !== organizationId) {
-      return null;
+      return null
     }
-    
-    return worker;
+
+    return worker
   }
 
-  async getWorkerStats(workerId: string, organizationId: string): Promise<{
-    worker: Worker;
-    stats: WorkerStats;
+  async getWorkerStats(
+    workerId: string,
+    organizationId: string
+  ): Promise<{
+    worker: Worker
+    stats: WorkerStats
   }> {
-    const worker = await this.getWorkerById(workerId, organizationId);
-    
+    const worker = await this.getWorkerById(workerId, organizationId)
+
     if (!worker) {
-      throw new Error('Worker not found');
+      throw new Error('Worker not found')
     }
-    
-    const stats = await this.workerRepo.getWorkerStats(workerId);
-    
+
+    const stats = await this.workerRepo.getWorkerStats(workerId)
+
     return {
       worker,
-      stats
-    };
+      stats,
+    }
   }
 
-  async createWorker(
-    data: CreateWorkerRequest, 
-    organizationId: string
-  ): Promise<Worker> {
+  async createWorker(data: CreateWorkerRequest, organizationId: string): Promise<Worker> {
     // Validate and format phone number
-    const formattedPhone = formatAustralianPhone(data.phone);
-    
+    const formattedPhone = formatAustralianPhone(data.phone)
+
     const workerData = {
       name: data.name.trim(),
       phone: formattedPhone,
       email: data.email?.trim() || undefined,
       organizationId,
       active: true,
-      metadata: data.metadata || {}
-    };
+      metadata: data.metadata || {},
+    }
 
-    return this.workerRepo.create(workerData);
+    return this.workerRepo.create(workerData)
   }
 
   async updateWorker(
-    id: string, 
-    data: UpdateWorkerRequest, 
+    id: string,
+    data: UpdateWorkerRequest,
     organizationId: string
   ): Promise<Worker> {
     // Verify worker belongs to organization
-    const existingWorker = await this.getWorkerById(id, organizationId);
+    const existingWorker = await this.getWorkerById(id, organizationId)
     if (!existingWorker) {
-      throw new Error('Worker not found');
+      throw new Error('Worker not found')
     }
 
-    const updateData: Partial<Worker> = {};
-    
+    const updateData: Partial<Worker> = {}
+
     if (data.name !== undefined) {
-      updateData.name = data.name.trim();
-    }
-    
-    if (data.phone !== undefined) {
-      updateData.phone = formatAustralianPhone(data.phone);
-    }
-    
-    if (data.email !== undefined) {
-      updateData.email = data.email?.trim() || undefined;
-    }
-    
-    if (data.active !== undefined) {
-      updateData.active = data.active;
-    }
-    
-    if (data.metadata !== undefined) {
-      updateData.metadata = data.metadata;
+      updateData.name = data.name.trim()
     }
 
-    return this.workerRepo.update(id, updateData);
+    if (data.phone !== undefined) {
+      updateData.phone = formatAustralianPhone(data.phone)
+    }
+
+    if (data.email !== undefined) {
+      updateData.email = data.email?.trim() || undefined
+    }
+
+    if (data.active !== undefined) {
+      updateData.active = data.active
+    }
+
+    if (data.metadata !== undefined) {
+      updateData.metadata = data.metadata
+    }
+
+    return this.workerRepo.update(id, updateData)
   }
 
   async deleteWorker(id: string, organizationId: string): Promise<void> {
     // Verify worker belongs to organization
-    const worker = await this.getWorkerById(id, organizationId);
+    const worker = await this.getWorkerById(id, organizationId)
     if (!worker) {
-      throw new Error('Worker not found');
+      throw new Error('Worker not found')
     }
 
-    await this.workerRepo.delete(id);
+    await this.workerRepo.delete(id)
   }
 
   async activateWorker(id: string, organizationId: string): Promise<Worker> {
-    return this.updateWorker(id, { active: true }, organizationId);
+    return this.updateWorker(id, { active: true }, organizationId)
   }
 
   async deactivateWorker(id: string, organizationId: string): Promise<Worker> {
-    return this.updateWorker(id, { active: false }, organizationId);
+    return this.updateWorker(id, { active: false }, organizationId)
   }
 
-  async searchWorkers(
-    organizationId: string,
-    query: string,
-    limit = 10
-  ): Promise<Worker[]> {
-    return this.workerRepo.searchWorkers(organizationId, query, limit);
+  async searchWorkers(organizationId: string, query: string, limit = 10): Promise<Worker[]> {
+    return this.workerRepo.searchWorkers(organizationId, query, limit)
   }
 
   async getActiveWorkers(organizationId: string): Promise<Worker[]> {
-    return this.workerRepo.findActiveWorkers(organizationId);
+    return this.workerRepo.findActiveWorkers(organizationId)
   }
 
-  async findWorkerByPhone(
-    phone: string, 
-    organizationId: string
-  ): Promise<Worker | null> {
-    const formattedPhone = formatAustralianPhone(phone);
-    return this.workerRepo.findByPhone(formattedPhone, organizationId);
+  async findWorkerByPhone(phone: string, organizationId: string): Promise<Worker | null> {
+    const formattedPhone = formatAustralianPhone(phone)
+    return this.workerRepo.findByPhone(formattedPhone, organizationId)
   }
 
   // Validation helpers
   private validateWorkerData(data: CreateWorkerRequest | UpdateWorkerRequest): void {
     if ('name' in data && data.name && data.name.trim().length === 0) {
-      throw new Error('Worker name cannot be empty');
+      throw new Error('Worker name cannot be empty')
     }
-    
+
     if ('phone' in data && data.phone) {
       // Basic phone validation - formatAustralianPhone will handle detailed validation
-      const trimmedPhone = data.phone.trim();
+      const trimmedPhone = data.phone.trim()
       if (trimmedPhone.length === 0) {
-        throw new Error('Phone number cannot be empty');
+        throw new Error('Phone number cannot be empty')
       }
     }
-    
+
     if ('email' in data && data.email) {
-      const trimmedEmail = data.email.trim();
+      const trimmedEmail = data.email.trim()
       if (trimmedEmail.length > 0 && !trimmedEmail.includes('@')) {
-        throw new Error('Invalid email format');
+        throw new Error('Invalid email format')
       }
     }
   }
 
   // Business logic methods
   async canSendSMS(workerId: string, organizationId: string): Promise<boolean> {
-    const worker = await this.getWorkerById(workerId, organizationId);
-    return worker ? worker.active : false;
+    const worker = await this.getWorkerById(workerId, organizationId)
+    return worker ? worker.active : false
   }
 
-  async getWorkersWithSMSCount(organizationId: string): Promise<Array<{
-    worker: Worker;
-    smsCount: number;
-  }>> {
-    const workers = await this.getWorkers(organizationId);
-    
+  async getWorkersWithSMSCount(organizationId: string): Promise<
+    Array<{
+      worker: Worker
+      smsCount: number
+    }>
+  > {
+    const workers = await this.getWorkers(organizationId)
+
     // In a real implementation, this would be optimized with a join
     const workersWithCount = await Promise.all(
       workers.map(async (worker) => {
-        const stats = await this.workerRepo.getWorkerStats(worker.id);
+        const stats = await this.workerRepo.getWorkerStats(worker.id)
         return {
           worker,
-          smsCount: stats.totalSms
-        };
+          smsCount: stats.totalSms,
+        }
       })
-    );
+    )
 
-    return workersWithCount.sort((a, b) => b.smsCount - a.smsCount);
+    return workersWithCount.sort((a, b) => b.smsCount - a.smsCount)
   }
 
   async bulkUpdateStatus(
-    workerIds: string[], 
-    active: boolean, 
+    workerIds: string[],
+    active: boolean,
     organizationId: string
   ): Promise<Worker[]> {
     const updatedWorkers = await Promise.all(
       workerIds.map(async (id) => {
         try {
-          return await this.updateWorker(id, { active }, organizationId);
+          return await this.updateWorker(id, { active }, organizationId)
         } catch (error) {
-          return null;
+          return null
         }
       })
-    );
+    )
 
-    return updatedWorkers.filter((worker): worker is Worker => worker !== null);
+    return updatedWorkers.filter((worker): worker is Worker => worker !== null)
   }
 }

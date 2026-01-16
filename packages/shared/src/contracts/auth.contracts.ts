@@ -1,15 +1,15 @@
 // Authentication provider contracts
 export type {
-  AuthProvider,
-  AuthProviderRegistry,
-  AuthProviderFactory,
+  AuthConfig,
   AuthCredentials,
+  AuthProvider,
+  AuthProviderFactory,
+  AuthProviderRegistry,
   AuthResult,
   AuthSession,
+  TokenPayload as AuthTokenPayload,
+  TokenResult as AuthTokenResult,
   AuthUser,
-  AuthConfig,
-  TokenPayload,
-  TokenResult,
-  SessionConfig,
   PasswordPolicy,
+  SessionConfig,
 } from '../types/auth.types'

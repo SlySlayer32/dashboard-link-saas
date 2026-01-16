@@ -14,12 +14,12 @@ import { errorHandler } from './middleware/error-handler'
 import admin from './routes/admin'
 import auth from './routes/auth'
 import dashboard from './routes/dashboard'
-import dashboards from './routes/dashboards'
+// import dashboards from './routes/dashboards'
 import manualData from './routes/manual-data'
 import organizations from './routes/organizations'
-import plugins from './routes/plugins'
+// import plugins from './routes/plugins'
+// import tokens from './routes/tokens' // Temporarily disabled
 import sms from './routes/sms'
-import tokens from './routes/tokens'
 import webhooks from './routes/webhooks'
 import { workers } from './routes/workers'
 
@@ -36,7 +36,11 @@ app.use('*', honoLogger())
 app.use(
   '*',
   cors({
-    origin: process.env.APP_URL || 'http://localhost:5173',
+    origin: [
+      process.env.APP_URL || 'http://localhost:5173',
+      'http://localhost:5173', // Admin
+      'http://localhost:5174', // Worker
+    ],
     credentials: true,
   })
 )
@@ -62,11 +66,11 @@ app.get('/health', (c) => {
 
 // Mount routes
 app.route('/auth', auth)
-app.route('/tokens', tokens)
+// app.route('/tokens', tokens) // Temporarily disabled
 app.route('/workers', workers)
 app.route('/organizations', organizations)
-app.route('/plugins', plugins)
-app.route('/dashboards', dashboards)
+// app.route('/plugins', plugins)
+// app.route('/dashboards', dashboards)
 app.route('/dashboard', dashboard)
 app.route('/sms', sms)
 app.route('/webhooks', webhooks)

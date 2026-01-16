@@ -5,7 +5,6 @@
  * Replaces direct Supabase queries with service layer abstraction
  */
 
-import { PluginRegistry } from '@dashboard-link/plugins'
 import type { PluginTestResult } from '@dashboard-link/shared'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
@@ -17,7 +16,7 @@ import { logger } from '../utils/logger.js'
 const plugins = new Hono<AppContext>()
 
 // Initialize plugin registry
-const pluginRegistry = new PluginRegistry()
+const pluginRegistry = new PluginRegistryImpl()
 
 // All routes require authentication
 plugins.use('*', authMiddleware)
