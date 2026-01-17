@@ -1,5 +1,15 @@
+import dotenv from 'dotenv'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
 import { z } from 'zod'
 import { logger } from '../utils/logger.js'
+
+// Get the directory of the current file
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+// Load environment variables from .env file
+dotenv.config({ path: join(__dirname, '../..', '.env') })
 
 // Environment variable schema
 const envSchema = z.object({
@@ -121,7 +131,7 @@ function validateEnv() {
   } catch (error) {
     logger.error('Environment variable validation failed', error as Error)
 
-    if (error instanceof z.ZodError) {
+    if (error instanceof z.ZodError && error.errors) {
       const errorMessages = error.errors.map((err) => {
         const path = err.path.join('.')
         return `${path}: ${err.message}`
@@ -149,10 +159,14 @@ function validateEnv() {
       PORT: parseInt(process.env.PORT || '3000'),
       HOST: process.env.HOST || '0.0.0.0',
       SUPABASE_URL: process.env.SUPABASE_URL || '',
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
       SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY || '',
       JWT_SECRET: process.env.JWT_SECRET || 'development-secret-key-that-is-not-secure',
       APP_URL: process.env.APP_URL || 'http://localhost:5173',
+      API_URL: process.env.API_URL || 'http://localhost:3000',
       LOG_LEVEL: (process.env.LOG_LEVEL as 'debug' | 'info' | 'warn' | 'error') || 'info',
+      DATABASE_URL: process.env.DATABASE_URL,
+      DB_TYPE: process.env.DB_TYPE || 'supabase',
       // Add other variables with defaults
     }
   }

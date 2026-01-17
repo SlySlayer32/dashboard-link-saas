@@ -1,29 +1,55 @@
 /**
  * Manual Data Route (Repository-Based)
- * 
+ *
  * API endpoints for manual data management using the repository pattern
  * Replaces direct Supabase queries with service layer abstraction
  */
 
-import { createContainerFromEnvironment, getWorkerRepository, initializeContainer } from '@dashboard-link/database';
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
-import { z } from 'zod';
-import { authMiddleware, type AuthContext } from '../middleware/auth';
+import {
+  createContainerFromEnvironment,
+  getWorkerRepository,
+  initializeContainer,
+} from '@dashboard-link/database'
+import { zValidator } from '@hono/zod-validator'
+import { Hono } from 'hono'
+import { z } from 'zod'
+import { env } from '../config/env'
+import { authMiddleware, type AuthContext } from '../middleware/auth'
 
 // Initialize container if not already done
 if (!process.env.DB_INITIALIZED) {
-  initializeContainer(createContainerFromEnvironment());
-  process.env.DB_INITIALIZED = 'true';
+  // Set environment variables for the database package
+  process.env.DB_TYPE = env.DB_TYPE
+  process.env.SUPABASE_URL = env.SUPABASE_URL
+  process.env.SUPABASE_SERVICE_KEY = env.SUPABASE_SERVICE_KEY
+  process.env.DB_CACHE_ENABLED = env.DB_CACHE_ENABLED?.toString() || 'false'
+  process.env.DB_CACHE_TTL = env.DB_CACHE_TTL?.toString() || '300'
+
+  // Use async initialization
+  createContainerFromEnvironment()
+    .then((containerConfig) => {
+      initializeContainer(containerConfig)
+      process.env.DB_INITIALIZED = 'true'
+    })
+    .catch((err) => {
+      console.error('Failed to initialize database container:', err)
+    })
 }
 
-const manualData = new Hono<AuthContext>();
-
-// Initialize repository
-const workerRepository = getWorkerRepository();
+const manualData = new Hono<AuthContext>()
 
 // All routes require authentication
-manualData.use('*', authMiddleware);
+manualData.use('*', authMiddleware)
+
+// Initialize repository lazily
+let workerRepository: ReturnType<typeof getWorkerRepository>
+
+function getWorkerRepo() {
+  if (!workerRepository) {
+    workerRepository = getWorkerRepository()
+  }
+  return workerRepository
+}
 
 // Validation schemas
 const createScheduleItemSchema = z.object({
@@ -32,8 +58,8 @@ const createScheduleItemSchema = z.object({
   endTime: z.string().datetime('End time must be a valid datetime'),
   type: z.enum(['shift', 'break', 'meeting', 'training']),
   notes: z.string().optional(),
-  metadata: z.record(z.any()).optional()
-});
+  metadata: z.record(z.any()).optional(),
+})
 
 const createTaskItemSchema = z.object({
   workerId: z.string().min(1, 'Worker ID is required'),
@@ -43,52 +69,58 @@ const createTaskItemSchema = z.object({
   dueDate: z.string().datetime('Due date must be a valid datetime').optional(),
   status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']),
   assignedBy: z.string().optional(),
-  metadata: z.record(z.any()).optional()
-});
+  metadata: z.record(z.any()).optional(),
+})
 
-const updateScheduleItemSchema = createScheduleItemSchema.partial();
-const updateTaskItemSchema = createTaskItemSchema.partial();
+const updateScheduleItemSchema = createScheduleItemSchema.partial()
+const updateTaskItemSchema = createTaskItemSchema.partial()
 
 /**
  * Get all schedule items for organization
  */
 manualData.get('/schedule', async (c) => {
-  const organizationId = c.get('organizationId');
-  const { startDate, endDate, workerId } = c.req.query();
-  
+  const organizationId = c.get('organizationId')
+  const { startDate, endDate, workerId } = c.req.query()
+
   try {
     // Return placeholder schedule data for now
-    const scheduleItems = [];
+    const scheduleItems = []
 
     return c.json({
       success: true,
-      data: scheduleItems
-    });
+      data: scheduleItems,
+    })
   } catch (error) {
-    return c.json({
-      success: false,
-      error: 'Failed to retrieve schedule items'
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: 'Failed to retrieve schedule items',
+      },
+      500
+    )
   }
-});
+})
 
 /**
  * Create a new schedule item
  */
 manualData.post('/schedule', zValidator('json', createScheduleItemSchema), async (c) => {
-  const organizationId = c.get('organizationId');
-  const userId = c.get('userId');
-  const scheduleData = c.req.valid('json');
-  
+  const organizationId = c.get('organizationId')
+  const userId = c.get('userId')
+  const scheduleData = c.req.valid('json')
+
   try {
     // Validate that the worker belongs to the organization
-    const worker = await workerRepository.findById(scheduleData.workerId);
-    
+    const worker = await getWorkerRepo().findById(scheduleData.workerId)
+
     if (!worker || worker.organizationId !== organizationId) {
-      return c.json({
-        success: false,
-        error: 'Worker not found or access denied'
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          error: 'Worker not found or access denied',
+        },
+        404
+      )
     }
 
     // Return placeholder for now
@@ -98,110 +130,128 @@ manualData.post('/schedule', zValidator('json', createScheduleItemSchema), async
       organizationId,
       createdBy: userId,
       createdAt: new Date(),
-      updatedAt: new Date()
-    };
+      updatedAt: new Date(),
+    }
 
-    return c.json({
-      success: true,
-      data: newScheduleItem
-    }, 201);
+    return c.json(
+      {
+        success: true,
+        data: newScheduleItem,
+      },
+      201
+    )
   } catch (error) {
-    return c.json({
-      success: false,
-      error: 'Failed to create schedule item'
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: 'Failed to create schedule item',
+      },
+      500
+    )
   }
-});
+})
 
 /**
  * Update a schedule item
  */
 manualData.put('/schedule/:id', zValidator('json', updateScheduleItemSchema), async (c) => {
-  const organizationId = c.get('organizationId');
-  const scheduleId = c.req.param('id');
-  const updateData = c.req.valid('json');
-  
+  const organizationId = c.get('organizationId')
+  const scheduleId = c.req.param('id')
+  const updateData = c.req.valid('json')
+
   try {
     // Return placeholder for now
     const updatedItem = {
       id: scheduleId,
       ...updateData,
-      updatedAt: new Date()
-    };
+      updatedAt: new Date(),
+    }
 
     return c.json({
       success: true,
-      data: updatedItem
-    });
+      data: updatedItem,
+    })
   } catch (error) {
-    return c.json({
-      success: false,
-      error: 'Failed to update schedule item'
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: 'Failed to update schedule item',
+      },
+      500
+    )
   }
-});
+})
 
 /**
  * Delete a schedule item
  */
 manualData.delete('/schedule/:id', async (c) => {
-  const organizationId = c.get('organizationId');
-  const scheduleId = c.req.param('id');
-  
+  const organizationId = c.get('organizationId')
+  const scheduleId = c.req.param('id')
+
   try {
     // Return placeholder for now
     return c.json({
       success: true,
-      message: 'Schedule item deleted successfully'
-    });
+      message: 'Schedule item deleted successfully',
+    })
   } catch (error) {
-    return c.json({
-      success: false,
-      error: 'Failed to delete schedule item'
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: 'Failed to delete schedule item',
+      },
+      500
+    )
   }
-});
+})
 
 /**
  * Get all task items for organization
  */
 manualData.get('/tasks', async (c) => {
-  const organizationId = c.get('organizationId');
-  const { status, priority, workerId, dueDate } = c.req.query();
-  
+  const organizationId = c.get('organizationId')
+  const { status, priority, workerId, dueDate } = c.req.query()
+
   try {
     // Return placeholder task data for now
-    const taskItems: unknown[] = [];
+    const taskItems: unknown[] = []
 
     return c.json({
       success: true,
-      data: taskItems
-    });
+      data: taskItems,
+    })
   } catch (error) {
-    return c.json({
-      success: false,
-      error: 'Failed to retrieve task items'
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: 'Failed to retrieve task items',
+      },
+      500
+    )
   }
-});
+})
 
 /**
  * Create a new task item
  */
 manualData.post('/tasks', zValidator('json', createTaskItemSchema), async (c) => {
-  const organizationId = c.get('organizationId');
-  const userId = c.get('userId');
-  const taskData = c.req.valid('json');
-  
+  const organizationId = c.get('organizationId')
+  const userId = c.get('userId')
+  const taskData = c.req.valid('json')
+
   try {
     // Validate that the worker belongs to the organization
-    const worker = await workerRepository.findById(taskData.workerId);
-    
+    const worker = await getWorkerRepo().findById(taskData.workerId)
+
     if (!worker || worker.organizationId !== organizationId) {
-      return c.json({
-        success: false,
-        error: 'Worker not found or access denied'
-      }, 404);
+      return c.json(
+        {
+          success: false,
+          error: 'Worker not found or access denied',
+        },
+        404
+      )
     }
 
     // Return placeholder for now
@@ -211,77 +261,89 @@ manualData.post('/tasks', zValidator('json', createTaskItemSchema), async (c) =>
       organizationId,
       assignedBy: userId,
       createdAt: new Date(),
-      updatedAt: new Date()
-    };
+      updatedAt: new Date(),
+    }
 
-    return c.json({
-      success: true,
-      data: newTaskItem
-    }, 201);
+    return c.json(
+      {
+        success: true,
+        data: newTaskItem,
+      },
+      201
+    )
   } catch (error) {
-    return c.json({
-      success: false,
-      error: 'Failed to create task item'
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: 'Failed to create task item',
+      },
+      500
+    )
   }
-});
+})
 
 /**
  * Update a task item
  */
 manualData.put('/tasks/:id', zValidator('json', updateTaskItemSchema), async (c) => {
-  const organizationId = c.get('organizationId');
-  const taskId = c.req.param('id');
-  const updateData = c.req.valid('json');
-  
+  const organizationId = c.get('organizationId')
+  const taskId = c.req.param('id')
+  const updateData = c.req.valid('json')
+
   try {
     // Return placeholder for now
     const updatedItem = {
       id: taskId,
       ...updateData,
-      updatedAt: new Date()
-    };
+      updatedAt: new Date(),
+    }
 
     return c.json({
       success: true,
-      data: updatedItem
-    });
+      data: updatedItem,
+    })
   } catch (error) {
-    return c.json({
-      success: false,
-      error: 'Failed to update task item'
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: 'Failed to update task item',
+      },
+      500
+    )
   }
-});
+})
 
 /**
  * Delete a task item
  */
 manualData.delete('/tasks/:id', async (c) => {
-  const organizationId = c.get('organizationId');
-  const taskId = c.req.param('id');
-  
+  const organizationId = c.get('organizationId')
+  const taskId = c.req.param('id')
+
   try {
     // Return placeholder for now
     return c.json({
       success: true,
-      message: 'Task item deleted successfully'
-    });
+      message: 'Task item deleted successfully',
+    })
   } catch (error) {
-    return c.json({
-      success: false,
-      error: 'Failed to delete task item'
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: 'Failed to delete task item',
+      },
+      500
+    )
   }
-});
+})
 
 /**
  * Get manual data statistics
  */
 manualData.get('/stats', async (c) => {
-  const organizationId = c.get('organizationId');
-  const { period } = c.req.query();
-  
+  const organizationId = c.get('organizationId')
+  const { period } = c.req.query()
+
   try {
     // Return placeholder stats for now
     const stats = {
@@ -289,35 +351,41 @@ manualData.get('/stats', async (c) => {
       totalTaskItems: 0,
       completedTasks: 0,
       pendingTasks: 0,
-      period: period || 'week'
-    };
+      period: period || 'week',
+    }
 
     return c.json({
       success: true,
-      data: stats
-    });
+      data: stats,
+    })
   } catch (error) {
-    return c.json({
-      success: false,
-      error: 'Failed to retrieve manual data statistics'
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: 'Failed to retrieve manual data statistics',
+      },
+      500
+    )
   }
-});
+})
 
 /**
  * Bulk import schedule items
  */
 manualData.post('/schedule/bulk', async (c) => {
-  const organizationId = c.get('organizationId');
-  const userId = c.get('userId');
-  const { items } = await c.req.json();
-  
+  const organizationId = c.get('organizationId')
+  const userId = c.get('userId')
+  const { items } = await c.req.json()
+
   try {
     if (!Array.isArray(items) || items.length === 0) {
-      return c.json({
-        success: false,
-        error: 'Invalid or empty items array'
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          error: 'Invalid or empty items array',
+        },
+        400
+      )
     }
 
     // Return placeholder results for now
@@ -327,38 +395,44 @@ manualData.post('/schedule/bulk', async (c) => {
       organizationId,
       createdBy: userId,
       createdAt: new Date(),
-      updatedAt: new Date()
-    }));
+      updatedAt: new Date(),
+    }))
 
     return c.json({
       success: true,
       data: {
         imported: results.length,
-        items: results
-      }
-    });
+        items: results,
+      },
+    })
   } catch (error) {
-    return c.json({
-      success: false,
-      error: 'Failed to bulk import schedule items'
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: 'Failed to bulk import schedule items',
+      },
+      500
+    )
   }
-});
+})
 
 /**
  * Bulk import task items
  */
 manualData.post('/tasks/bulk', async (c) => {
-  const organizationId = c.get('organizationId');
-  const userId = c.get('userId');
-  const { items } = await c.req.json();
-  
+  const organizationId = c.get('organizationId')
+  const userId = c.get('userId')
+  const { items } = await c.req.json()
+
   try {
     if (!Array.isArray(items) || items.length === 0) {
-      return c.json({
-        success: false,
-        error: 'Invalid or empty items array'
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          error: 'Invalid or empty items array',
+        },
+        400
+      )
     }
 
     // Return placeholder results for now
@@ -368,22 +442,25 @@ manualData.post('/tasks/bulk', async (c) => {
       organizationId,
       assignedBy: userId,
       createdAt: new Date(),
-      updatedAt: new Date()
-    }));
+      updatedAt: new Date(),
+    }))
 
     return c.json({
       success: true,
       data: {
         imported: results.length,
-        items: results
-      }
-    });
+        items: results,
+      },
+    })
   } catch (error) {
-    return c.json({
-      success: false,
-      error: 'Failed to bulk import task items'
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: 'Failed to bulk import task items',
+      },
+      500
+    )
   }
-});
+})
 
-export default manualData;
+export default manualData

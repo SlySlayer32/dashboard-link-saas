@@ -120,26 +120,26 @@ dashboard-link-saas/
 
 ## Development Priorities
 
-1. **Phase 1**: Core backend and admin dashboard
-   - Auth system
-   - Worker management
-   - SMS sending
-   - Manual plugin
-   
-2. **Phase 2**: Worker dashboard
-   - Mobile-optimized view
-   - Token validation
-   - Dashboard widgets
-   
-3. **Phase 3**: External plugins
-   - Google Calendar
-   - Airtable
-   - Notion
-   
-4. **Phase 4**: Advanced features
-   - Webhooks
-   - Analytics
-   - Performance optimization
+**For execution order and implementation details, see**:
+- [docs/MVP_QUICKSTART.md](MVP_QUICKSTART.md) - What to build for V1
+- [plan/PLAN_INDEX.md](../plan/PLAN_INDEX.md) - Step-by-step build order
+- [plan/1/PLAYBOOK_FOUNDATION_SETUP.md](../plan/1/PLAYBOOK_FOUNDATION_SETUP.md) - Foundation setup
+- [plan/2/PLAYBOOK_USER_FLOWS.md](../plan/2/PLAYBOOK_USER_FLOWS.md) - Core user flows
+
+**MVP V1 scope** (plan/1 + plan/2):
+- Auth system (Supabase)
+- Worker management (CRUD)
+- Google Calendar plugin (OAuth-based)
+- SMS sending (synchronous, MobileMessage.au)
+- Worker dashboard (mobile-optimized)
+- Manual data entry (backend API only, UI deferred)
+
+**Post-MVP** (plan/future/3-8, defer until revenue):
+- Additional plugins (Airtable, Notion, custom APIs)
+- Webhooks and real-time updates
+- Async processing (BullMQ queues)
+- Advanced billing and quotas
+- Performance optimization and SLOs
 
 ## Critical Success Factors
 

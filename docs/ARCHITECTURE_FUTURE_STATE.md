@@ -1,7 +1,13 @@
-# 🏗️ Dashboard Link SaaS - Enterprise Architecture Blueprint
+# 🔮 Dashboard Link SaaS - Future State Architecture
+
+> ⚠️ **THIS IS POST-MVP ARCHITECTURE**  
+> **For MVP builders**: See [MVP_QUICKSTART.md](MVP_QUICKSTART.md) instead. 90% of this document describes production-grade patterns for scale (queues, circuit breakers, SLOs, etc.) that are NOT required for V1.  
+> **When to read this**: After you have revenue and need to scale beyond 100 organizations.
+
+---
 
 > **Last Updated**: 2026-01-07  
-> **Status**: Production-Ready  
+> **Status**: Future-State (Post-MVP)  
 > **Architecture Style**: Event-Driven Multi-Tenant SaaS (Zapier-Inspired)  
 > **Compliance**: Enterprise-grade security, GDPR-ready, SOC2-aligned patterns
 

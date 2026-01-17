@@ -50,7 +50,7 @@ export class DIContainer {
     switch (database.type) {
       case 'supabase': {
         // Type assertion for Supabase client
-        return createSupabaseAdapter(database.connection as unknown, database.config || {})
+        return createSupabaseAdapter(database.connection as any, database.config || {})
       }
 
       case 'postgresql':
@@ -191,7 +191,7 @@ export function getSMSLogRepository(): SMSLogRepository {
 }
 
 // Factory for creating container with environment-based configuration
-export function createContainerFromEnvironment(): DIContainer {
+export async function createContainerFromEnvironment(): Promise<DIContainer> {
   const config: ContainerConfig = {
     database: {
       type: (process.env.DB_TYPE as 'supabase' | 'postgresql' | 'mock') || 'supabase',
@@ -208,12 +208,11 @@ export function createContainerFromEnvironment(): DIContainer {
   // Set up connection based on type
   if (config.database.type === 'supabase') {
     // Import Supabase client dynamically to avoid circular dependencies
-    void import('@supabase/supabase-js').then(({ createClient }) => {
-      config.database.connection = createClient(
-        process.env.SUPABASE_URL || '',
-        process.env.SUPABASE_SERVICE_KEY || ''
-      )
-    })
+    const { createClient } = await import('@supabase/supabase-js')
+    config.database.connection = createClient(
+      process.env.SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_KEY || ''
+    )
   }
 
   return new DIContainer(config)

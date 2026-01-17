@@ -1,153 +1,147 @@
 # CleanConnect Plan Index
 
+> **For MVP builders**: Focus on plan/1 and plan/2 only. Plans 3-8 are post-MVP.
+
 ## How to use
-- Use the numbered development order below as the default path.
-- Keep V1 scope tight unless a Needs decision item expands it.
-- Follow Zapier-style layering (core -> contracts -> adapters) and shared types.
-- Keep vendor SDKs in adapters only; routes call services and contracts.
+- **Start with**: [docs/MVP_QUICKSTART.md](../docs/MVP_QUICKSTART.md) for the big picture
+- **Then follow**: plan/1 → plan/2 (Foundation + Core Flows = MVP)
+- **Defer**: plan/future/* until after revenue/traction
+- Follow Zapier-style layering (core → contracts → adapters) and shared types
+- Keep vendor SDKs in adapters only; routes call services and contracts
 
-## Development order (start here)
+---
 
-1) Foundation setup (local dev works)
-	- plan/1/AREA_FOUNDATION_SETUP.md
-	- plan/1/PLAYBOOK_FOUNDATION_SETUP.md
-	- docs/SETUP_CHECKLIST.md
-	- ENV.example
+## 🚀 MVP SCOPE (Build This First)
 
-2) Core user flows (build the thin slice)
-	- plan/2/AREA_CORE_USER_FLOWS.md
-	- plan/2/PLAYBOOK_USER_FLOWS.md
-	- docs/V1_IMPLEMENTATION_CHECKLIST.md
+### 1) Foundation Setup (Local Dev Works)
+**Time**: 30-60 minutes  
+**Goal**: Get all apps running locally with Supabase
 
-3) Connectors and service boundaries (keep vendor churn isolated)
-	- plan/3/BACKEND_SERVICES.md
-	- plan/3/PLAYBOOK_CONNECTORS.md
+- [plan/1/AREA_FOUNDATION_SETUP.md](1/AREA_FOUNDATION_SETUP.md)
+- [plan/1/PLAYBOOK_FOUNDATION_SETUP.md](1/PLAYBOOK_FOUNDATION_SETUP.md)
+- [docs/SETUP_CHECKLIST.md](../docs/SETUP_CHECKLIST.md)
+- [ENV.example](../ENV.example)
 
-4) Data infra foundations (schemas, invariants, replay safety)
-	- plan/4/DATA_INFRA.md
-	- plan/4/PLAYBOOK_DATA_INFRA.md
+**Success**: Admin/Worker/API all boot, Supabase connected, migrations run
 
-5) Reliability + async (retries, jobs, rollout safety)
-	- plan/5/AREA_PLATFORM_RELIABILITY_ASYNC.md
-	- plan/5/PLAYBOOK_PLATFORM_RELIABILITY_ASYNC.md
+---
 
-6) Security + QA (RLS, lifecycle, correctness gates)
-	- plan/6/AREA_SECURITY_DATA_LIFECYCLE.md
-	- plan/6/PLAYBOOK_SECURITY_DATA_LIFECYCLE.md
+### 2) Core User Flows (Build the Thin Slice)
+**Time**: 2-3 weeks  
+**Goal**: Admin → Google Calendar → SMS → Worker dashboard
 
-7) Deployment, billing, ops (ship and run it)
-	- plan/7/AREA_DEPLOYMENT_BILLING_OPS.md
-	- plan/7/PLAYBOOK_DEPLOYMENT_BILLING_OPS.md
+- [plan/2/AREA_CORE_USER_FLOWS.md](2/AREA_CORE_USER_FLOWS.md)
+- [plan/2/PLAYBOOK_USER_FLOWS.md](2/PLAYBOOK_USER_FLOWS.md)
+- [docs/V1_IMPLEMENTATION_CHECKLIST.md](../docs/V1_IMPLEMENTATION_CHECKLIST.md)
 
-8) Decisions log (when something is ambiguous)
-	- plan/8/NEEDS_DECISIONS.md
-	- plan/8/PLAYBOOK_DECISIONS.md
+**Features**:
+- Admin UI: login, workers CRUD, Google Calendar OAuth, send SMS
+- API: auth, workers, organizations, plugin-manager, tokens, SMS
+- Worker UI: mobile dashboard with today's schedule
+- Google Calendar adapter (OAuth-based, read-only)
 
-## Migration note (2026-01-10)
-- Phase-based plan files in `plan/PHASE_*.md` were superseded by the area-based plans below and removed to keep a single source of truth.
+**Success**: End-to-end flow works - admin sends SMS, worker sees schedule
 
-## Docs reviewed
-- AGENTS.md
-- CHANGELOG.md
-- README.md
-- apps/AGENTS.md
-- apps/admin/AGENTS.md
-- apps/admin/src/AGENTS.md
-- apps/admin/src/components/AGENTS.md
-- apps/admin/src/docs/AGENTS.md
-- apps/admin/src/docs/AUTH_SETUP.md
-- apps/admin/src/hooks/AGENTS.md
-- apps/admin/src/lib/AGENTS.md
-- apps/admin/src/pages/AGENTS.md
-- apps/admin/src/services/AGENTS.md
-- apps/admin/src/store/AGENTS.md
-- apps/admin/src/test/AGENTS.md
-- apps/admin/src/types/AGENTS.md
-- apps/admin/src/utils/AGENTS.md
-- apps/api/AGENTS.md
-- apps/api/src/AGENTS.md
-- apps/api/src/config/AGENTS.md
-- apps/api/src/middleware/AGENTS.md
-- apps/api/src/routes/AGENTS.md
-- apps/api/src/services/AGENTS.md
-- apps/api/src/test/AGENTS.md
-- apps/api/src/types/AGENTS.md
-- apps/api/src/utils/AGENTS.md
-- apps/worker/AGENTS.md
-- apps/worker/src/AGENTS.md
-- apps/worker/src/components/AGENTS.md
-- apps/worker/src/hooks/AGENTS.md
-- apps/worker/src/lib/AGENTS.md
-- apps/worker/src/pages/AGENTS.md
-- docs/AGENTS.md
-- docs/ARCHITECTURE_BLUEPRINT.md
-- docs/ARCHITECTURE_RESEARCH_SUMMARY.md
-- docs/CORE_INFRA_PLAN.md
-- docs/PROJECT_FOUNDATION.md
-- docs/SETUP_CHECKLIST.md
-- docs/V1_IMPLEMENTATION_CHECKLIST.md
-- packages/AGENTS.md
-- packages/auth/AGENTS.md
-- packages/auth/src/AGENTS.md
-- packages/database/AGENTS.md
-- packages/database/migrations/AGENTS.md
-- packages/database/src/AGENTS.md
-- packages/plugins/AGENTS.md
-- packages/plugins/src/AGENTS.md
-- packages/plugins/src/__tests__/README.md
-- packages/shared/AGENTS.md
-- packages/shared/src/AGENTS.md
-- packages/sms/AGENTS.md
-- packages/sms/README.md
-- packages/sms/SECURITY_AND_PRODUCTION_NOTES.md
-- packages/sms/src/AGENTS.md
-- packages/tokens/AGENTS.md
-- packages/tokens/src/AGENTS.md
-- packages/ui/AGENTS.md
-- packages/ui/src/AGENTS.md
-- packages/ui/src/components/AGENTS.md
-- packages/ui/src/hooks/AGENTS.md
-- packages/ui/src/lib/AGENTS.md
-- packages/ui/src/test/AGENTS.md
-- packages/ui/src/tokens/AGENTS.md
-- packages/ui/src/utils/AGENTS.md
-- supabase/AGENTS.md
+---
 
-## Area-based plan files
-- plan/1/AREA_FOUNDATION_SETUP.md
-- plan/2/AREA_CORE_USER_FLOWS.md
-- plan/3/BACKEND_SERVICES.md
-- plan/4/DATA_INFRA.md
-- plan/5/AREA_PLATFORM_RELIABILITY_ASYNC.md
-- plan/6/AREA_SECURITY_DATA_LIFECYCLE.md
-- plan/7/AREA_DEPLOYMENT_BILLING_OPS.md
-- plan/8/NEEDS_DECISIONS.md
+## 🔮 POST-MVP (Defer Until Revenue)
 
-Each area file includes its definition of done; use those statements to gate progress to the next area.
+### 3) Connectors & Service Boundaries
+**When**: After 10+ paying organizations  
+**What**: Airtable, Notion, custom API connectors
 
-## Playbooks (canonical how-to)
-- plan/1/PLAYBOOK_FOUNDATION_SETUP.md
-- plan/2/PLAYBOOK_USER_FLOWS.md
-- plan/3/PLAYBOOK_CONNECTORS.md
-- plan/4/PLAYBOOK_DATA_INFRA.md
-- plan/5/PLAYBOOK_PLATFORM_RELIABILITY_ASYNC.md
-- plan/6/PLAYBOOK_SECURITY_DATA_LIFECYCLE.md
-- plan/7/PLAYBOOK_DEPLOYMENT_BILLING_OPS.md
-- plan/8/PLAYBOOK_DECISIONS.md
+- [plan/future/3/BACKEND_SERVICES.md](future/3/BACKEND_SERVICES.md)
+- [plan/future/3/PLAYBOOK_CONNECTORS.md](future/3/PLAYBOOK_CONNECTORS.md)
 
-## Global constraints
-- TypeScript everywhere, ESM modules, Zod validation for inputs.
-- Prefer shared types from @dashboard-link/shared.
-- Keep vendor SDKs in adapters under packages/*/src.
-- Keep services clean of vendor SDKs; use contracts and registries.
-- Follow the API response shape rule: return { success, data, error }.
+---
 
-## V1 acceptance criteria summary
-- Admin can sign up, create org, add workers, connect Google Calendar, and send a dashboard SMS.
-- Worker can open SMS link and see today's schedule and tasks from Google Calendar.
-- Tokens expire as configured; expired and invalid links show correct error states.
-- SMS logs are recorded per organization and visible in admin.
-- Core API routes and repositories have passing tests.
+### 4) Data Infrastructure Foundations
+**When**: Data quality issues surface  
+**What**: Schema versioning, invariants, replay safety
 
-## Decisions log
-See `plan/8/NEEDS_DECISIONS.md` for the canonical list and updates.
+- [plan/future/4/DATA_INFRA.md](future/4/DATA_INFRA.md)
+- [plan/future/4/PLAYBOOK_DATA_INFRA.md](future/4/PLAYBOOK_DATA_INFRA.md)
+
+---
+
+### 5) Reliability + Async Processing
+**When**: SMS delivery becomes bottleneck (>1000/day)  
+**What**: BullMQ queues, retries, dead letter queues, circuit breakers
+
+- [plan/future/5/AREA_PLATFORM_RELIABILITY_ASYNC.md](future/5/AREA_PLATFORM_RELIABILITY_ASYNC.md)
+- [plan/future/5/PLAYBOOK_PLATFORM_RELIABILITY_ASYNC.md](future/5/PLAYBOOK_PLATFORM_RELIABILITY_ASYNC.md)
+
+**See also**: [docs/ARCHITECTURE_FUTURE_STATE.md](../docs/ARCHITECTURE_FUTURE_STATE.md) for enterprise patterns
+
+---
+
+### 6) Security + QA
+**When**: Preparing for SOC2/compliance  
+**What**: Enhanced RLS policies, audit logging, GDPR compliance
+
+- [plan/future/6/AREA_SECURITY_DATA_LIFECYCLE.md](future/6/AREA_SECURITY_DATA_LIFECYCLE.md)
+- [plan/future/6/PLAYBOOK_SECURITY_DATA_LIFECYCLE.md](future/6/PLAYBOOK_SECURITY_DATA_LIFECYCLE.md)
+
+---
+
+### 7) Deployment, Billing, Ops
+**When**: First paying customer ready  
+**What**: Production deployment, Stripe integration, usage quotas
+
+- [plan/future/7/AREA_DEPLOYMENT_BILLING_OPS.md](future/7/AREA_DEPLOYMENT_BILLING_OPS.md)
+- [plan/future/7/PLAYBOOK_DEPLOYMENT_BILLING_OPS.md](future/7/PLAYBOOK_DEPLOYMENT_BILLING_OPS.md)
+
+---
+
+### 8) Decisions Log
+**When**: Facing architectural ambiguity  
+**What**: Document tradeoffs and decisions
+
+- [plan/future/8/NEEDS_DECISIONS.md](future/8/NEEDS_DECISIONS.md)
+- [plan/future/8/PLAYBOOK_DECISIONS.md](future/8/PLAYBOOK_DECISIONS.md)
+
+---
+
+## Global Constraints (All Plans)
+
+- **TypeScript everywhere**: ESM modules, strict mode enabled
+- **Validation**: Zod for all inputs (API routes, forms, adapters)
+- **Shared types**: Prefer types from `@dashboard-link/shared`
+- **Vendor isolation**: SDK calls ONLY in `packages/*/src` adapters, never in routes/UI
+- **API response shape**: Always return `{ success, data, error }` with stable error codes
+- **Multi-tenant**: Every query/service method scoped by `organizationId`
+- **Security**: Token expiry enforced, RLS policies as backstop
+
+---
+
+## V1 Acceptance Criteria (Definition of Done)
+
+**Functional**:
+- ✅ Admin can log in, manage workers, connect Google Calendar
+- ✅ Admin can send SMS link to worker
+- ✅ Worker receives SMS, clicks link, sees today's schedule
+- ✅ Expired/invalid tokens show friendly error message
+- ✅ No placeholder logic in critical paths (no TODOs blocking MVP)
+
+**Quality**:
+- ✅ API tests pass: `pnpm --filter @dashboard-link/api test`
+- ✅ No TypeScript errors: `pnpm typecheck`
+- ✅ Manual smoke test completes successfully
+
+**Deployment**:
+- ✅ Environment variables documented in `ENV.example`
+- ✅ Database migrations run cleanly on fresh database
+- ✅ Supabase RLS policies deployed
+
+---
+
+## Migration Notes
+
+### 2026-01-17: MVP Focus Reorganization
+- Moved plan/3-8 to plan/future/ to clarify MVP vs post-MVP scope
+- Consolidated PROJECT_FOUNDATION + V1_CHECKLIST into MVP_QUICKSTART.md
+- Reduced AGENTS.md files from 53 to 8 (deleted deeply nested ones)
+- Archived legacy docs (ARCHITECTURE_BLUEPRINT_OLD, CORE_INFRA_PLAN, RESEARCH_SUMMARY)
+
+### 2026-01-10: Phase → Area Migration  
+- Phase-based plan files in `plan/PHASE_*.md` were superseded by area-based plans and removed
