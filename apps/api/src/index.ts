@@ -4,6 +4,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
 import type { AppContext } from './types'
+import v1 from './v1' // Import versioned API
 
 // Import middleware and config
 import { validateRuntimeDependencies } from './config/env'
@@ -29,7 +30,9 @@ dotenv.config()
 // Validate critical environment variables
 validateRuntimeDependencies()
 
-const app = new Hono<AppContext>()
+const app = new Hono<{
+  Variables: AppContext['Variables']
+}>()
 
 // Middleware
 app.use('*', honoLogger())
@@ -61,7 +64,37 @@ app.get('/', (c) => {
 })
 
 app.get('/health', (c) => {
-  return c.json({ status: 'healthy' })
+  return c.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+  })
+})
+
+// Mount versioned API routes
+app.route('/api/v1', v1)
+
+// Support header versioning
+app.use('/api/*', async (c, next) => {
+  const version = c.req.header('API-Version')
+  if (version && c.req.path.startsWith('/api/')) {
+    // For now, default to v1 for any version header
+    // In production, you'd map versions to actual route handlers
+    const newPath = c.req.path.replace('/api/', '/api/v1/')
+
+    // Create a new request with the updated path
+    const url = new URL(c.req.url)
+    url.pathname = newPath
+
+    const newReq = new Request(url.toString(), {
+      method: c.req.method,
+      headers: c.req.header(),
+      body: c.req.raw.body,
+    })
+
+    return await app.fetch(newReq)
+  }
+  await next()
 })
 
 // Mount routes

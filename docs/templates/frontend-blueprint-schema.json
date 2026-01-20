@@ -1,0 +1,516 @@
+{
+  "_howToUse": {
+    "purpose": "This blueprint is a single source of truth for a frontend. Fill every section that applies. If unknown, use null + add a TODO with owner and due date.",
+    "requiredFieldsRule": "Fields marked with _required=true must be filled before production.",
+    "examplesRule": "Where you see _example, replace with your project's real values. Do not leave example values in production.",
+    "consistencyRule": "IDs referenced across sections (routes -> components -> api contracts -> events) must match exactly.",
+    "aiGuidance": "Write content so a coding agent can implement without guessing: include routes, data dependencies, error behavior, caching keys, and acceptance tests."
+  },
+
+  "meta": {
+    "_required": true,
+    "schemaVersion": "1.0.0",
+    "_schemaVersion_help": "Version of this blueprint schema itself. Increment when you change the template structure.",
+    "appName": "TODO: short product name",
+    "_appName_help": "Human-friendly name, e.g., 'Worker Dashboard', 'Admin Portal'.",
+    "frontendType": "web",
+    "_frontendType_help": "One of: web | mobile | desktop | extension.",
+    "repoPath": "TODO: path in repo (e.g., apps/worker)",
+    "owners": ["TODO: team or person"],
+    "_owners_help": "Who maintains the frontend. Include at least one owner.",
+    "lastUpdated": "YYYY-MM-DD",
+    "_lastUpdated_help": "Update whenever this blueprint changes.",
+    "environments": ["local", "staging", "prod"],
+    "_environments_help": "List all environments this frontend runs in."
+  },
+
+  "product": {
+    "_required": true,
+    "purpose": "TODO: one paragraph describing what this frontend does and why it exists",
+    "_purpose_help": "Should answer: what users get value, and what problem it solves.",
+    "primaryUsers": [
+      {
+        "_required": true,
+        "role": "TODO: role name (e.g., admin, worker, manager)",
+        "_role_help": "User persona that uses this frontend.",
+        "jobsToBeDone": [
+          "TODO: outcome-oriented statement (e.g., 'View today's tasks in under 10 seconds')"
+        ],
+        "_jobsToBeDone_help": "List the top 3-10 jobs, written as outcomes.",
+        "successCriteria": [
+          "TODO: measurable or observable success (e.g., 'Task list loads <2s on 4G')"
+        ],
+        "_successCriteria_help": "Used for acceptance tests and performance targets."
+      }
+    ],
+
+    "coreUserJourneys": [
+      {
+        "_required": true,
+        "id": "JOURNEY_001",
+        "_id_help": "Stable identifier. Never reuse IDs for different journeys.",
+        "name": "TODO: journey name (e.g., 'Open SMS link and view dashboard')",
+        "entryPoints": ["TODO: route or trigger (e.g., '/d/:token', 'navbar click', 'deep link')"],
+        "steps": [
+          {
+            "_required": true,
+            "step": 1,
+            "_step_help": "Sequential order.",
+            "route": "/TODO",
+            "_route_help": "Route that renders this step.",
+            "ui": ["TODO_COMPONENT_ID"],
+            "_ui_help": "Component IDs that appear in this step.",
+            "userAction": "TODO: what user does (tap, type, select)",
+            "systemAction": ["TODO: apiCallId OR stateChangeId OR analyticsEventId"],
+            "_systemAction_help": "Reference IDs defined elsewhere (api.contracts, state, analytics).",
+            "success": "TODO: success condition (what user sees)",
+            "errors": ["TODO_ERROR_CASE_ID"]
+          }
+        ]
+      }
+    ],
+
+    "nonGoals": ["TODO: what the frontend explicitly will NOT do (prevents scope creep)"]
+  },
+
+  "ux": {
+    "_required": true,
+    "designSystem": {
+      "_required": true,
+      "library": "TODO: Tailwind|MUI|Chakra|custom",
+      "_library_help": "The main UI toolkit. If custom, describe how tokens/components are managed.",
+      "tokens": {
+        "_required": true,
+        "colors": {
+          "primary": "#TODO",
+          "bg": "#TODO",
+          "_help": "Add semantic colors (success, warning, danger). Avoid raw names like 'blue500'."
+        },
+        "typography": {
+          "fontFamily": "TODO",
+          "scale": ["12", "14", "16", "20", "24", "32"],
+          "_help": "Use a consistent type scale so AI can standardize headings/body text."
+        },
+        "spacing": {
+          "baseUnit": 4,
+          "_help": "Base spacing unit in px. Common: 4 or 8."
+        },
+        "radii": { "sm": 6, "md": 12, "lg": 18 },
+        "shadows": {
+          "card": "TODO: css shadow string",
+          "_help": "Define card and modal shadows for consistent elevation."
+        }
+      },
+
+      "componentGuidelines": {
+        "_required": true,
+        "forms": "TODO: form layout, validation display, disable submit rules",
+        "tables": "TODO: table sorting, pagination, responsive behavior",
+        "emptyStates": "TODO: rules for when data is empty; must show CTA",
+        "errorStates": "TODO: inline vs toast vs full-page; wording rules",
+        "loadingStates": "TODO: skeletons vs spinners; minimum display time"
+      }
+    },
+
+    "informationArchitecture": {
+      "_required": true,
+      "navigationModel": "TODO: tabs|sidebar|stack|hybrid",
+      "_navigationModel_help": "Describe the primary navigation structure.",
+      "siteMap": [
+        {
+          "label": "TODO: menu label",
+          "route": "/TODO",
+          "access": ["TODO_ROLE"],
+          "_access_help": "Roles allowed to see this route in nav.",
+          "children": []
+        }
+      ]
+    },
+
+    "accessibility": {
+      "_required": true,
+      "target": "WCAG 2.1 AA",
+      "_target_help": "Minimum recommended for production: WCAG 2.1 AA.",
+      "keyboardNavigation": true,
+      "_keyboardNavigation_help": "True if all interactive controls are reachable by keyboard.",
+      "screenReaderNotes": ["TODO: aria-label rules, live region rules, focus management rules"],
+      "colorContrastNotes": ["TODO: minimum contrast ratios; link color rules"]
+    }
+  },
+
+  "architecture": {
+    "_required": true,
+    "framework": {
+      "_required": true,
+      "name": "TODO: React|Next.js|Vue|Svelte|RN",
+      "version": "TODO: exact version pinned in package.json",
+      "rendering": "TODO: CSR|SSR|SSG|ISR",
+      "routing": "TODO: react-router|next-app-router|expo-router",
+      "_help": "Fill rendering/routing because it affects data fetching patterns, caching, and auth."
+    },
+
+    "stateManagement": {
+      "_required": true,
+      "global": "TODO: Redux|Zustand|Jotai|none",
+      "serverState": "TODO: React Query|SWR|Apollo|none",
+      "formState": "TODO: React Hook Form|Formik|none",
+      "validation": "TODO: Zod|Yup|Valibot|none",
+      "_help": "This tells the AI how to implement forms, validation, and caching without improvising."
+    },
+
+    "dataFlow": {
+      "_required": true,
+      "pattern": "unidirectional",
+      "_pattern_help": "Common choices: unidirectional (React) or MVVM. Keep it consistent.",
+      "rules": [
+        "TODO: e.g., 'UI never calls fetch directly; must use apiClient'",
+        "TODO: e.g., 'Mutations must invalidate queries by key'",
+        "TODO: e.g., 'No cross-feature imports except shared/*'"
+      ]
+    },
+
+    "folderStructure": {
+      "_required": true,
+      "conventions": [
+        "feature-first",
+        "co-locate tests with files",
+        "no cross-feature imports except shared/*"
+      ],
+      "_conventions_help": "These rules prevent architecture drift.",
+      "tree": ["src/app", "src/features", "src/shared", "src/services", "src/assets", "src/tests"],
+      "_tree_help": "List primary folders so an AI can scaffold reliably."
+    }
+  },
+
+  "routing": {
+    "_required": true,
+    "basePath": "/",
+    "routes": [
+      {
+        "_required": true,
+        "id": "ROUTE_ID",
+        "_id_help": "Stable route identifier referenced by analytics, tests, and docs.",
+        "path": "/TODO",
+        "_path_help": "Use route params like /users/:id or /d/:token.",
+        "type": "page",
+        "layout": "LAYOUT_ID",
+        "title": "TODO: browser title",
+        "accessControl": {
+          "_required": true,
+          "authRequired": false,
+          "rolesAllowed": [],
+          "redirectIfDenied": "/login",
+          "_help": "If authRequired=false, explain what protects data (e.g., token in URL)."
+        },
+        "data": {
+          "queries": ["QUERY_ID"],
+          "prefetch": ["QUERY_ID"],
+          "blocking": ["QUERY_ID"],
+          "_help": "blocking = must finish before render; queries can render progressively."
+        },
+        "ui": {
+          "components": ["COMPONENT_ID"],
+          "emptyStates": ["EMPTY_STATE_ID"],
+          "loadingStates": ["LOADING_STATE_ID"],
+          "errorStates": ["ERROR_STATE_ID"]
+        },
+        "seo": {
+          "indexable": true,
+          "metaTags": [{ "name": "description", "content": "TODO" }]
+        }
+      }
+    ],
+
+    "layouts": [
+      {
+        "_required": true,
+        "id": "LAYOUT_ID",
+        "regions": ["header", "content", "footer"],
+        "guards": ["GUARD_ID"],
+        "_help": "Regions define layout slots and required UI."
+      }
+    ],
+
+    "guards": [
+      {
+        "_required": true,
+        "id": "GUARD_ID",
+        "logic": "TODO: exact decision logic in plain language",
+        "dependencies": ["authState", "tokenStorage"],
+        "failureBehavior": "redirect",
+        "_help": "Describe what happens on failure (redirect, 403, 404)."
+      }
+    ],
+
+    "navigation": {
+      "menus": [
+        {
+          "id": "MAIN_MENU",
+          "items": [
+            {
+              "label": "TODO",
+              "to": "/TODO",
+              "icon": "TODO (optional)",
+              "roles": ["TODO_ROLE"]
+            }
+          ]
+        }
+      ]
+    }
+  },
+
+  "components": {
+    "_required": true,
+    "componentCatalog": [
+      {
+        "_required": true,
+        "id": "COMPONENT_ID",
+        "_id_help": "Stable identifier; referenced by routes, stories, tests.",
+        "name": "ComponentName",
+        "type": "atom",
+        "_type_help": "atom|molecule|organism|page. Optional classification.",
+        "responsibilities": ["TODO: what this component does", "TODO: what it must NOT do"],
+        "props": [{ "name": "TODO", "type": "string|number|boolean|fn|object", "required": true }],
+        "states": ["default", "loading", "empty", "error", "disabled"],
+        "a11y": ["TODO: aria attributes, focus rules, keyboard interactions"],
+        "styleTokensUsed": ["colors.primary", "radii.md"],
+        "tests": ["TEST_ID"],
+        "stories": ["STORY_ID (optional)"]
+      }
+    ]
+  },
+
+  "state": {
+    "_required": true,
+    "auth": {
+      "_required": true,
+      "model": {
+        "isAuthenticated": "boolean",
+        "user": { "id": "string", "role": "string", "orgId": "string" },
+        "tokens": { "accessToken": "string|null", "refreshToken": "string|null" },
+        "_help": "If your app uses magic-link/token redemption, user may be null until redeemed."
+      },
+      "storage": {
+        "_required": true,
+        "strategy": "httpOnlyCookie",
+        "_strategy_help": "Best practice: httpOnly cookies for authenticated sessions when possible. For token links, store only after redemption.",
+        "keyNames": ["TODO: e.g., session", "csrf"],
+        "rotation": "TODO: how refresh/rotation works",
+        "logoutBehavior": "TODO: clear storage, invalidate session, redirect"
+      }
+    },
+
+    "clientCache": {
+      "_required": true,
+      "strategy": "react-query",
+      "staleTimes": { "defaultMs": 30000 },
+      "queryKeys": ["TODO: list canonical query keys (e.g., ['me'], ['dashboard', token])"],
+      "invalidationRules": [
+        "TODO: mutation -> invalidate keys (e.g., createWorker invalidates ['workers'])"
+      ]
+    }
+  },
+
+  "api": {
+    "_required": true,
+    "baseUrls": {
+      "local": "http://localhost:XXXX",
+      "staging": "https://TODO",
+      "prod": "https://TODO"
+    },
+
+    "client": {
+      "_required": true,
+      "library": "fetch",
+      "timeoutsMs": 15000,
+      "retry": {
+        "enabled": true,
+        "maxAttempts": 2,
+        "backoff": "exponential",
+        "retryOn": [408, 429, 500, 502, 503, 504],
+        "_help": "Retry rules must match backend idempotency. Do NOT retry non-idempotent POST unless idempotency key used."
+      },
+      "interceptors": [
+        "attach auth token (if applicable)",
+        "inject requestId header",
+        "map API errors to FrontendError model"
+      ]
+    },
+
+    "contracts": [
+      {
+        "_required": true,
+        "id": "API_CALL_ID",
+        "method": "GET",
+        "path": "/v1/TODO",
+        "auth": "required",
+        "_auth_help": "required|optional|none. If none, explain protection (e.g., link token).",
+        "request": {
+          "query": [{ "name": "TODO", "type": "string", "required": true }],
+          "headers": [{ "name": "x-request-id", "required": false }],
+          "body": null
+        },
+        "response": {
+          "successShape": { "data": {}, "meta": {} },
+          "errorShape": { "type": "string", "title": "string", "status": 400, "detail": "string" }
+        },
+        "frontendUsage": {
+          "_required": true,
+          "queryKey": ["TODO", "param"],
+          "cache": { "staleTimeMs": 0, "gcTimeMs": 300000 },
+          "invalidates": ["TODO_QUERY_KEY"],
+          "uiImpact": ["ROUTE_ID", "COMPONENT_ID"],
+          "_help": "This tells the AI exactly where this API is used and how caching behaves."
+        }
+      }
+    ]
+  },
+
+  "errorHandling": {
+    "_required": true,
+    "errorModel": {
+      "_required": true,
+      "kinds": [
+        "NetworkError",
+        "AuthError",
+        "ValidationError",
+        "RateLimitError",
+        "ServerError",
+        "UnknownError"
+      ],
+      "mappingRules": [
+        "401 -> AuthError -> forceLogout + redirect",
+        "429 -> RateLimitError -> show retry UI using Retry-After header",
+        "5xx -> ServerError -> show fallback + allow retry"
+      ],
+      "_help": "These rules must be implemented in apiClient + error boundary components."
+    },
+
+    "boundaries": [
+      {
+        "_required": true,
+        "scope": "route",
+        "component": "RouteErrorBoundary",
+        "behavior": "render error page",
+        "_help": "Define which boundaries exist and what they do."
+      }
+    ],
+
+    "offline": {
+      "_required": true,
+      "detection": "navigator.onLine + fetch failure",
+      "uiBehavior": "banner + cached last known state",
+      "_help": "Specify offline UX. Even a simple banner is valuable."
+    }
+  },
+
+  "performance": {
+    "_required": true,
+    "targets": {
+      "LCP_ms": 2500,
+      "TTI_ms": 3500,
+      "bundleSize_kb": 250,
+      "_help": "Set realistic budgets per app. Worker app often must be lighter than admin."
+    },
+    "strategy": {
+      "_required": true,
+      "codeSplitting": "route-based",
+      "imageOptimization": "modern formats + lazy loading",
+      "caching": "static assets long-cache, API short-cache",
+      "prefetching": ["prefetch critical queries after login", "prefetch next route on hover"]
+    }
+  },
+
+  "security": {
+    "_required": true,
+    "threatModel": ["XSS", "CSRF", "Token theft", "Open redirects"],
+    "_threatModel_help": "List realistic threats for your app. Keep it short but explicit.",
+    "controls": {
+      "_required": true,
+      "contentSecurityPolicy": "TODO: CSP string or policy description",
+      "xssMitigations": ["escape untrusted text", "avoid dangerouslySetInnerHTML"],
+      "csrf": "sameSite + csrf token if needed",
+      "secrets": "No secrets in client bundle; use env vars only for public config.",
+      "linkTokens": {
+        "_required": true,
+        "rules": [
+          "Use opaque token in URL (not JWT unless necessary)",
+          "Token expires quickly (e.g., 1-24h depending on sensitivity)",
+          "Do not log full token; mask it",
+          "Prevent token leakage via referrer policy (Referrer-Policy: no-referrer)",
+          "Optional: one-time redemption"
+        ],
+        "_help": "If your app uses SMS links, this section is critical."
+      }
+    }
+  },
+
+  "analytics": {
+    "_required": false,
+    "provider": "none",
+    "_provider_help": "If you track events, specify provider and event schema.",
+    "events": [
+      {
+        "id": "EVT_ID",
+        "name": "snake_case_event_name",
+        "properties": ["prop1", "prop2"],
+        "trigger": "TODO: when fired",
+        "pii": "none|masked|hashed",
+        "_help": "For production, document PII handling and event triggers."
+      }
+    ]
+  },
+
+  "i18n": {
+    "_required": false,
+    "enabled": false,
+    "defaultLocale": "en-AU",
+    "supportedLocales": ["en-AU"],
+    "strategy": "icu-messageformat",
+    "_help": "If disabled, keep this section minimal."
+  },
+
+  "testing": {
+    "_required": true,
+    "unit": {
+      "framework": "vitest",
+      "coverageTarget": 70,
+      "_help": "Specify minimum acceptable coverage and what must be tested."
+    },
+    "component": {
+      "framework": "testing-library",
+      "_help": "Storybook optional but recommended for UI-heavy apps."
+    },
+    "e2e": {
+      "framework": "playwright",
+      "smokePaths": ["/login", "/TODO"],
+      "_help": "Smoke paths must include the critical journey."
+    }
+  },
+
+  "release": {
+    "_required": true,
+    "ci": ["lint", "typecheck", "test", "build"],
+    "_help_ci": "List CI steps that must pass before deploy.",
+    "featureFlags": {
+      "provider": "none",
+      "flags": [
+        {
+          "id": "FF_FLAG_ID",
+          "default": false,
+          "owners": ["TODO"],
+          "_help": "Use flags for risky changes. If none, leave provider=none."
+        }
+      ]
+    },
+    "envVars": [
+      {
+        "name": "VITE_API_URL",
+        "required": true,
+        "secret": false,
+        "example": "http://localhost:8787/api",
+        "_help": "List every env var the frontend needs. Mark if secret."
+      }
+    ]
+  }
+}
