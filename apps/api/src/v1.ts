@@ -30,17 +30,6 @@ v1.use('*', async (c, next) => {
   await tenantMiddleware(c, next)
 })
 
-// Note: quotaMiddleware disabled for MVP - will be enabled post-MVP with Redis
-// Apply quota middleware to all v1 routes except auth and webhooks
-// v1.use('*', async (c, next) => {
-//   // Skip quota middleware for auth and webhook endpoints
-//   if (c.req.path.startsWith('/auth/') || c.req.path.startsWith('/webhooks/')) {
-//     await next()
-//     return
-//   }
-//   await quotaMiddleware(c, next)
-// })
-
 // Auth endpoints (public - no tenant middleware needed)
 v1.post('/auth/login', async (c) => {
   // Placeholder for login logic

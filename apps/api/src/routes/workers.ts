@@ -287,13 +287,9 @@ workers.post('/:id/deactivate', async (c) => {
 
 // Helper functions - using direct Supabase queries per spec T042 (MVP approach)
 
-async function getOrganizationId(userId: string): Promise<string> {
-  const { createClient } = await import('@supabase/supabase-js')
-  const supabase = createClient(
-    process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_KEY || ''
-  )
+import { supabase } from '../lib/db.js'
 
+async function getOrganizationId(userId: string): Promise<string> {
   const { data, error } = await supabase
     .from('users')
     .select('organization_id')

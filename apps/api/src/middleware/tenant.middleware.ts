@@ -32,11 +32,13 @@ export async function tenantMiddleware(c: Context, next: Next) {
         userId: c.get('userId'),
     });
 
-    await next();
+    try {
+        await next();
+    } finally {
+        // CRITICAL: Clear RLS context after request
+        await clearTenantContext();
 
-    // CRITICAL: Clear RLS context after request
-    await clearTenantContext();
-
-    // Clear logger context after request
-    logger.clearContext();
+        // Clear logger context after request
+        logger.clearContext();
+    }
 }
