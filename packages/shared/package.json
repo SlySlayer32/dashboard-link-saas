@@ -40,7 +40,8 @@
   },
   "dependencies": {
     "zod": "^3.22.4",
-    "hono": "^4.0.0"
+    "hono": "^4.0.0",
+    "libphonenumber-js": "^1.10.51"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",

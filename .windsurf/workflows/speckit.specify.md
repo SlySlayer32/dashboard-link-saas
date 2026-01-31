@@ -24,6 +24,45 @@ The text the user typed after `/speckit.specify` in the triggering message **is*
 
 Given that feature description, do this:
 
+0. **DETECT SPECIFICATION MODE** from user input (case-insensitive):
+
+   **Mode Detection Rules:**
+   - If input contains `mvp` or `v1` → **MVP MODE**
+   - If input contains `v2`, `v3`, `v4`, etc. → **ITERATION MODE**
+   - Otherwise → **FULL FEATURE MODE**
+
+   **Mode Definitions:**
+
+   **MVP MODE** (Keywords: `mvp`, `v1`):
+   - **Scope**: Identify and include ONLY the 3-5 most critical user stories (P1-P3 priority)
+   - **Quality**: Production-ready implementation for ALL included features
+     - Complete error handling with typed errors (no TODOs)
+     - Real integrations (no mocks in production code paths)
+     - Full security (authentication, authorization, input validation)
+     - All acceptance criteria must be met
+     - No placeholder code (no FIXME, TODO, console.log as implementation)
+   - **Deferred**: List entire features/user stories to defer (P4+), NOT implementation quality
+   - **Add to spec**: Create "MVP Scope" section listing:
+     - ✅ Included: [User Stories 1-3 with brief description]
+     - ❌ Deferred to V2: [User Stories 4-5+ with brief description]
+     - 📋 Quality Standard: "All included features are production-ready with complete implementations"
+
+   **ITERATION MODE** (Keywords: `v2`, `v3`, `v4`...):
+   - **Scope**: Add new features to existing MVP/previous version
+   - **Quality**: Same production-ready standard as MVP
+   - **Add to spec**: Create "Version Scope" section:
+     - 📦 This Version (V2/V3): [New user stories being added]
+     - ✅ Already Built: [Reference to MVP or previous version]
+     - 📋 Quality Standard: "All new features are production-ready with complete implementations"
+
+   **FULL FEATURE MODE** (No version keyword):
+   - **Scope**: Include all identified user stories
+   - **Quality**: Production-ready implementation for everything
+   - **Add to spec**: No special scope section needed
+
+   **CRITICAL**: The mode determines SCOPE (which features), NOT quality (how complete).
+   ALL modes require production-ready implementations with no placeholders.
+
 1. **Generate a concise short name** (2-4 words) for the branch:
    - Analyze the feature description and extract the most meaningful keywords
    - Create a 2-4 word short name that captures the essence of the feature
@@ -228,11 +267,22 @@ When creating this spec from a user prompt:
 
 **Examples of reasonable defaults** (don't ask about these):
 
-- Data retention: Industry-standard practices for the domain
-- Performance targets: Standard web/mobile app expectations unless specified
-- Error handling: User-friendly messages with appropriate fallbacks
-- Authentication method: Standard session-based or OAuth2 for web apps
-- Integration patterns: RESTful APIs unless specified otherwise
+- Data retention: Industry-standard practices for the domain (e.g., 7 years for financial, 90 days for logs)
+- Performance targets: Standard web/mobile expectations (API <500ms p99, dashboard <2s load on 3G)
+- Error handling: **Complete error handling** with typed errors, user-friendly messages, proper logging, and fallbacks
+- Authentication method: Standard OAuth2 or session-based for web apps with secure token storage
+- Integration patterns: RESTful APIs with proper error handling and retry logic
+- Implementation quality: **Production-ready code** - no TODOs, FIXMEs, mocks in production paths, or placeholder logic
+
+**CRITICAL DISTINCTION**:
+- ✅ Reasonable default: "Use OAuth2 for authentication" (complete implementation assumed)
+- ❌ NOT a reasonable default: "Basic auth for now, add OAuth2 later" (incomplete implementation)
+- ✅ Reasonable default: "Standard error handling with typed errors and logging" (complete)
+- ❌ NOT a reasonable default: "Basic error handling, improve later" (incomplete)
+
+**MVP vs Full Feature**:
+- MVP reduces **SCOPE** (fewer features) → "Include auth and workers, defer notifications"
+- MVP does NOT reduce **QUALITY** → "Complete auth with full error handling, not basic auth"
 
 ### Success Criteria Guidelines
 

@@ -28,46 +28,11 @@ export {
   type PasswordPolicy,
   type SessionConfig,
   type UserRole,
-  type ValidationError,
+  type ValidationError
 } from './auth.types'
 
-// Token types (avoid conflicts with auth.types)
-export {
-  type DatabaseProviderConfig,
-  type JWTProviderConfig,
-  type TokenAuditLog,
-  type TokenBlacklist,
-  type TokenCache,
-  type TokenConfig,
-  type TokenError,
-  type TokenEvent,
-  type TokenEventHandler,
-  type TokenExtractor,
-  type TokenGenerationOptions,
-  type TokenGenerator,
-  type TokenManager,
-  type TokenMiddlewareOptions,
-  type TokenMigration,
-  type TokenMigrationResult,
-  type TokenPayload,
-  type TokenProvider,
-  type TokenProviderCapabilities,
-  type TokenProviderFactory,
-  type TokenProviderMap,
-  type TokenProviderName,
-  type TokenRateLimit,
-  type TokenRateLimitResult,
-  type TokenRegistry,
-  type TokenResult,
-  type TokenSecurityConfig,
-  type TokenStats,
-  type TokenStorageOptions,
-  type TokenValidation,
-  type TokenValidator,
-  type WorkerTokenPayload,
-  type WorkerTokenResult,
-  type WorkerTokenValidation,
-} from './token.types'
+// Token types - Export all from token.types
+export * from './token.types'
 
 // SMS types - full export
 export * from './sms.types'
@@ -78,10 +43,18 @@ export * from './repository.types'
 // Payment types - full export
 export * from './payment.types'
 
+// MVP Core Types - Export all from new type files (avoid conflicts with repository.types)
+// These are already exported via repository.types, so we skip them to avoid conflicts
+// export * from './access-log'
+// export * from './data-source'
+// export * from './organization'
+export * from './schedule'
+// export * from './sms'  // Already exported via sms.types
+// export * from './token'  // Already exported via token.types
+// export * from './worker'  // Already exported via repository.types
+
 // Legacy simple types (avoid conflicts with .types.ts files)
 export type { DashboardWidget } from './dashboard'
-export type { Admin as LegacyAdmin, Organization as LegacyOrganization } from './organization'
-export type { Worker as LegacyWorker } from './worker'
 
 // Utility types with conflict resolution
 export {
@@ -91,7 +64,7 @@ export {
   AuthorizationError,
   ConflictError,
   NotFoundError,
-  RateLimitError,
+  RateLimitError
 } from './errors'
 
 export * from './hono'

@@ -4,7 +4,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
 import type { AppContext } from './types'
-import v1 from './v1' // Import versioned API
+import v1 from './v1'; // Import versioned API
 
 // Import middleware and config
 import { validateRuntimeDependencies } from './config/env'
@@ -12,17 +12,9 @@ import { cacheMiddleware, createCacheConfig } from './middleware/cache'
 import { errorHandler } from './middleware/error-handler'
 
 // Import routes
-import admin from './routes/admin'
-import auth from './routes/auth'
-import dashboard from './routes/dashboard'
 // import dashboards from './routes/dashboards'
-import manualData from './routes/manual-data'
-import organizations from './routes/organizations'
 // import plugins from './routes/plugins'
 // import tokens from './routes/tokens' // Temporarily disabled
-import sms from './routes/sms'
-import webhooks from './routes/webhooks'
-import { workers } from './routes/workers'
 
 // Load environment variables
 dotenv.config()
@@ -97,18 +89,8 @@ app.use('/api/*', async (c, next) => {
   await next()
 })
 
-// Mount routes
-app.route('/auth', auth)
-// app.route('/tokens', tokens) // Temporarily disabled
-app.route('/workers', workers)
-app.route('/organizations', organizations)
-// app.route('/plugins', plugins)
-// app.route('/dashboards', dashboards)
-app.route('/dashboard', dashboard)
-app.route('/sms', sms)
-app.route('/webhooks', webhooks)
-app.route('/admin', admin) // Admin routes with admin auth
-app.route('', manualData) // Manual data routes don't have a prefix
+// All routes are mounted under /api/v1/ (see line 75)
+// Do not mount routes at root level per spec T047
 
 // 404 handler
 app.notFound((c) => {

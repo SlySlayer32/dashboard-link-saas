@@ -49,8 +49,20 @@ description: "Task list template for feature implementation"
 **Purpose**: Project initialization and basic structure
 
 - [ ] T001 Create project structure per implementation plan
+  - Acceptance:
+    - [ ] All directories created as specified in plan.md
+    - [ ] Package manager initialized (package.json/requirements.txt/etc.)
+    - [ ] README.md created with setup instructions
 - [ ] T002 Initialize [language] project with [framework] dependencies
+  - Acceptance:
+    - [ ] All dependencies from plan.md installed
+    - [ ] Project builds/compiles successfully
+    - [ ] No version conflicts in dependency tree
 - [ ] T003 [P] Configure linting and formatting tools
+  - Acceptance:
+    - [ ] Linter config file exists (.eslintrc, .pylintrc, etc.)
+    - [ ] Formatter config file exists (.prettierrc, .editorconfig, etc.)
+    - [ ] Lint command runs without errors on empty project
 
 ---
 
@@ -63,11 +75,35 @@ description: "Task list template for feature implementation"
 Examples of foundational tasks (adjust based on your project):
 
 - [ ] T004 Setup database schema and migrations framework
+  - Acceptance:
+    - [ ] Migration tool configured (Alembic, Flyway, etc.)
+    - [ ] Initial migration created and can run
+    - [ ] Database connection verified
 - [ ] T005 [P] Implement authentication/authorization framework
+  - Acceptance:
+    - [ ] Auth middleware created and functional
+    - [ ] Token generation/validation implemented
+    - [ ] No placeholder/mock auth code
 - [ ] T006 [P] Setup API routing and middleware structure
+  - Acceptance:
+    - [ ] Router/app instance created
+    - [ ] Middleware stack configured (CORS, logging, etc.)
+    - [ ] Health check endpoint responds
 - [ ] T007 Create base models/entities that all stories depend on
+  - Acceptance:
+    - [ ] Base model class created with common fields
+    - [ ] Timestamp fields (created_at, updated_at) implemented
+    - [ ] Models can be imported by other modules
 - [ ] T008 Configure error handling and logging infrastructure
+  - Acceptance:
+    - [ ] Error handler middleware registered
+    - [ ] Structured logging configured
+    - [ ] Error responses follow standard format
 - [ ] T009 Setup environment configuration management
+  - Acceptance:
+    - [ ] .env.example file created with all required vars
+    - [ ] Config validation at startup implemented
+    - [ ] No hardcoded secrets in code
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -89,11 +125,43 @@ Examples of foundational tasks (adjust based on your project):
 ### Implementation for User Story 1
 
 - [ ] T012 [P] [US1] Create [Entity1] model in src/models/[entity1].py
+  - Acceptance:
+    - [ ] File exists at exact path
+    - [ ] All required fields defined with correct types
+    - [ ] Validation methods implemented (not stubbed)
+    - [ ] Exported and importable by services
 - [ ] T013 [P] [US1] Create [Entity2] model in src/models/[entity2].py
+  - Acceptance:
+    - [ ] File exists at exact path
+    - [ ] All required fields defined with correct types
+    - [ ] Relationships to other entities defined
+    - [ ] Exported and importable by services
 - [ ] T014 [US1] Implement [Service] in src/services/[service].py (depends on T012, T013)
+  - Acceptance:
+    - [ ] File exists at exact path
+    - [ ] All CRUD methods implemented (not stubbed)
+    - [ ] Uses real database/API (not mocks)
+    - [ ] Error handling with typed errors
+    - [ ] Exported and used by endpoints
 - [ ] T015 [US1] Implement [endpoint/feature] in src/[location]/[file].py
+  - Acceptance:
+    - [ ] File exists at exact path
+    - [ ] Endpoint registered in router
+    - [ ] Request validation implemented
+    - [ ] Calls service layer (not direct DB access)
+    - [ ] Returns standard response format
 - [ ] T016 [US1] Add validation and error handling
+  - Acceptance:
+    - [ ] Input validation for all endpoints
+    - [ ] Error responses follow standard format
+    - [ ] No silent failures or empty catch blocks
+    - [ ] User-friendly error messages
 - [ ] T017 [US1] Add logging for user story 1 operations
+  - Acceptance:
+    - [ ] Structured logging configured
+    - [ ] Key operations logged (create, update, delete)
+    - [ ] Logs include request context (user, tenant, etc.)
+    - [ ] No sensitive data in logs
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 

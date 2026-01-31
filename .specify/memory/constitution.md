@@ -200,12 +200,18 @@ Performance regressions >20% MUST be investigated and resolved before merge.
 - Each app (admin, worker, api) is independently deployable
 
 ### MVP Scope Discipline
-V1 MUST include only: Auth system, Worker management, Google Calendar plugin,
-SMS sending, Worker dashboard, Manual data entry backend. All other plugins,
-webhooks, async processing, circuit breakers, observability stacks, SLOs,
-disaster recovery, data lifecycle compliance, billing, and performance
-optimizations are deferred until revenue. NO exceptions without explicit
-business justification and constitutional amendment.
+**DEFINITION**: MVP (Minimum Viable Product) means **fewer features with production-ready quality**, NOT incomplete implementations.
+
+**V1/MVP MUST include**:
+- Reduced feature scope: Auth system, Worker management, Google Calendar plugin, SMS sending, Worker dashboard, Manual data entry backend
+- **Production-ready quality for ALL included features**:
+  - Complete implementations (no TODO, FIXME, placeholder code)
+  - Full error handling with typed errors
+  - Real integrations (no mocks in production code paths)
+  - Complete security (authentication, authorization, input validation)
+  - All acceptance criteria met
+- **Deferred Features (Entirely)**: All other plugins, webhooks, async processing, circuit breakers, observability stacks, SLOs, disaster recovery, data lifecycle compliance, billing, and performance optimizations are deferred until revenue.
+- **NO exceptions** without explicit business justification and constitutional amendment.
 
 ## Governance
 
