@@ -1,5 +1,13 @@
 ---
 description: Execute the implementation plan by processing and executing all tasks defined in tasks.md
+handoffs:
+  - label: Verify Implementation Quality
+    agent: speckit.verify
+    prompt: Verify the implementation meets quality standards
+    send: true
+  - label: Run Final Validation
+    agent: speckit.validate
+    prompt: Run comprehensive quality validation for deployment readiness
 ---
 
 ## User Input
@@ -103,33 +111,170 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Task details**: ID, description, file paths, parallel markers [P]
    - **Execution flow**: Order and dependency requirements
 
-6. Execute implementation following the task plan:
+6. **Load Implementation Context**:
+   - Read `.specify/memory/constitution.md` for awareness of quality standards
+   - Note key principles (will be enforced by `/speckit.verify` later):
+     - TypeScript strict mode
+     - Functions under 50 lines
+     - No placeholder code
+     - Explicit error handling
+     - Test coverage targets
+
+7. **Execute Implementation** (Phase-by-Phase):
+   
+   For each phase in tasks.md:
+   
+   ### Phase Execution Rules
    - **Phase-by-phase execution**: Complete each phase before moving to the next
-   - **Respect dependencies**: Run sequential tasks in order, parallel tasks [P] can run together  
+   - **Respect dependencies**: Run sequential tasks in order, parallel tasks [P] can run together
    - **Follow TDD approach**: Execute test tasks before their corresponding implementation tasks
    - **File-based coordination**: Tasks affecting the same files must run sequentially
-   - **Validation checkpoints**: Verify each phase completion before proceeding
-
-7. Implementation execution rules:
+   
+   ### Implementation Approach
    - **Setup first**: Initialize project structure, dependencies, configuration
-   - **Tests before code**: If you need to write tests for contracts, entities, and integration scenarios
+   - **Tests before code**: Write tests for contracts, entities, and integration scenarios
    - **Core development**: Implement models, services, CLI commands, endpoints
    - **Integration work**: Database connections, middleware, logging, external services
-   - **Polish and validation**: Unit tests, performance optimization, documentation
+   - **Polish**: Documentation, code cleanup, final touches
 
-8. Progress tracking and error handling:
+8. **Per-Task Implementation** (For each task):
+   
+   ### Implementation Steps
+   1. **Read task specification**:
+      - Understand what needs to be built
+      - Check acceptance criteria (if defined)
+      - Note file paths and requirements
+   
+   2. **Check if exists**:
+      - Verify if file already exists
+      - If exists, read current implementation
+      - Determine if needs creation or modification
+   
+   3. **Implement the code**:
+      - Create file at exact path specified
+      - Write complete, functional implementation
+      - Include all required functions/methods/components
+      - Add proper imports and exports
+      - Implement error handling
+      - Add necessary comments for complex logic
+   
+   4. **Wire integrations**:
+      - If creating service, import it in routes
+      - If creating middleware, register it in app
+      - If creating component, ensure it's importable
+      - Connect to database if needed
+      - Connect to external APIs if needed
+   
+   5. **Mark task complete**:
+      - Mark task [X] in tasks.md when implementation is written
+      - Note: Quality verification happens later in `/speckit.verify`
+   
+   ### What "Complete" Means for Implementation
+   - ✅ File created at correct path
+   - ✅ Code written (not just file created)
+   - ✅ All required functions/methods implemented
+   - ✅ Integrations wired up
+   - ✅ No obvious syntax errors
+   - ✅ **NO PLACEHOLDERS**: No `TODO`, `FIXME`, `@ts-ignore`, `console.log` (as impl), or mock data in production paths
+   - ✅ **NO "LATER"**: No commented out code or "implement this later" comments
+
+   **Note**: Detailed quality verification (placeholder detection, constitution compliance, testing) happens in `/speckit.verify` workflow.
+
+9. **Progress Tracking and Error Handling**:
    - Report progress after each completed task
-   - Halt execution if any non-parallel task fails
+   - Show which phase you're working on
+   - Halt execution if any non-parallel task fails to implement
    - For parallel tasks [P], continue with successful tasks, report failed ones
    - Provide clear error messages with context for debugging
    - Suggest next steps if implementation cannot proceed
-   - **IMPORTANT** For completed tasks, make sure to mark the task off as [X] in the tasks file.
+   - Mark task [X] when code is written (verification happens later)
 
-9. Completion validation:
-   - Verify all required tasks are completed
-   - Check that implemented features match the original specification
-   - Validate that tests pass and coverage meets requirements
-   - Confirm the implementation follows the technical plan
-   - Report final status with summary of completed work
+10. **Phase Completion Report** (After each phase):
+    
+    After completing all tasks in a phase:
+    
+    ```markdown
+    ## Phase [N] Complete: [PHASE NAME]
+    
+    - Tasks Implemented: [X] / [Total]
+    - Files Created: [X]
+    - Files Modified: [X]
+    
+    **Implementation Summary**:
+    [Brief summary of what was implemented]
+    
+    **Next Phase**: [Next phase name]
+    ```
+
+11. **Final Implementation Report** (After all phases complete):
+    
+    ```markdown
+    # Implementation Complete: [FEATURE NAME]
+    
+    **Date**: [DATE]
+    **Status**: All tasks implemented
+    
+    ## Summary
+    - Total Tasks: [X]
+    - Phases Completed: [X]
+    - Files Created: [X]
+    - Files Modified: [X]
+    
+    ## Phase Breakdown
+    
+    | Phase | Tasks | Status |
+    |-------|-------|--------|
+    | Phase 1: Setup | 10/10 | ✅ Complete |
+    | Phase 2: Foundation | 10/10 | ✅ Complete |
+    | Phase 3: User Story 1 | 18/18 | ✅ Complete |
+    | Phase 4: User Story 2 | 13/13 | ✅ Complete |
+    | Phase 5: User Story 3 | 12/12 | ✅ Complete |
+    
+    ## Implementation Highlights
+    
+    [Brief summary of key features implemented]
+    
+    ## Next Steps - IMPORTANT
+    
+    ⚠️ **Implementation is complete, but quality verification is required before deployment.**
+    
+    ### Recommended Workflow:
+    
+    1. **Run Quality Verification**:
+       ```
+       /speckit.verify
+       ```
+       This will check implementation quality against constitution standards and identify any issues.
+    
+    2. **Fix Any Issues Found**:
+       - Address critical issues
+       - Fix high priority issues
+       - Consider warnings
+    
+    3. **Re-verify After Fixes**:
+       ```
+       /speckit.verify
+       ```
+       Confirm all issues are resolved.
+    
+    4. **Run Final Validation**:
+       ```
+       /speckit.validate
+       ```
+       Comprehensive quality assurance and deployment readiness check.
+    
+    5. **Deploy** (only after validation PASS):
+       - Follow deployment checklist
+       - Monitor for issues
+       - Have rollback plan ready
+    
+    ## Notes
+    
+    - All code has been written and integrated
+    - Quality verification happens in separate workflows
+    - Do not deploy without running `/speckit.verify` and `/speckit.validate`
+    ```
 
 Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/speckit.tasks` first to regenerate the task list.
+
+**After implementation completes, ALWAYS recommend running `/speckit.verify` next.**

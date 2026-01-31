@@ -1,5 +1,5 @@
 import { getOrganizationRepository, getWorkerRepository } from '@dashboard-link/database'
-import { TenantContext, quotaMiddleware, tenantMiddleware } from '@dashboard-link/shared'
+import { TenantContext, tenantMiddleware } from '@dashboard-link/shared'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
@@ -28,16 +28,6 @@ v1.use('*', async (c, next) => {
     return
   }
   await tenantMiddleware(c, next)
-})
-
-// Apply quota middleware to all v1 routes except auth and webhooks
-v1.use('*', async (c, next) => {
-  // Skip quota middleware for auth and webhook endpoints
-  if (c.req.path.startsWith('/auth/') || c.req.path.startsWith('/webhooks/')) {
-    await next()
-    return
-  }
-  await quotaMiddleware(c, next)
 })
 
 // Auth endpoints (public - no tenant middleware needed)

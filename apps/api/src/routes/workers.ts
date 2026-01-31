@@ -8,8 +8,9 @@
 import { getWorkerRepository } from '@dashboard-link/database'
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
-import type { AppContext } from '../types'
 import { WorkerService } from '../services/WorkerService'
+import type { AppContext } from '../types'
+import { supabase } from '../lib/db.js'
 import { logger } from '../utils/logger.js'
 
 const workers = new Hono<AppContext>()
@@ -134,7 +135,7 @@ workers.post('/', async (c) => {
 })
 
 // Update worker
-workers.put('/:id', async (c) => {
+workers.patch('/:id', async (c) => {
   const id = c.req.param('id')
   const userId = c.get('userId')
   const body = await c.req.json()
@@ -285,17 +286,20 @@ workers.post('/:id/deactivate', async (c) => {
   }
 })
 
-// Helper functions (these would typically use other repositories/services)
+// Helper functions - using direct Supabase queries per spec T042 (MVP approach)
 
-async function getOrganizationId(_userId: string): Promise<string> {
-  // This would typically use AdminRepository to get the user's organization
-  // For now, we'll return a placeholder
-  // In a real implementation, you would:
-  // const adminRepo = getAdminRepository();
-  // const admin = await adminRepo.findByAuthUserId(userId);
-  // return admin.organizationId;
+async function getOrganizationId(userId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('organization_id')
+    .eq('id', userId)
+    .single()
 
-  throw new Error('Admin repository not yet implemented')
+  if (error || !data) {
+    throw new Error('User not found or not authorized')
+  }
+
+  return data.organization_id
 }
 
 async function createDefaultDashboard(workerId: string, organizationId: string) {
@@ -313,3 +317,4 @@ async function createDefaultDashboard(workerId: string, organizationId: string) 
 }
 
 export { workers }
+

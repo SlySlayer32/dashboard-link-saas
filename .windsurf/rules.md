@@ -30,6 +30,10 @@
 - Use stable error codes (no string-matching in clients)
 
 ### 4. Development Workflow
+- **SpecKit Workflows**: Use `/speckit.*` commands for feature development (specify → plan → tasks → implement → verify → validate)
+- **Implementation Discipline**: `/speckit.implement` writes code ONLY - quality verification happens in separate workflows
+- **Quality Enforcement**: ALWAYS run `/speckit.verify` after implementation to catch placeholder code, mocks, and constitution violations
+- **Deployment Gate**: MUST run `/speckit.validate` and receive PASS before deploying - this is non-negotiable
 - Follow `plan/PLAN_INDEX.md` execution order (don't skip prerequisites)
 - Read `AGENTS.md` first, then folder-specific `AGENTS.md`
 - Check docs/ARCHITECTURE_BLUEPRINT.md for patterns
@@ -152,10 +156,14 @@
 - Memory bank synchronized
 
 ### Before Deploy
+- **MANDATORY**: `/speckit.validate` PASS status received
 - All tests pass
 - Security review complete
 - Performance benchmarks met
 - Rollback plan documented
+- No placeholder code (TODO, FIXME, mocks, console.log)
+- Constitution compliance verified
+- Test coverage targets met (API 90%, React 85%, Utils 95%)
 
 ## Emergency Procedures
 
@@ -203,6 +211,46 @@
 - Error rate trends
 - User feedback integration
 
+## SpecKit Workflow Rules (CRITICAL)
+
+### Workflow Sequence (MUST FOLLOW)
+1. `/speckit.specify` - Create feature specification
+2. `/speckit.plan` - Generate technical plan
+3. `/speckit.tasks` - Generate task breakdown with acceptance criteria
+4. `/speckit.implement` - Write all code (no quality checks here)
+5. `/speckit.verify` - Verify quality (8 categories, read-only)
+6. `/speckit.validate` - Final QA and deployment decision
+
+### Implementation Rules (NON-NEGOTIABLE)
+- **NEVER mark tasks [X] without writing actual code**
+- **NEVER leave placeholder code** (TODO, FIXME, mocks, commented DB queries)
+- **NEVER skip verification** - `/speckit.verify` catches what implement misses
+- **NEVER deploy without validation PASS** - `/speckit.validate` is the final gate
+- **ALWAYS wire integrations** - services to routes, middleware to app, stores to components
+- **ALWAYS use real implementations** - no console.log instead of SMS, no mock auth in production paths
+
+### Quality Verification (ENFORCED)
+When `/speckit.verify` finds issues:
+1. Fix ALL critical issues immediately
+2. Fix high priority issues before proceeding
+3. Re-run `/speckit.verify` to confirm fixes
+4. Only proceed to `/speckit.validate` when verify passes
+
+### Deployment Gate (ABSOLUTE)
+- `/speckit.validate` provides binary PASS/FAIL decision
+- **PASS** = Deploy approved, all quality gates met
+- **FAIL** = Deployment blocked, must fix issues and re-validate
+- **NO exceptions** - if validation fails, code is not production-ready
+
+### Acceptance Criteria (REQUIRED)
+All tasks MUST include acceptance criteria:
+- File exists at exact path
+- All required methods/functions implemented
+- No placeholder code (TODO, FIXME, mocks)
+- Integration points wired up
+- TypeScript strict compliance
+- Tests written and passing (if required)
+
 ## Reminders
 
 - You're helping a non-technical founder - keep it simple
@@ -210,3 +258,4 @@
 - Document decisions for future reference
 - When in doubt, ask for clarification
 - Progress over perfection
+- **Quality over speed** - better to implement fewer tasks correctly than many tasks with placeholders

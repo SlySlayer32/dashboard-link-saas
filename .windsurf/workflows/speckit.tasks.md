@@ -72,10 +72,14 @@ The tasks.md should be immediately executable - each task must be specific enoug
 
 ### Checklist Format (REQUIRED)
 
-Every task MUST strictly follow this format:
+Every task MUST strictly follow this format with acceptance criteria:
 
 ```text
 - [ ] [TaskID] [P?] [Story?] Description with file path
+  - Acceptance:
+    - [ ] [Specific verification criterion 1]
+    - [ ] [Specific verification criterion 2]
+    - [ ] [Integration point if applicable]
 ```
 
 **Format Components**:
@@ -90,17 +94,43 @@ Every task MUST strictly follow this format:
    - User Story phases: MUST have story label
    - Polish phase: NO story label
 5. **Description**: Clear action with exact file path
+6. **Acceptance Criteria**: Specific, verifiable conditions that define "done"
+   - File exists at exact path
+   - All required methods/functions/components implemented
+   - **NO placeholder code** (TODO, FIXME, mocks, console.log as implementation)
+   - **NO commented-out logic** or "implement later" blocks
+   - Integration points wired up
+   - TypeScript strict compliance (if applicable)
+   - **Production-ready quality** regardless of MVP status
 
 **Examples**:
 
-- ✅ CORRECT: `- [ ] T001 Create project structure per implementation plan`
-- ✅ CORRECT: `- [ ] T005 [P] Implement authentication middleware in src/middleware/auth.py`
-- ✅ CORRECT: `- [ ] T012 [P] [US1] Create User model in src/models/user.py`
-- ✅ CORRECT: `- [ ] T014 [US1] Implement UserService in src/services/user_service.py`
-- ❌ WRONG: `- [ ] Create User model` (missing ID and Story label)
-- ❌ WRONG: `T001 [US1] Create model` (missing checkbox)
-- ❌ WRONG: `- [ ] [US1] Create User model` (missing Task ID)
-- ❌ WRONG: `- [ ] T001 [US1] Create model` (missing file path)
+- ✅ CORRECT:
+```markdown
+- [ ] T012 [P] [US1] Create User model in src/models/user.py
+  - Acceptance:
+    - [ ] File exists at src/models/user.py
+    - [ ] User class with id, email, name, created_at fields
+    - [ ] Validation methods implemented (not stubbed)
+    - [ ] Exported and importable by services
+```
+
+- ✅ CORRECT:
+```markdown
+- [ ] T040 [US1] Implement AuthService in apps/api/src/services/auth.service.ts
+  - Acceptance:
+    - [ ] File exists at exact path
+    - [ ] register(), login(), getCurrentUser() methods implemented
+    - [ ] Uses real Supabase client (not mocks)
+    - [ ] Error handling with typed errors
+    - [ ] TypeScript strict mode (no `any`)
+    - [ ] Exported and used by routes/auth.ts
+```
+
+- ❌ WRONG: `- [ ] Create User model` (missing ID, Story label, path, acceptance)
+- ❌ WRONG: `T001 [US1] Create model` (missing checkbox, path, acceptance)
+- ❌ WRONG: `- [ ] [US1] Create User model` (missing Task ID, path, acceptance)
+- ❌ WRONG: `- [ ] T001 [US1] Create model in src/models/user.py` (missing acceptance criteria)
 
 ### Task Organization
 
