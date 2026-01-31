@@ -1,9 +1,10 @@
 <!--
 Sync Impact Report:
-- Version change: 1.1.0 → 1.2.0 (minor: four new principles added for code quality,
-  testing, UX consistency, and performance)
+- Version change: 1.1.0 → 1.2.0 → 1.3.0 (minor: added maturity level guidance)
 - Modified principles: None (existing principles unchanged)
 - Added sections:
+  - Maturity Level Guidance (new top section)
+  - How to Use Maturity Levels with This Constitution
   - Core Principles VII. Code Quality & Maintainability
   - Core Principles VIII. Testing Standards & Discipline
   - Core Principles IX. User Experience Consistency
@@ -19,6 +20,51 @@ Sync Impact Report:
 -->
 
 # CleanConnect Constitution
+
+---
+
+## 📋 Maturity Level Guidance
+
+**Current Maturity Level**: V1 (Professional Product)
+
+This constitution is designed for a V1 maturity level product. For guidance on choosing and using maturity levels, see:
+- **Quick Reference**: [`.specify/templates/maturity-levels/README.md`](../.specify/templates/maturity-levels/README.md)
+- **Complete Guide**: [`.specify/docs/MATURITY_LEVELS_GUIDE.md`](../.specify/docs/MATURITY_LEVELS_GUIDE.md)
+
+### Available Maturity Level Templates
+
+If you need to adjust your maturity level, use these templates:
+- 🟢 **MVP** (4-6 weeks): [`.specify/templates/maturity-levels/mvp-constitution.md`](../.specify/templates/maturity-levels/mvp-constitution.md)
+- 🔵 **V1** (10-14 weeks): [`.specify/templates/maturity-levels/v1-constitution.md`](../.specify/templates/maturity-levels/v1-constitution.md)
+- 🟣 **V2** (18-24 weeks): [`.specify/templates/maturity-levels/v2-constitution.md`](../.specify/templates/maturity-levels/v2-constitution.md)
+- 🔴 **PRODUCTION** (26+ weeks): [`.specify/templates/maturity-levels/production-constitution.md`](../.specify/templates/maturity-levels/production-constitution.md)
+
+### How to Use Maturity Levels with This Constitution
+
+When specifying features for this project, ALWAYS reference the maturity level:
+
+```bash
+# Good ✅
+/speckit.specify Build [feature] following our V1 constitution constraints
+
+# Also Good ✅
+/speckit.plan Design [feature] per V1 maturity level in our constitution
+
+# Bad ❌ (too vague)
+/speckit.specify Build [feature] professionally
+```
+
+**Key V1 Constraints Applied to This Project**:
+- ✅ Professional UI/UX with shadcn/ui
+- ✅ Production-ready code quality
+- ✅ Comprehensive testing (unit + integration)
+- ✅ Real integrations (no mocks in production)
+- ✅ Complete error handling
+- ✅ Performance targets (see Principle X)
+- ❌ NO advanced features outside MVP scope (see MVP Scope Discipline)
+- ❌ NO premature optimization beyond V1 requirements
+
+---
 
 ## Core Principles
 
@@ -267,4 +313,4 @@ Technology choices are FIXED - alternatives require constitutional amendment.
 For runtime development guidance, refer to docs/PROJECT_FOUNDATION.md,
 docs/MVP_QUICKSTART.md, and docs/ARCHITECTURE_FUTURE_STATE.md (post-MVP).
 
-**Version**: 1.2.0 | **Ratified**: 2025-01-21 | **Last Amended**: 2026-01-21
+**Version**: 1.3.0 | **Ratified**: 2025-01-21 | **Last Amended**: 2026-01-31 | **Maturity Level**: V1
