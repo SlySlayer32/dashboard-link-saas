@@ -18,9 +18,8 @@ export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
  * Set tenant context for RLS policies
  */
 export async function setTenantContext(tenantId: string) {
-    await supabase.rpc('set_config', {
-        setting: 'app.tenant_id',
-        value: tenantId,
+    await supabase.rpc('set_tenant_id', {
+        tenant_id_value: tenantId,
     });
 }
 
@@ -28,8 +27,7 @@ export async function setTenantContext(tenantId: string) {
  * Clear tenant context
  */
 export async function clearTenantContext() {
-    await supabase.rpc('set_config', {
-        setting: 'app.tenant_id',
-        value: '',
+    await supabase.rpc('set_tenant_id', {
+        tenant_id_value: '',
     });
 }

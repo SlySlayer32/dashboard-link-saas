@@ -19,13 +19,3 @@ export interface UpdateWorkerDTO {
   phone_number?: string;
   calendar_email?: string;
 }
-
-export interface DashboardToken {
-  id: string;
-  token_hash: string;
-  worker_id: string;
-  organization_id: string;
-  expires_at: string;
-  revoked_at?: string;
-  created_at: string;
-}

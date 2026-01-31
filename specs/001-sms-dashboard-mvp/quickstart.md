@@ -98,10 +98,11 @@ supabase start
 # Apply initial schema migration
 supabase db push
 
-# Or manually run migrations
-psql postgresql://postgres:postgres@localhost:54322/postgres < supabase/migrations/001_initial_schema.sql
-psql postgresql://postgres:postgres@localhost:54322/postgres < supabase/migrations/002_rls_policies.sql
-psql postgresql://postgres:postgres@localhost:54322/postgres < supabase/migrations/003_indexes.sql
+# Or manually run migrations (use actual timestamped filenames)
+psql postgresql://postgres:postgres@localhost:54322/postgres < supabase/migrations/20260124231200_mvp_schema.sql
+psql postgresql://postgres:postgres@localhost:54322/postgres < supabase/migrations/20260124231201_rls_policies.sql
+psql postgresql://postgres:postgres@localhost:54322/postgres < supabase/migrations/20260124231202_indexes.sql
+psql postgresql://postgres:postgres@localhost:54322/postgres < supabase/migrations/20260131000000_tenant_context_function.sql
 
 # Verify tables created
 supabase db diff

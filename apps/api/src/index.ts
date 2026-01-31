@@ -40,11 +40,10 @@ app.use(
   })
 )
 
-// Apply caching to GET routes
-app.use('/workers', cacheMiddleware(createCacheConfig('workers')))
-app.use('/dashboard', cacheMiddleware(createCacheConfig('dashboard')))
-app.use('/dashboards/*', cacheMiddleware(createCacheConfig('dashboard')))
-app.use('/sms/logs', cacheMiddleware(createCacheConfig('sms-logs')))
+// Apply cache middleware to routes under /api/v1/
+app.use('/api/v1/workers', cacheMiddleware(createCacheConfig('workers')))
+app.use('/api/v1/dashboard', cacheMiddleware(createCacheConfig('dashboard')))
+app.use('/api/v1/dashboards/*', cacheMiddleware(createCacheConfig('dashboard')))
 
 // Health check
 app.get('/', (c) => {

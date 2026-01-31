@@ -10,6 +10,7 @@ import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 import { WorkerService } from '../services/WorkerService'
 import type { AppContext } from '../types'
+import { supabase } from '../lib/db.js'
 import { logger } from '../utils/logger.js'
 
 const workers = new Hono<AppContext>()
@@ -288,12 +289,6 @@ workers.post('/:id/deactivate', async (c) => {
 // Helper functions - using direct Supabase queries per spec T042 (MVP approach)
 
 async function getOrganizationId(userId: string): Promise<string> {
-  const { createClient } = await import('@supabase/supabase-js')
-  const supabase = createClient(
-    process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_KEY || ''
-  )
-
   const { data, error } = await supabase
     .from('users')
     .select('organization_id')
