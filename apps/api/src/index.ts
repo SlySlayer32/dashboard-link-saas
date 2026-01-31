@@ -44,7 +44,6 @@ app.use(
 app.use('/api/v1/workers', cacheMiddleware(createCacheConfig('workers')))
 app.use('/api/v1/dashboard', cacheMiddleware(createCacheConfig('dashboard')))
 app.use('/api/v1/dashboards/*', cacheMiddleware(createCacheConfig('dashboard')))
-app.use('/api/v1/sms/logs', cacheMiddleware(createCacheConfig('sms-logs')))
 
 // Health check
 app.get('/', (c) => {
