@@ -25,6 +25,6 @@ $$;
 
 -- Grant execute permissions to service_role only (not to authenticated users)
 -- This prevents authenticated users from arbitrarily changing tenant context
--- Only the backend API with service_role credentials can set tenant context
+-- Only services with service_role credentials (e.g., backend API) can set tenant context
 GRANT EXECUTE ON FUNCTION set_tenant_id(TEXT) TO service_role;
 GRANT EXECUTE ON FUNCTION get_tenant_id() TO authenticated;
