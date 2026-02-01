@@ -4,7 +4,7 @@
 **Maturity Level**: [MVP/V1/V2/PRODUCTION - from constitution]  
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
+**Note**: This template is typically filled in by the `/speckit.plan` command.
 
 <!--
   MATURITY LEVEL REMINDER:
@@ -49,7 +49,7 @@
 
 ### Maturity Level Alignment
 
-- [ ] Feature scope aligns with [MVP/V1/V2/Production] constraints
+- [ ] Feature scope aligns with [MVP/V1/V2/PRODUCTION] constraints
 - [ ] Tech stack choices match constitution requirements
 - [ ] Database table count within maturity level limits
 - [ ] Testing requirements match maturity level

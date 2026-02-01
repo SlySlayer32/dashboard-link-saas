@@ -231,13 +231,13 @@ cp .specify/templates/maturity-levels/production-constitution.md .specify/memory
 
 2. **Update AI context**:
 ```bash
-/speckit.constitution Use Production maturity level. Follow Production constraints strictly.
+/speckit.constitution Use PRODUCTION maturity level. Follow PRODUCTION constraints strictly.
 ```
 
 3. **Specify enterprise features**:
 ```bash
-/speckit.specify Add SSO/SAML following our Production constitution
-/speckit.specify Implement SOC2 compliance controls following our Production constitution
+/speckit.specify Add SSO/SAML following our PRODUCTION constitution
+/speckit.specify Implement SOC2 compliance controls following our PRODUCTION constitution
 ```
 
 ---
@@ -394,7 +394,7 @@ Don't move to V1 until MVP is validated. Don't move to V2 until V1 has customers
 If you have questions about maturity levels:
 1. Read the specific template for your level
 2. Check the examples in this README
-3. Ask your AI team: "What does our [MVP/V1/V2/Production] constitution say about [topic]?"
+3. Ask your AI team: "What does our [MVP/V1/V2/PRODUCTION] constitution say about [topic]?"
 
 ---
 

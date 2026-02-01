@@ -188,7 +188,7 @@ Production level is about **enterprise readiness**. You have a mature product (V
 When specifying features at Production level:
 
 ```bash
-/speckit.specify Build [enterprise feature] following our Production constitution. 
+/speckit.specify Build [enterprise feature] following our PRODUCTION constitution. 
 Include SSO integration, compliance controls, audit logging, multi-region support, 
 and comprehensive security testing.
 ```
@@ -405,7 +405,7 @@ When specifying a feature:
 ```markdown
 Feature: [Feature Name]
 
-Constitution: Production
+Constitution: PRODUCTION
 
 Enterprise Requirements: [Why enterprises need this]
 

@@ -324,17 +324,17 @@ cp .specify/templates/maturity-levels/production-constitution.md .specify/memory
 ### Step 2: Update AI Context
 
 ```bash
-/speckit.constitution Use Production maturity level for this project.
-We're enterprise-ready. Follow Production constraints: SSO/SAML required,
+/speckit.constitution Use PRODUCTION maturity level for this project.
+We're enterprise-ready. Follow PRODUCTION constraints: SSO/SAML required,
 SOC2 compliance mandatory, 99.9% SLA commitment, multi-region deployment.
 ```
 
 ### Step 3: Specify SSO Feature
 
 ```bash
-/speckit.specify Build SSO/SAML integration following our Production constitution.
+/speckit.specify Build SSO/SAML integration following our PRODUCTION constitution.
 
-Context: Production level - enterprise authentication requirements
+Context: PRODUCTION level - enterprise authentication requirements
 
 Feature: Enterprise SSO (SAML 2.0)
 
@@ -356,7 +356,7 @@ Security:
 - IP whitelisting per IdP
 - Comprehensive audit trail (immutable logs)
 
-Tech Stack (per Production constitution):
+Tech Stack (per PRODUCTION constitution):
 - WorkOS (enterprise auth platform) OR Auth0 Enterprise
 - Multi-region database (audit logs in all regions)
 - Advanced monitoring (track SSO success/failure rates)
@@ -378,9 +378,9 @@ Success: Enterprises can authenticate via their IdP, meeting security requiremen
 ### Step 4: Specify GDPR Compliance
 
 ```bash
-/speckit.specify Build GDPR compliance dashboard following our Production constitution.
+/speckit.specify Build GDPR compliance dashboard following our PRODUCTION constitution.
 
-Context: Production level - legal and compliance requirements
+Context: PRODUCTION level - legal and compliance requirements
 
 Feature: GDPR compliance tools
 
@@ -417,13 +417,13 @@ Success: Full GDPR compliance, enterprise customers satisfied
 ### Step 5: Plan & Implement
 
 ```bash
-/speckit.plan Design SSO integration per Production constitution with 
+/speckit.plan Design SSO integration per PRODUCTION constitution with 
 multi-IdP support, security hardening, compliance documentation, and DR testing
 
 /speckit.tasks Break down SSO implementation. Include security tests,
 compliance verification, and multi-region deployment tasks.
 
-/speckit.implement Build SSO system per Production constitution
+/speckit.implement Build SSO system per PRODUCTION constitution
 ```
 
 **Result**: Production-grade enterprise platform. 2000+ customers including Fortune 500. $500K+ MRR.

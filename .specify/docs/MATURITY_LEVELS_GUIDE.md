@@ -466,7 +466,7 @@ Use this template every time:
 ```markdown
 Feature: [Name]
 
-Maturity Level: [MVP/V1/V2/Production]
+Maturity Level: [MVP/V1/V2/PRODUCTION]
 
 Context: Following our [level] constitution
 

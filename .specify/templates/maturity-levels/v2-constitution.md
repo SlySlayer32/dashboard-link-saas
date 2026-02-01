@@ -399,8 +399,8 @@ Replace the V2 section in `.specify/memory/constitution.md` with the Production 
 ### Step 2: Update Maturity Level
 
 ```bash
-/speckit.constitution Use Production maturity level for this project. 
-Follow Production constraints strictly.
+/speckit.constitution Use PRODUCTION maturity level for this project. 
+Follow PRODUCTION constraints strictly.
 ```
 
 ### Step 3: Specify Enterprise Features
