@@ -3,7 +3,21 @@
 **Feature Branch**: `[###-feature-name]`  
 **Created**: [DATE]  
 **Status**: Draft  
+**Maturity Level**: [MVP/V1/V2/PRODUCTION - from constitution]  
 **Input**: User description: "$ARGUMENTS"
+
+<!--
+  MATURITY LEVEL GUIDANCE:
+  Check your constitution (.specify/memory/constitution.md) for your current maturity level.
+  This determines what features/complexity are appropriate for this spec.
+  
+  🟢 MVP: 1 core feature, basic implementation, no integrations
+  🔵 V1: 3-5 features, professional quality, payments, teams
+  🟣 V2: 8-12 features, integrations, analytics, API
+  🔴 PRODUCTION: Enterprise features, SSO, compliance, SLA
+  
+  If unsure, see: .specify/templates/maturity-levels/README.md
+-->
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -18,6 +32,12 @@
   - Tested independently
   - Deployed independently
   - Demonstrated to users independently
+  
+  MATURITY LEVEL CHECK:
+  - MVP: Typically 1-2 user stories maximum (focus on ONE core feature)
+  - V1: 3-5 user stories (complete, polished features)
+  - V2: 5-8 user stories (advanced, differentiated features)
+  - Production: 8+ user stories (enterprise requirements included)
 -->
 
 ### User Story 1 - [Brief Title] (Priority: P1)

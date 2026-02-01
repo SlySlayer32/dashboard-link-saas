@@ -5,10 +5,46 @@ description: "Task list template for feature implementation"
 
 # Tasks: [FEATURE NAME]
 
+**Maturity Level**: [MVP/V1/V2/PRODUCTION - from constitution]  
 **Input**: Design documents from `/specs/[###-feature-name]/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
+<!--
+  MATURITY LEVEL IMPACT ON TASKS:
+  
+  🟢 MVP Tasks Should:
+  - Focus on core functionality only
+  - Skip tests (unless explicitly required in spec)
+  - Use simple implementations (no premature optimization)
+  - Manual processes acceptable (no automation tasks)
+  - NO integration tasks (Zapier, Slack, etc.)
+  - Max 5 database tables
+  
+  🔵 V1 Tasks Should:
+  - Include comprehensive testing tasks (unit + integration)
+  - Professional error handling and validation
+  - Monitoring and logging setup
+  - Payment integration if relevant
+  - Team/collaboration features
+  
+  🟣 V2 Tasks Should:
+  - Include integration setup (Zapier, Slack, webhooks)
+  - API endpoint tasks for third-party developers
+  - Advanced analytics and reporting
+  - Performance optimization tasks
+  - Caching layer setup
+  
+  🔴 PRODUCTION Tasks Should:
+  - Include compliance tasks (GDPR, SOC2 controls)
+  - SSO/SAML integration tasks
+  - Multi-region deployment tasks
+  - Advanced security hardening
+  - Audit logging for all actions
+  
+  Reference: .specify/templates/maturity-levels/README.md
+-->
+
+**Tests**: The examples below include test tasks. Tests are OPTIONAL for MVP, REQUIRED for V1+. Only include them if appropriate for your maturity level or explicitly requested in the feature specification.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 

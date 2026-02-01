@@ -273,6 +273,23 @@ docker-compose up -d
 
 The project follows a Zapier-style architecture (see [Architecture Blueprint](./docs/ARCHITECTURE_BLUEPRINT.md)).
 
+### 🎯 Maturity-Level Development System
+
+This project uses **maturity-level driven development** to ensure AI development teams build exactly what's needed at each stage:
+
+- **[Maturity Levels Guide](./.specify/docs/MATURITY_LEVELS_GUIDE.md)** – Complete guide for non-technical founders
+- **[Example Workflows](./.specify/docs/EXAMPLE_WORKFLOWS.md)** – Real-world examples of using maturity levels
+- **[Constitution Templates](./.specify/templates/maturity-levels/)** – MVP, V1, V2, and Production templates
+
+**Current Maturity**: V1 (Professional Product)
+
+When working with AI tools (GitHub Copilot, Windsurf, Claude), always reference the maturity level:
+```bash
+/speckit.specify Build [feature] following our V1 constitution constraints
+```
+
+This ensures consistent quality and prevents over-engineering. See the guides above for details.
+
 
 - **[Architecture](./docs/ARCHITECTURE.md)** – System design
 - **[Development Guide](./docs/DEVELOPMENT_ENVIRONMENT.md)** – Local setup

@@ -1,9 +1,18 @@
 # Implementation Plan: [FEATURE]
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]  
+**Maturity Level**: [MVP/V1/V2/PRODUCTION - from constitution]  
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
+**Note**: This template is typically filled in by the `/speckit.plan` command.
+
+<!--
+  MATURITY LEVEL REMINDER:
+  Check .specify/memory/constitution.md for current maturity level constraints.
+  This plan MUST align with that maturity level's technology and scope constraints.
+  
+  Reference: .specify/templates/maturity-levels/README.md for details
+-->
 
 ## Summary
 
@@ -15,6 +24,13 @@
   ACTION REQUIRED: Replace the content in this section with the technical details
   for the project. The structure here is presented in advisory capacity to guide
   the iteration process.
+  
+  MATURITY LEVEL GUIDANCE:
+  Ensure tech stack choices align with your maturity level from constitution:
+  - MVP: Free tiers, simple stack, max 5 database tables
+  - V1: Pro tiers, full testing, proper monitoring
+  - V2: Auto-scaling, advanced monitoring, caching layers
+  - PRODUCTION: Multi-region, enterprise infrastructure, compliance
 -->
 
 **Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
@@ -31,7 +47,17 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+### Maturity Level Alignment
+
+- [ ] Feature scope aligns with [MVP/V1/V2/PRODUCTION] constraints
+- [ ] Tech stack choices match constitution requirements
+- [ ] Database table count within maturity level limits
+- [ ] Testing requirements match maturity level
+- [ ] Performance targets appropriate for maturity level
+- [ ] NO features from higher maturity levels included
+- [ ] Integrations appropriate for maturity level
+
+[Additional gates determined based on constitution file]
 
 ## Project Structure
 
