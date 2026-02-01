@@ -3,7 +3,7 @@
 **Feature Branch**: `[###-feature-name]`  
 **Created**: [DATE]  
 **Status**: Draft  
-**Maturity Level**: [MVP/V1/V2/Production - from constitution]  
+**Maturity Level**: [MVP/V1/V2/PRODUCTION - from constitution]  
 **Input**: User description: "$ARGUMENTS"
 
 <!--

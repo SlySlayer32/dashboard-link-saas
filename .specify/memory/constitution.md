@@ -28,16 +28,16 @@ Sync Impact Report:
 **Current Maturity Level**: V1 (Professional Product)
 
 This constitution is designed for a V1 maturity level product. For guidance on choosing and using maturity levels, see:
-- **Quick Reference**: [`.specify/templates/maturity-levels/README.md`](../.specify/templates/maturity-levels/README.md)
-- **Complete Guide**: [`.specify/docs/MATURITY_LEVELS_GUIDE.md`](../.specify/docs/MATURITY_LEVELS_GUIDE.md)
+- **Quick Reference**: [`.specify/templates/maturity-levels/README.md`](../templates/maturity-levels/README.md)
+- **Complete Guide**: [`.specify/docs/MATURITY_LEVELS_GUIDE.md`](../docs/MATURITY_LEVELS_GUIDE.md)
 
 ### Available Maturity Level Templates
 
 If you need to adjust your maturity level, use these templates:
-- 🟢 **MVP** (4-6 weeks): [`.specify/templates/maturity-levels/mvp-constitution.md`](../.specify/templates/maturity-levels/mvp-constitution.md)
-- 🔵 **V1** (10-14 weeks): [`.specify/templates/maturity-levels/v1-constitution.md`](../.specify/templates/maturity-levels/v1-constitution.md)
-- 🟣 **V2** (18-24 weeks): [`.specify/templates/maturity-levels/v2-constitution.md`](../.specify/templates/maturity-levels/v2-constitution.md)
-- 🔴 **PRODUCTION** (26+ weeks): [`.specify/templates/maturity-levels/production-constitution.md`](../.specify/templates/maturity-levels/production-constitution.md)
+- 🟢 **MVP** (4-6 weeks): [`.specify/templates/maturity-levels/mvp-constitution.md`](../templates/maturity-levels/mvp-constitution.md)
+- 🔵 **V1** (10-14 weeks): [`.specify/templates/maturity-levels/v1-constitution.md`](../templates/maturity-levels/v1-constitution.md)
+- 🟣 **V2** (18-24 weeks): [`.specify/templates/maturity-levels/v2-constitution.md`](../templates/maturity-levels/v2-constitution.md)
+- 🔴 **PRODUCTION** (26+ weeks): [`.specify/templates/maturity-levels/production-constitution.md`](../templates/maturity-levels/production-constitution.md)
 
 ### How to Use Maturity Levels with This Constitution
 
@@ -61,7 +61,7 @@ When specifying features for this project, ALWAYS reference the maturity level:
 - ✅ Real integrations (no mocks in production)
 - ✅ Complete error handling
 - ✅ Performance targets (see Principle X)
-- ❌ NO advanced features outside MVP scope (see MVP Scope Discipline)
+- ❌ NO advanced features outside V1 scope (see MVP Scope Discipline)
 - ❌ NO premature optimization beyond V1 requirements
 
 ---

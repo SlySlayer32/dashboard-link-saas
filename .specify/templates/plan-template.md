@@ -1,7 +1,7 @@
 # Implementation Plan: [FEATURE]
 
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]  
-**Maturity Level**: [MVP/V1/V2/Production - from constitution]  
+**Maturity Level**: [MVP/V1/V2/PRODUCTION - from constitution]  
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
@@ -30,10 +30,9 @@
   - MVP: Free tiers, simple stack, max 5 database tables
   - V1: Pro tiers, full testing, proper monitoring
   - V2: Auto-scaling, advanced monitoring, caching layers
-  - Production: Multi-region, enterprise infrastructure, compliance
+  - PRODUCTION: Multi-region, enterprise infrastructure, compliance
 -->
 
-**Maturity Level**: [MVP/V1/V2/Production]  
 **Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
 **Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
 **Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
