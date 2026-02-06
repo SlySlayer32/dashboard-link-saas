@@ -1,316 +1,186 @@
-<!--
-Sync Impact Report:
-- Version change: 1.1.0 → 1.2.0 → 1.3.0 (minor: added maturity level guidance)
-- Modified principles: None (existing principles unchanged)
-- Added sections:
-  - Maturity Level Guidance (new top section)
-  - How to Use Maturity Levels with This Constitution
-  - Core Principles VII. Code Quality & Maintainability
-  - Core Principles VIII. Testing Standards & Discipline
-  - Core Principles IX. User Experience Consistency
-  - Core Principles X. Performance Requirements & Optimization
-  - Development Workflow: Code Review Standards (new subsection)
-  - Development Workflow: Performance Validation (new subsection)
-- Removed sections: None
-- Templates requiring updates:
-  ✅ .specify/templates/plan-template.md (performance goals already present)
-  ✅ .specify/templates/spec-template.md (success criteria align with new principles)
-  ✅ .specify/templates/tasks-template.md (test tasks and polish phase align)
-- Follow-up TODOs: None
--->
+# CleanConnect — Development Constitution v2.0.0
 
-# CleanConnect Constitution
+> Non-negotiable rules guiding all code, design, and AI-agent decisions.
+> Detailed implementation examples live in `docs/` and feature `plan.md` files — not here.
 
 ---
 
-## 📋 Maturity Level Guidance
+## 1. Core Principles
 
-**Current Maturity Level**: V1 (Professional Product)
+1. **Multi-Tenant Isolation** — Every DB query MUST be scoped by `organization_id`. Enforced via Supabase RLS + application-layer checks.
+2. **Mobile-First** — Worker dashboards MUST be optimised for phone screens (touch targets ≥44px, base font ≥16px).
+3. **Plugin Extensibility** — All external integrations MUST implement the `IAdapter` interface and be registered in the `PluginRegistry`.
+4. **Security by Default** — Secrets in env vars only; JWT validated on every request; never expose internal errors to clients.
+5. **Type Safety** — TypeScript `strict: true` everywhere; no `any` without `@ts-expect-error` + justification.
+6. **Explicit Error Handling** — No empty catch blocks; categorise errors as transient vs permanent; use structured error responses (RFC 7807).
 
-This constitution is designed for a V1 maturity level product. For guidance on choosing and using maturity levels, see:
-- **Quick Reference**: [`.specify/templates/maturity-levels/README.md`](../templates/maturity-levels/README.md)
-- **Complete Guide**: [`.specify/docs/MATURITY_LEVELS_GUIDE.md`](../docs/MATURITY_LEVELS_GUIDE.md)
+---
 
-### Available Maturity Level Templates
+## 2. Code Quality
 
-If you need to adjust your maturity level, use these templates:
-- 🟢 **MVP** (4-6 weeks): [`.specify/templates/maturity-levels/mvp-constitution.md`](../templates/maturity-levels/mvp-constitution.md)
-- 🔵 **V1** (10-14 weeks): [`.specify/templates/maturity-levels/v1-constitution.md`](../templates/maturity-levels/v1-constitution.md)
-- 🟣 **V2** (18-24 weeks): [`.specify/templates/maturity-levels/v2-constitution.md`](../templates/maturity-levels/v2-constitution.md)
-- 🔴 **PRODUCTION** (26+ weeks): [`.specify/templates/maturity-levels/production-constitution.md`](../templates/maturity-levels/production-constitution.md)
+- **TypeScript strict mode** (`strict`, `noUncheckedIndexedAccess`, `noImplicitReturns`) in all `tsconfig.json`.
+- **Explicit return types** on all exported functions.
+- **Functions ≤50 lines**; files ≤500 lines.
+- **Named exports** only (no default exports except Vite entry points).
+- **SOLID principles**; dependency injection for DB, cache, and queue clients.
+- **JSDoc** on all public functions with `@param`, `@returns`, `@throws`.
+- **Zod validation** on every API endpoint (body, query, path params).
 
-### How to Use Maturity Levels with This Constitution
+### File Naming
 
-When specifying features for this project, ALWAYS reference the maturity level:
+| Type | Convention | Example |
+|------|-----------|---------|
+| Component | `PascalCase.tsx` | `WorkerDashboard.tsx` |
+| Utility | `camelCase.ts` | `formatPhoneNumber.ts` |
+| Types | `PascalCase.types.ts` | `Worker.types.ts` |
+| Test | `*.test.ts` / `*.spec.ts` | `auth.test.ts` |
 
-```bash
-# Good ✅
-/speckit.specify Build [feature] following our V1 constitution constraints
+---
 
-# Also Good ✅
-/speckit.plan Design [feature] per V1 maturity level in our constitution
+## 3. Security & Multi-Tenancy
 
-# Bad ❌ (too vague)
-/speckit.specify Build [feature] professionally
+### Tenant Isolation (CRITICAL)
+
+- **Database**: Supabase RLS on ALL tenant-scoped tables with `organization_id` filter.
+- **Application**: Extract `org_id` from JWT; pass as query filter (defense-in-depth).
+- **Cache**: Namespace Redis keys as `{entity}:{tenantId}:{id}`.
+
+### Authentication
+
+- **Admin**: Email/password → Supabase Auth → JWT (access 15min, refresh 7d).
+- **Worker**: Tokenised URL → no login (dashboard token 1–24hr, configurable per org).
+- JWT MUST contain `sub`, `org_id`, `role`, `exp`, `jti` (revocation).
+- Validate signature, expiry, and tenant match on every request.
+
+### Secrets
+
+- All secrets in environment variables; `.env` files never committed.
+- `.env.example` with dummy values for documentation.
+- Never log secrets, full phone numbers, or raw JWTs.
+
+---
+
+## 4. Architecture
+
+### Tech Stack (Fixed)
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Vite + React 18 + shadcn/ui + Tailwind + Zustand + TanStack Query |
+| API | Hono.js (TypeScript) |
+| Database | Supabase (PostgreSQL + Auth + RLS) |
+| SMS | MobileMessage.com.au (Basic Auth) |
+| Monorepo | Turborepo + pnpm |
+
+### Repo Structure
+
+```
+apps/admin/    — Admin dashboard (Vite + React)
+apps/worker/   — Worker mobile dashboard (Vite + React)
+apps/api/      — Hono.js API
+packages/shared/   — Shared types & utilities
+packages/plugins/  — Plugin adapter system
+packages/auth/     — Auth helpers
+packages/database/ — DB client & migrations
 ```
 
-**Key V1 Constraints Applied to This Project**:
-- ✅ Professional UI/UX with shadcn/ui
-- ✅ Production-ready code quality
-- ✅ Comprehensive testing (unit + integration)
-- ✅ Real integrations (no mocks in production)
-- ✅ Complete error handling
-- ✅ Performance targets (see Principle X)
-- ❌ NO advanced features outside V1 scope (see MVP Scope Discipline)
-- ❌ NO premature optimization beyond V1 requirements
+### Plugin Contract (Minimal)
+
+Every adapter MUST implement: `initialize`, `healthCheck`, `shutdown`, `validateConfig`, `getConfigSchema`.
+Schedule providers additionally implement `getSchedule`.
+Adapters MUST return standardised `AdapterError` with `code`, `message`, `retryable`.
+
+### API Design
+
+- RESTful: `GET/POST/PUT/PATCH/DELETE /api/v1/{resource}`.
+- Standard envelope: `{ data, meta?: { pagination, requestId }, links? }`.
+- Error format: RFC 7807 (`type`, `title`, `status`, `detail`, `instance`).
+- Cursor-based pagination (never offset-based).
+- HTTP status codes: 200/201/204/400/401/403/404/429/500/503.
 
 ---
 
-## Core Principles
+## 5. Error Handling
 
-### I. Mobile-First Worker Experience
-Every feature MUST prioritize the mobile worker experience. Workers access
-dashboards via SMS links on phones, not desktops. UI MUST be optimized for
-mobile screens, touch interactions, and intermittent connectivity. No
-desktop-only worker features.
+- External API calls MUST have timeouts (30s default) and retry with exponential backoff (max 3–5 attempts).
+- Categorise errors: network/429/5xx → transient (retry); 400/401/403 → permanent (fail fast).
+- When external service is unavailable, return cached data with `stale: true` flag, or queue for later.
+- Never expose stack traces or internal messages to API consumers.
 
-### II. Secure Tokenized & Auditable Access
-All dashboard links MUST use time-limited tokens (1hr-24hr expiry). Tokens MUST
-NOT require worker login. Security MUST include tenant isolation via RLS,
-encrypted data in transit, audit logging, rate limiting, and webhook signature
-verification for PUSH integrations.
+---
 
-### III. Plugin-Based Extensibility & Resilience
-The system MUST use a plugin adapter pattern for all external integrations.
-Each plugin MUST implement the base adapter interface, handle its own
-authentication, and support PULL (fetch) and PUSH (webhook) patterns. Post-MVP,
-adapters MUST include versioned contracts, health checks, rate limiting,
-standardized error codes, and circuit breaker + retry protection. Core plugins:
-Manual Entry, Google Calendar, Airtable, Notion.
+## 6. Testing
 
-### IV. SMS-First Delivery
-SMS is the primary delivery mechanism for dashboard links. The system MUST
-track delivery status, log all SMS for audit, support custom messages, handle
-bulk sending, and include rate limiting per organization. Post-MVP, SMS
-delivery MUST use queued processing with retries and dead letter handling to
-ensure reliability. SMS provider is MobileMessage.com.au for Australian rates.
+| Scope | Coverage Target | What to Test |
+|-------|----------------|-------------|
+| Unit | 80% minimum | Business logic, validation schemas, utilities, adapters (mocked) |
+| Integration | Key flows | API endpoints, DB operations (test DB) |
+| E2E | Critical paths | Sign up → create worker → send SMS → view dashboard |
 
-### V. Simple Admin Experience
-Admin setup MUST be completable in under 2 minutes. Configuration flows MUST be
-intuitive for non-technical users. Plugin setup SHOULD require minimal steps
-(OAuth preferred over API keys) to reduce friction. All admin interfaces MUST
-provide clear feedback and error messages.
+- Use Vitest (configured in `vitest.workspace.ts`).
+- Test files co-located or in `tests/` per package.
 
-### VI. Observable & Resilient by Default
-Production systems MUST emit structured logs with request and tenant context
-and capture metrics and traces for core workflows. Post-MVP, the platform MUST
-define SLIs/SLOs (availability, latency, SMS delivery) with error budgets and
-use queues, retries, and circuit breakers to prevent cascading failures.
-Disaster recovery targets for production MUST meet RTO < 1 hour and
-RPO < 5 minutes.
+---
 
-### VII. Code Quality & Maintainability
-All code MUST be written in TypeScript with strict mode enabled - no JavaScript
-in source files. Code MUST follow single responsibility principle with functions
-under 50 lines and files under 500 lines. Shared logic MUST be extracted to
-packages/shared/ or packages/ui/. All public APIs MUST have TypeScript
-interfaces with JSDoc comments. Code MUST use meaningful variable names (no
-single letters except loop indices). Error handling MUST be explicit with typed
-errors - no silent failures or generic catch blocks. Dependency injection MUST
-be used for testability. Circular dependencies are FORBIDDEN. All configuration
-MUST be externalized via environment variables with validation at startup.
+## 7. Database
 
-**Rationale**: Maintainable code reduces technical debt, enables faster feature
-development, and prevents bugs. TypeScript provides type safety that catches
-errors at compile time. Small, focused functions are easier to test and reason
-about.
+- Supabase migrations in `supabase/migrations/` (SQL, timestamped).
+- RLS policies on: `organizations`, `workers`, `plugins`, `sms_logs`, `dashboards`.
+- Indexes on `organization_id`, `created_at`, `status` for all tenant-scoped tables.
+- Avoid N+1 queries; use joins or batch fetches.
+- Result set limits: default 20, max 100.
+- GDPR: soft-delete with 30-day retention, then anonymise/hard-delete.
 
-### VIII. Testing Standards & Discipline
-All features MUST include tests before merging to main. Test coverage targets:
-API endpoints 90%+, React components 85%+, utility functions 95%+. Tests MUST
-follow the testing pyramid: many unit tests, fewer integration tests, minimal
-E2E tests. Unit tests MUST be fast (<100ms each) and isolated with no external
-dependencies. Integration tests MUST use test databases and mock external APIs.
-Contract tests MUST validate API request/response schemas. Tests MUST be
-organized by feature in parallel with source structure. Test names MUST clearly
-describe what is being tested and expected behavior (Given-When-Then format).
-Flaky tests MUST be fixed immediately or removed. All tests MUST pass before
-deployment - no exceptions.
+---
 
-**Rationale**: Tests prevent regressions, enable confident refactoring, and
-serve as living documentation. The testing pyramid balances coverage with speed.
-Fast, reliable tests encourage frequent execution during development.
+## 8. Observability
 
-### IX. User Experience Consistency
-All UI components MUST use shadcn/ui patterns with Tailwind CSS - no custom CSS
-frameworks. Mobile interfaces MUST have touch targets ≥44px and font sizes
-≥16px to prevent zoom. Loading states MUST be shown for operations >200ms.
-Error messages MUST be user-friendly with actionable guidance (not technical
-stack traces). Forms MUST validate on blur with inline error messages. Success
-feedback MUST be immediate and clear. Navigation MUST be consistent across
-admin and worker apps. Keyboard navigation and screen reader support MUST work
-for all interactive elements. Color contrast MUST meet WCAG AA standards
-(4.5:1 for text). Empty states MUST guide users toward next actions.
+- Structured JSON logs with: `timestamp`, `level`, `message`, `service`, `requestId`, `tenantId`.
+- Log all HTTP requests, errors (with stack), external API calls, and security events.
+- Never log: passwords, API keys, full phone numbers, raw JWTs.
 
-**Rationale**: Consistent UX reduces cognitive load and training time. Mobile
-optimization ensures workers can use the system effectively in the field.
-Accessibility ensures the platform is usable by all workers regardless of
-ability.
+---
 
-### X. Performance Requirements & Optimization
-API endpoints MUST respond in <500ms at p99 for all CRUD operations. Dashboard
-page load MUST complete in <2s on 3G mobile connections. Database queries MUST
-use indexes for all WHERE, JOIN, and ORDER BY clauses. N+1 queries are
-FORBIDDEN - use eager loading or batching. API responses MUST use pagination
-for collections >100 items. Images MUST be optimized and served via CDN with
-lazy loading. Bundle sizes MUST be monitored - admin app <500KB, worker app
-<300KB (gzipped). React components MUST use memo/useMemo for expensive
-computations. Unnecessary re-renders MUST be eliminated. Database connection
-pools MUST be configured for expected load. Cache headers MUST be set for
-static assets (1 year) and API responses (appropriate TTL).
+## 9. Forbidden Patterns
 
-**Rationale**: Performance directly impacts user satisfaction and operational
-costs. Mobile workers often have limited bandwidth and older devices. Fast
-responses reduce frustration and increase productivity. Efficient resource
-usage reduces infrastructure costs.
+1. DB query without `organization_id` scope.
+2. `any` type without `@ts-expect-error` justification.
+3. Hardcoded secrets or credentials.
+4. Exposing internal error messages to API consumers.
+5. Offset-based pagination.
+6. Empty catch blocks.
+7. `console.log` in production code paths (use structured logger).
 
-## Technology Constraints
+---
 
-### Fixed Technology Stack
-- Frontend: Vite + React 18 + shadcn/ui + Tailwind + Zustand + TanStack Query
-- Backend: Hono.js (NOT Express/Fastify) - chosen for 5x smaller memory footprint and TypeScript-first design
-- Database: Supabase (PostgreSQL) - chosen for built-in RLS, Auth, Storage, and Realtime
-- SMS: MobileMessage.com.au (Australia) - chosen for 2¢/SMS intro rate, no monthly fees
-- Monorepo: Turborepo (NOT Nx) - chosen for simpler configuration and faster setup
-- Deployment: Frontend on Vercel, Backend/DB on Supabase
+## 10. MVP vs Future Scope
 
-### Architecture Requirements
-- Multi-tenant by design with organization isolation at ALL layers and resource
-  quotas per plan (post-MVP)
-- Zapier-style plugin architecture with adapter registry and versioned
-  contracts
-- Event-driven processing for reliability (post-MVP) using queues and dead
-  letter handling
-- Circuit breakers + retry policies for external integrations (post-MVP)
-- API versioning with URL pattern: /api/v1/, /api/v2/
-- Security defense-in-depth (OAuth 2.0/JWT, rate limiting, audit logging,
-  webhook signature verification for PUSH)
-- Observability baseline: structured logs, metrics, tracing, SLI/SLOs with error
-  budgets (post-MVP)
-- Data lifecycle compliance (GDPR-ready retention, deletion, audit trails) for
-  production (post-MVP)
-- Disaster recovery readiness for production (RTO < 1 hour, RPO < 5 minutes)
-- TypeScript throughout - no JavaScript in source files
+Rules above apply at **all phases**. The following are **deferred until post-MVP** (do NOT implement for V1):
 
-## Development Workflow
+- BullMQ job queues (MVP uses synchronous SMS sending)
+- Circuit breakers (MVP uses simple try/catch + timeout)
+- Prometheus metrics & SLO monitoring
+- Redis caching layers
+- Blue/green & canary deployments
+- S3/Glacier log archival
+- Distributed tracing (OpenTelemetry)
+- Webhook push processing
+- Resource quota enforcement per plan tier
 
-### Quality Gates
-- All API endpoints MUST have proper error responses
-- Observability hooks (structured logs + core metrics) MUST exist for all core
-  API flows before production releases
-- Mobile views MUST be tested on actual phones
-- Token expiry MUST work correctly in all scenarios
-- SMS service MUST have test mode for development
-- Plugin connections MUST handle failures gracefully
-- Test coverage targets: API 90%+, React 85%+, Utils 95%+
+When these are needed, add them as feature specs via `/speckit.specify` — not by expanding this constitution.
 
-### Code Review Standards
-All pull requests MUST be reviewed before merging. Reviewers MUST verify:
-- TypeScript strict mode compliance with no `any` types except where justified
-- Test coverage meets targets with meaningful assertions
-- Error handling is explicit with typed errors
-- Mobile responsiveness for UI changes (test on actual device or emulator)
-- Performance impact (bundle size, query efficiency, render optimization)
-- Accessibility compliance (keyboard nav, screen reader, color contrast)
-- Security considerations (input validation, authorization checks, secret handling)
-- Documentation updates for public APIs and complex logic
-PRs MUST be small (<400 lines changed) to enable thorough review. Breaking
-changes MUST include migration guides. All review comments MUST be resolved
-before merge.
+---
 
-### Performance Validation
-Before production deployment, MUST validate:
-- API response times: p50 <200ms, p99 <500ms (use load testing tools)
-- Database query performance: EXPLAIN ANALYZE for new queries, verify indexes
-- Frontend bundle sizes: admin <500KB, worker <300KB (gzipped)
-- Lighthouse scores: Performance >90, Accessibility >95, Best Practices >90
-- Mobile performance: test on 3G throttled connection, verify <2s page load
-- Memory usage: no memory leaks in long-running processes
-Performance regressions >20% MUST be investigated and resolved before merge.
+## Pre-Commit Checklist
 
-### Code Organization
-- Monorepo structure with apps/, packages/, and docs/ at root
-- Shared types and utilities in packages/shared/
-- UI components in packages/ui/ using shadcn/ui patterns
-- Plugin adapters in packages/plugins/ with base adapter inheritance
-- Each app (admin, worker, api) is independently deployable
+- [ ] TypeScript strict, no untyped code
+- [ ] All queries scoped by `organization_id`
+- [ ] All endpoints validated with Zod
+- [ ] Secrets in env vars only
+- [ ] Structured logging, no `console.log`
+- [ ] Tests passing
+- [ ] No forbidden patterns
 
-### MVP Scope Discipline
-**DEFINITION**: MVP (Minimum Viable Product) means **fewer features with production-ready quality**, NOT incomplete implementations.
+---
 
-**V1/MVP MUST include**:
-- Reduced feature scope: Auth system, Worker management, Google Calendar plugin, SMS sending, Worker dashboard, Manual data entry backend
-- **Production-ready quality for ALL included features**:
-  - Complete implementations (no TODO, FIXME, placeholder code)
-  - Full error handling with typed errors
-  - Real integrations (no mocks in production code paths)
-  - Complete security (authentication, authorization, input validation)
-  - All acceptance criteria met
-- **Deferred Features (Entirely)**: All other plugins, webhooks, async processing, circuit breakers, observability stacks, SLOs, disaster recovery, data lifecycle compliance, billing, and performance optimizations are deferred until revenue.
-- **NO exceptions** without explicit business justification and constitutional amendment.
-
-## Governance
-
-### Constitutional Supremacy
-This constitution supersedes all other practices and documentation. When
-conflicts arise between this constitution and other documentation, the
-constitution takes precedence. All technical decisions MUST align with core
-principles.
-
-### How Principles Guide Technical Decisions
-When evaluating technical choices, MUST consider impact on principles:
-- **Code Quality (VII)**: Does this introduce complexity? Can it be tested? Is it maintainable?
-- **Testing (VIII)**: Can this be unit tested? Does it require integration tests? Is it testable in isolation?
-- **UX Consistency (IX)**: Does this match existing patterns? Is it accessible? Does it work on mobile?
-- **Performance (X)**: What is the performance impact? Does it add bundle size? Will it scale?
-
-Decisions that violate principles require explicit justification and
-constitutional amendment. Convenience NEVER justifies principle violations.
-
-### Implementation Choice Governance
-When multiple implementation approaches exist, MUST choose based on:
-1. **Principle alignment**: Which approach best satisfies constitutional principles?
-2. **Simplicity**: Prefer simpler solutions that meet requirements
-3. **Testability**: Choose approaches that are easier to test
-4. **Performance**: Consider performance implications early
-5. **Maintainability**: Favor code that future developers can understand
-
-Document significant technical decisions with rationale in ADRs (Architecture
-Decision Records) referencing relevant constitutional principles.
-
-### Amendment Process
-Constitutional amendments require:
-1. Documentation of proposed changes with rationale
-2. Impact analysis on existing codebase and principles
-3. Approval from project maintainer
-4. Version increment following semantic versioning:
-   - MAJOR: Backward incompatible principle removals or redefinitions
-   - MINOR: New principles or materially expanded guidance
-   - PATCH: Clarifications, wording improvements, non-semantic refinements
-5. Update of all dependent templates and documentation
-6. Migration plan for any breaking changes
-7. Communication to all team members
-
-### Compliance Verification
-All PRs and reviews MUST verify compliance with these principles. Reviewers
-MUST check:
-- Code quality standards (TypeScript strict, function size, error handling)
-- Test coverage and quality (pyramid, isolation, meaningful assertions)
-- UX consistency (shadcn/ui, mobile optimization, accessibility)
-- Performance requirements (response times, bundle sizes, query efficiency)
-
-Technology choices are FIXED - alternatives require constitutional amendment.
-For runtime development guidance, refer to docs/PROJECT_FOUNDATION.md,
-docs/MVP_QUICKSTART.md, and docs/ARCHITECTURE_FUTURE_STATE.md (post-MVP).
-
-**Version**: 1.3.0 | **Ratified**: 2025-01-21 | **Last Amended**: 2026-01-31 | **Maturity Level**: V1
+*Living document. Propose changes via PR. For implementation details, see `docs/` and feature plan files.*

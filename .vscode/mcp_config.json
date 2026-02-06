@@ -1,0 +1,47 @@
+{
+  "mcpServers": {
+    "deepwiki": {
+      "disabled": false,
+      "headers": {},
+      "serverUrl": "https://mcp.deepwiki.com/mcp"
+    },
+    "fetch": {
+      "args": ["mcp-server-fetch"],
+      "command": "uvx",
+      "disabled": false,
+      "env": {}
+    },
+    "filesystem": {
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", ""],
+      "command": "npx",
+      "disabled": false,
+      "env": {}
+    },
+    "github-mcp-server": {
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "command": "docker",
+      "disabled": false,
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_token_here"
+      }
+    },
+    "supabase-mcp-server": {
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "sbp_1b618ec8310394f1096b71ee165dac1b734d5e76"
+      ],
+      "command": "npx",
+      "disabled": false,
+      "env": {}
+    }
+  }
+}
