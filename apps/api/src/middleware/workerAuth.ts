@@ -1,45 +1,27 @@
 import { createTokenManager } from '@dashboard-link/tokens';
-import { Context } from 'hono';
-import { SessionService } from '../services/session.service';
+import type { AppContext } from '../types.js';
 import { logger } from '../utils/logger.js';
 
-// Initialize token manager with environment configuration
+// Initialize token manager with database configuration for dashboard_tokens
 const tokenManager = createTokenManager({
   provider: 'database',
-  tableName: 'worker_tokens',
-  hashTokens: true,
-  cleanupExpired: true,
-  defaultExpiry: 86400, // 1 day for worker tokens
-  refreshExpiry: 2592000 // 30 days
+  databaseConfig: {
+    tableName: 'dashboard_tokens',
+    hashTokens: true,
+    cleanupExpired: true,
+  },
+  defaultExpiry: 28800, // 8 hours for worker tokens
+  refreshExpiry: 86400 // 24 hours
 });
 
 /**
- * Middleware to handle worker dashboard authentication via tokens and sessions
+ * Middleware to handle worker dashboard authentication via tokens
  */
-export const workerAuthMiddleware = async (c: Context, next: () => Promise<void>) => {
+export const workerAuthMiddleware = async (c: AppContext, next: () => Promise<void>) => {
   try {
-    // First, check for existing session
-    const sessionId = SessionService.getSessionIdFromCookie(c)
-    
-    if (sessionId) {
-      const sessionValidation = await SessionService.validateSession(sessionId)
-      
-      if (sessionValidation.valid && sessionValidation.sessionData) {
-        // Valid session found, refresh it and continue
-        await SessionService.refreshSession(sessionId)
-        
-        // Set session data in context
-        c.set('workerId', sessionValidation.sessionData.workerId)
-        c.set('organizationId', sessionValidation.sessionData.organizationId)
-        c.set('sessionId', sessionId)
-        
-        return next()
-      }
-    }
-
-    // No valid session, check for token in URL params
+    // Check for token in URL params
     const token = c.req.param('token')
-    
+
     if (!token) {
       return c.json(
         { success: false, error: 'No token provided' },
@@ -49,7 +31,7 @@ export const workerAuthMiddleware = async (c: Context, next: () => Promise<void>
 
     // Validate token
     const tokenValidation = await tokenManager.validateToken(token)
-    
+
     if (!tokenValidation.valid || !tokenValidation.payload) {
       const errorMap: Record<string, string> = {
         'NOT_FOUND': 'Invalid token',
@@ -57,36 +39,33 @@ export const workerAuthMiddleware = async (c: Context, next: () => Promise<void>
         'INVALID': 'Invalid token',
         'REVOKED': 'Token has been revoked'
       }
-      
+
       return c.json(
-        { 
-          success: false, 
-          error: errorMap[tokenValidation.error || 'NOT_FOUND'] 
+        {
+          success: false,
+          error: errorMap[tokenValidation.error || 'NOT_FOUND']
         },
         401
       )
     }
 
-    // Token is valid, create session
+    // Token is valid, extract worker and organization info from metadata
     const workerId = tokenValidation.payload.metadata?.workerId || tokenValidation.payload.userId
-    const organizationId = tokenValidation.payload.organizationId || 'org-placeholder'
+    const organizationId = tokenValidation.payload.organizationId
 
-    // TODO(tokens/rls): Remove placeholder org resolution. Ensure worker tokens always include
-    // organizationId in payload metadata, or resolve organizationId from workerId via DB.
-    // This also impacts RLS/service-role access assumptions for worker dashboard reads.
-    
-    const sessionData = await SessionService.createSession(
-      workerId,
-      organizationId
-    )
+    if (!workerId || !organizationId) {
+      return c.json(
+        {
+          success: false,
+          error: 'Invalid token structure'
+        },
+        401
+      )
+    }
 
-    // Set session cookie
-    SessionService.setSessionCookie(c, sessionData.sessionId)
-
-    // Set session data in context
-    c.set('workerId', workerId)
-    c.set('organizationId', organizationId)
-    c.set('sessionId', sessionData.sessionId)
+    // Set worker data in context
+    c.set('workerId', workerId as string)
+    c.set('organizationId', organizationId as string)
 
     return next()
   } catch (error) {

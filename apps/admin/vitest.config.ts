@@ -18,6 +18,37 @@ export default defineConfig({
         '**/*.config.*',
         'dist/',
       ],
+      thresholds: {
+        // Global thresholds
+        functions: 70,
+        branches: 60,
+        lines: 70,
+        statements: 70,
+
+        // Auth and security - critical
+        'src/store/auth.ts': {
+          functions: 90,
+          branches: 85,
+          lines: 90,
+          statements: 90,
+        },
+
+        // Custom hooks - high coverage
+        'src/hooks/**': {
+          functions: 80,
+          branches: 70,
+          lines: 80,
+          statements: 80,
+        },
+
+        // UI components - moderate (visual testing)
+        'src/components/**': {
+          functions: 65,
+          branches: 55,
+          lines: 65,
+          statements: 65,
+        },
+      },
     },
   },
   resolve: {

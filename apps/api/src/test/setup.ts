@@ -1,4 +1,14 @@
-import { vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, vi } from 'vitest'
+import { server } from './mocks/server'
+
+// Setup MSW server for HTTP mocking
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: 'warn' })
+})
+
+afterAll(() => {
+  server.close()
+})
 
 // Mock Supabase client
 vi.mock('@supabase/supabase-js', () => ({
@@ -45,4 +55,5 @@ process.env.JWT_SECRET = 'test-jwt-secret'
 // Clean up mocks after each test
 afterEach(() => {
   vi.clearAllMocks()
+  server.resetHandlers()
 })

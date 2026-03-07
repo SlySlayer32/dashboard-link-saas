@@ -4,6 +4,9 @@ import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
 
+// Import routes
+import tokens from './routes/tokens'
+
 // Import services
 import { SMSService } from './services/sms-service'
 import { TokenService } from './services/token-service'
@@ -577,5 +580,10 @@ v1.post(
     }
   }
 )
+
+// Mount tokens route
+v1.route('/tokens', tokens)
+
+// Import routes
 
 export default v1

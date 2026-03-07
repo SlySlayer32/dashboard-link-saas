@@ -21,7 +21,7 @@ export class DashboardTokenService {
   /**
    * Generate a new dashboard token
    */
-  generateToken(payload: Omit<DashboardTokenPayload, 'jti'>): {
+  generateToken(_payload: Omit<DashboardTokenPayload, 'jti'>): {
     token: string
     hash: string
     jti: string
@@ -118,7 +118,7 @@ export class DashboardTokenService {
     const expiresAt = new Date()
     expiresAt.setHours(expiresAt.getHours() + hoursToExpiry)
 
-    const payload: DashboardTokenPayload = {
+    const payload = {
       jti: '',
       orgId,
       workerId,

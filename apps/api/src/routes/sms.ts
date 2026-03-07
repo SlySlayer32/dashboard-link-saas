@@ -96,7 +96,7 @@ sms.post('/send-dashboard-link', async (c) => {
 
     // Get user's organization
     const { data: admin, error: adminError } = await supabase
-      .from('admins')
+      .from('users')
       .select('organization_id')
       .eq('auth_user_id', userId)
       .single()
@@ -135,18 +135,6 @@ sms.post('/send-dashboard-link', async (c) => {
       )
     }
 
-    if (!worker.active) {
-      return c.json(
-        {
-          success: false,
-          error: {
-            code: 'WORKER_INACTIVE',
-            message: 'Worker is inactive',
-          },
-        },
-        400
-      )
-    }
 
     // Generate token - TODO: Implement proper token generation
     // const tokenData = await tokenManager.generateWorkerToken(workerId, admin.organization_id, {
@@ -197,7 +185,7 @@ sms.post('/send-dashboard-link', async (c) => {
         token: tokenData.token,
         dashboardUrl,
         status: smsResult.success ? 'sent' : 'failed',
-        expiresAt: tokenData.expires_at,
+        expiresAt: tokenData.expiresAt,
       },
     }
 
@@ -261,7 +249,7 @@ sms.get('/logs', async (c) => {
 
     // Get user's organization
     const { data: admin, error: adminError } = await supabase
-      .from('admins')
+      .from('users')
       .select('organization_id')
       .eq('auth_user_id', userId)
       .single()
@@ -385,7 +373,7 @@ sms.post('/send', async (c) => {
     }
 
     const { data: admin, error: adminError } = await supabase
-      .from('admins')
+      .from('users')
       .select('organization_id')
       .eq('auth_user_id', userId)
       .single()
