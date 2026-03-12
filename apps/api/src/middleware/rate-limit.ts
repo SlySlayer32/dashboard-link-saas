@@ -26,16 +26,14 @@ export const rateLimit = (options: RateLimitOptions) => {
 
   return createMiddleware(async (c, next) => {
     // Get client identifier (IP address)
-    const clientId = c.req.header('x-forwarded-for') || 
-                    c.req.header('x-real-ip') || 
-                    'unknown'
+    const clientId = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
 
     const now = Date.now()
     const key = `${clientId}:${c.req.path}`
 
     // Get current rate limit data
     const current = rateLimitStore.get(key)
-    
+
     if (!current || now > current.resetTime) {
       // New window or expired window
       rateLimitStore.set(key, {
@@ -49,7 +47,7 @@ export const rateLimit = (options: RateLimitOptions) => {
     // Check if limit exceeded
     if (current.count >= maxRequests) {
       const resetTime = Math.ceil((current.resetTime - now) / 1000)
-      
+
       logger.warn('Rate limit exceeded', {
         clientId,
         path: c.req.path,
@@ -102,8 +100,8 @@ export const cleanupRateLimits = () => {
     }
   }
 
-  keysToDelete.forEach(key => rateLimitStore.delete(key))
-  
+  keysToDelete.forEach((key) => rateLimitStore.delete(key))
+
   if (keysToDelete.length > 0) {
     logger.info('Cleaned up expired rate limit entries', { count: keysToDelete.length })
   }

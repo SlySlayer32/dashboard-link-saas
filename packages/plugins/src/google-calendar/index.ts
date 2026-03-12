@@ -1,10 +1,10 @@
 import { BasePluginAdapter } from '../base/adapter'
 import {
-    DateRange,
-    PluginConfig,
-    StandardScheduleItem,
-    StandardTaskItem,
-    ValidationResult,
+  DateRange,
+  PluginConfig,
+  StandardScheduleItem,
+  StandardTaskItem,
+  ValidationResult,
 } from '../contracts'
 
 /**

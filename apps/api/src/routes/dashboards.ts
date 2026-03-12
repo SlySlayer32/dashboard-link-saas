@@ -8,11 +8,14 @@ import { logger } from '../utils/logger.js'
 const dashboards = new Hono<{ Variables: AppContextVariables }>()
 
 // Apply rate limiting to public endpoints
-dashboards.use('/*', rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 100, // 100 requests per 15 minutes per IP
-  message: 'Too many dashboard access attempts, please try again later.',
-}))
+dashboards.use(
+  '/*',
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    maxRequests: 100, // 100 requests per 15 minutes per IP
+    message: 'Too many dashboard access attempts, please try again later.',
+  })
+)
 
 /**
  * Public endpoint - validate token and return dashboard data
@@ -38,10 +41,12 @@ dashboards.get('/:token', workerAuthMiddleware, async (c) => {
           errorMessage = 'This link has been revoked. Please ask your administrator for a new link.'
           break
         case 'not_found':
-          errorMessage = 'Invalid link. Please check the URL or ask your administrator for a new link.'
+          errorMessage =
+            'Invalid link. Please check the URL or ask your administrator for a new link.'
           break
         case 'invalid':
-          errorMessage = 'Invalid link format. Please check the URL or ask your administrator for a new link.'
+          errorMessage =
+            'Invalid link format. Please check the URL or ask your administrator for a new link.'
           statusCode = 400
           break
       }
@@ -75,7 +80,10 @@ dashboards.get('/:token', workerAuthMiddleware, async (c) => {
       },
     })
   } catch (error) {
-    logger.error('Dashboard access error', error instanceof Error ? error : new Error(String(error)))
+    logger.error(
+      'Dashboard access error',
+      error instanceof Error ? error : new Error(String(error))
+    )
 
     // Return a generic error to avoid leaking implementation details
     return c.json(

@@ -88,12 +88,12 @@ export const useOnboardingStore = create<OnboardingStore>()(
       },
 
       deselectPlugin: (pluginId) => {
-        const selectedPlugins = get().selectedPlugins.filter(id => id !== pluginId)
+        const selectedPlugins = get().selectedPlugins.filter((id) => id !== pluginId)
         set({ selectedPlugins })
       },
 
       connectPlugin: (pluginId) => {
-        const plugins = get().plugins.map(p => 
+        const plugins = get().plugins.map((p) =>
           p.id === pluginId ? { ...p, connected: true } : p
         )
         const connectedPlugins = [...get().connectedPlugins, pluginId]
@@ -101,10 +101,10 @@ export const useOnboardingStore = create<OnboardingStore>()(
       },
 
       disconnectPlugin: (pluginId) => {
-        const plugins = get().plugins.map(p => 
+        const plugins = get().plugins.map((p) =>
           p.id === pluginId ? { ...p, connected: false } : p
         )
-        const connectedPlugins = get().connectedPlugins.filter(id => id !== pluginId)
+        const connectedPlugins = get().connectedPlugins.filter((id) => id !== pluginId)
         set({ plugins, connectedPlugins })
       },
 
@@ -112,13 +112,14 @@ export const useOnboardingStore = create<OnboardingStore>()(
 
       completeOnboarding: () => set({ isCompleted: true, step: 'complete' }),
 
-      resetOnboarding: () => set({
-        step: 'welcome',
-        selectedPlugins: [],
-        connectedPlugins: [],
-        dashboardLayout: [],
-        isCompleted: false,
-      }),
+      resetOnboarding: () =>
+        set({
+          step: 'welcome',
+          selectedPlugins: [],
+          connectedPlugins: [],
+          dashboardLayout: [],
+          isCompleted: false,
+        }),
     }),
     {
       name: 'onboarding-storage',

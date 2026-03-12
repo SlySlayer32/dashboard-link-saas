@@ -5,11 +5,11 @@ import axios, { AxiosInstance } from 'axios'
 const authService = createAuthService('supabase', {
   providerConfig: {
     supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
-    supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+    supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
   },
   jwtSecret: import.meta.env.VITE_JWT_SECRET || 'default-secret',
   tokenExpiry: 3600,
-  refreshTokenExpiry: 2592000
+  refreshTokenExpiry: 2592000,
 })
 
 // Create axios instance
@@ -49,11 +49,11 @@ const createApiClient = (): AxiosInstance => {
           const refreshToken = localStorage.getItem('refreshToken')
           if (refreshToken) {
             const result = await authService.refreshToken(refreshToken)
-            
+
             if (result.success && result.tokens) {
               localStorage.setItem('token', result.tokens.accessToken)
               localStorage.setItem('refreshToken', result.tokens.refreshToken)
-              
+
               // Retry original request with new token
               originalRequest.headers.Authorization = `Bearer ${result.tokens.accessToken}`
               return client(originalRequest)
@@ -90,7 +90,12 @@ export const authApi = {
   },
 
   // Register
-  register: async (userData: { email: string; password: string; name: string; organizationName: string }) => {
+  register: async (userData: {
+    email: string
+    password: string
+    name: string
+    organizationName: string
+  }) => {
     try {
       const response = await authApiClient.post('/auth/register', userData)
       return response.data
@@ -144,13 +149,13 @@ export const authApi = {
     try {
       const response = await authApiClient.post('/auth/change-password', {
         currentPassword,
-        newPassword
+        newPassword,
       })
       return response.data
     } catch (error) {
       throw error
     }
-  }
+  },
 }
 
 // Generic API client for other endpoints

@@ -5,42 +5,10 @@
  * Replaces direct database queries with repository abstraction
  */
 
-// Temporarily copied phone utils to get API running
-// TODO: Fix module resolution and revert to @dashboard-link/shared import
-
-/**
- * Format Australian phone number to E.164 format
- */
-function formatAustralianPhone(phone: string): string {
-  // Remove all spaces, dashes, and parentheses
-  const cleaned = phone.replace(/[\s\-()]/g, '')
-
-  // If already in E.164 format with +61
-  if (cleaned.startsWith('+61')) {
-    return cleaned
-  }
-
-  // If starts with 61 (without +)
-  if (cleaned.startsWith('61') && cleaned.length === 11) {
-    return `+${cleaned}`
-  }
-
-  // If starts with 0 (Australian format)
-  if (cleaned.startsWith('0') && cleaned.length === 10) {
-    return `+61${cleaned.substring(1)}`
-  }
-
-  // If it's just the number without country code or leading 0
-  if (cleaned.length === 9) {
-    return `+61${cleaned}`
-  }
-
-  throw new Error(`Invalid Australian phone number: ${phone}`)
-}
-
-// Import types and repositories
 import { WorkerRepository } from '@dashboard-link/database'
 import type { Worker } from '@dashboard-link/shared'
+import { formatAustralianPhone } from '@dashboard-link/shared'
+import { logger } from '../utils/logger.js'
 
 export interface CreateWorkerRequest {
   name: string
@@ -104,65 +72,203 @@ export class WorkerService {
   }
 
   async createWorker(data: CreateWorkerRequest, organizationId: string): Promise<Worker> {
-    // Validate and format phone number
-    const formattedPhone = formatAustralianPhone(data.phone)
+    const startTime = Date.now()
 
-    const workerData = {
-      name: data.name.trim(),
-      phone: formattedPhone,
-      email: data.email?.trim() || undefined,
-      organizationId,
-      active: true,
-      metadata: data.metadata || {},
+    try {
+      // Validate and format phone number
+      const formattedPhone = formatAustralianPhone(data.phone)
+
+      // Check for duplicate phone number (active workers only)
+      const existingWorker = await this.workerRepo.findByPhoneActive(formattedPhone, organizationId)
+      if (existingWorker) {
+        logger.error('Duplicate phone number detected', new Error('Phone number already in use'), {
+          operation: 'createWorker',
+          organizationId,
+          phone: formattedPhone,
+          error_type: 'duplicate_phone',
+        })
+        throw new Error('Phone number already in use by an active worker')
+      }
+
+      const workerData = {
+        name: data.name.trim(),
+        phone: formattedPhone,
+        email: data.email?.trim() || undefined,
+        organizationId,
+        active: true,
+        deletedAt: null,
+        metadata: data.metadata || {},
+      }
+
+      const worker = await this.workerRepo.create(workerData)
+
+      logger.info('Worker created successfully', {
+        operation: 'createWorker',
+        duration_ms: Date.now() - startTime,
+        success: true,
+        organizationId,
+        workerId: worker.id,
+      })
+
+      return worker
+    } catch (error) {
+      logger.error(
+        'Failed to create worker',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          operation: 'createWorker',
+          duration_ms: Date.now() - startTime,
+          success: false,
+          organizationId,
+          error_type:
+            error instanceof Error && error.message.includes('duplicate')
+              ? 'duplicate_phone'
+              : 'unknown',
+        }
+      )
+      throw error
     }
-
-    return this.workerRepo.create(workerData)
   }
 
   async updateWorker(
     id: string,
-    data: UpdateWorkerRequest,
+    data: UpdateWorkerRequest & { updatedAt?: string },
     organizationId: string
   ): Promise<Worker> {
-    // Verify worker belongs to organization
-    const existingWorker = await this.getWorkerById(id, organizationId)
-    if (!existingWorker) {
-      throw new Error('Worker not found')
+    const startTime = Date.now()
+
+    try {
+      // Verify worker belongs to organization
+      const existingWorker = await this.getWorkerById(id, organizationId)
+      if (!existingWorker) {
+        throw new Error('Worker not found')
+      }
+
+      // Last-write-wins conflict detection (FR-019)
+      if (data.updatedAt && existingWorker.updatedAt !== data.updatedAt) {
+        logger.warn('Concurrent edit conflict detected', {
+          operation: 'updateWorker',
+          organizationId,
+          workerId: id,
+          error_type: 'concurrent_edit',
+        })
+        const error = new Error('Worker was updated by another user. Please refresh and try again.')
+        ;(error as any).statusCode = 409
+        throw error
+      }
+
+      const updateData: Partial<Worker> = {}
+
+      if (data.name !== undefined) {
+        updateData.name = data.name.trim()
+      }
+
+      if (data.phone !== undefined) {
+        const formattedPhone = formatAustralianPhone(data.phone)
+
+        // Check for duplicate phone number (different worker, active only)
+        const existingWithPhone = await this.workerRepo.findByPhoneActive(
+          formattedPhone,
+          organizationId
+        )
+        if (existingWithPhone && existingWithPhone.id !== id) {
+          logger.error(
+            'Duplicate phone number detected on update',
+            new Error('Phone number already in use'),
+            {
+              operation: 'updateWorker',
+              organizationId,
+              workerId: id,
+              phone: formattedPhone,
+              error_type: 'duplicate_phone',
+            }
+          )
+          throw new Error('Phone number already in use by an active worker')
+        }
+
+        updateData.phone = formattedPhone
+      }
+
+      if (data.email !== undefined) {
+        updateData.email = data.email?.trim() || undefined
+      }
+
+      if (data.active !== undefined) {
+        updateData.active = data.active
+      }
+
+      if (data.metadata !== undefined) {
+        updateData.metadata = data.metadata
+      }
+
+      const worker = await this.workerRepo.update(id, updateData)
+
+      logger.info('Worker updated successfully', {
+        operation: 'updateWorker',
+        duration_ms: Date.now() - startTime,
+        success: true,
+        organizationId,
+        workerId: id,
+      })
+
+      return worker
+    } catch (error) {
+      logger.error(
+        'Failed to update worker',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          operation: 'updateWorker',
+          duration_ms: Date.now() - startTime,
+          success: false,
+          organizationId,
+          workerId: id,
+          error_type:
+            error instanceof Error && error.message.includes('duplicate')
+              ? 'duplicate_phone'
+              : error instanceof Error && (error as any).statusCode === 409
+                ? 'concurrent_edit'
+                : 'unknown',
+        }
+      )
+      throw error
     }
-
-    const updateData: Partial<Worker> = {}
-
-    if (data.name !== undefined) {
-      updateData.name = data.name.trim()
-    }
-
-    if (data.phone !== undefined) {
-      updateData.phone = formatAustralianPhone(data.phone)
-    }
-
-    if (data.email !== undefined) {
-      updateData.email = data.email?.trim() || undefined
-    }
-
-    if (data.active !== undefined) {
-      updateData.active = data.active
-    }
-
-    if (data.metadata !== undefined) {
-      updateData.metadata = data.metadata
-    }
-
-    return this.workerRepo.update(id, updateData)
   }
 
   async deleteWorker(id: string, organizationId: string): Promise<void> {
-    // Verify worker belongs to organization
-    const worker = await this.getWorkerById(id, organizationId)
-    if (!worker) {
-      throw new Error('Worker not found')
-    }
+    const startTime = Date.now()
 
-    await this.workerRepo.delete(id)
+    try {
+      // Verify worker belongs to organization
+      const worker = await this.getWorkerById(id, organizationId)
+      if (!worker) {
+        throw new Error('Worker not found')
+      }
+
+      // Soft delete (sets deleted_at timestamp)
+      await this.workerRepo.softDelete(id)
+
+      logger.info('Worker soft deleted successfully', {
+        operation: 'deleteWorker',
+        duration_ms: Date.now() - startTime,
+        success: true,
+        organizationId,
+        workerId: id,
+      })
+    } catch (error) {
+      logger.error(
+        'Failed to delete worker',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          operation: 'deleteWorker',
+          duration_ms: Date.now() - startTime,
+          success: false,
+          organizationId,
+          workerId: id,
+          error_type: 'unknown',
+        }
+      )
+      throw error
+    }
   }
 
   async activateWorker(id: string, organizationId: string): Promise<Worker> {
@@ -183,7 +289,7 @@ export class WorkerService {
 
   async findWorkerByPhone(phone: string, organizationId: string): Promise<Worker | null> {
     const formattedPhone = formatAustralianPhone(phone)
-    return this.workerRepo.findByPhone(formattedPhone, organizationId)
+    return this.workerRepo.findByPhoneActive(formattedPhone, organizationId)
   }
 
   // Validation helpers

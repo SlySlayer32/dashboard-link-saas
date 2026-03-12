@@ -1,33 +1,50 @@
+import { parsePhoneNumber } from 'libphonenumber-js'
+
 /**
- * Format Australian phone number to E.164 format
- * Converts: 0412345678 → +61412345678
- * Accepts: 0412345678, +61412345678, 61412345678
+ * Format and validate Australian phone number to E.164 format
+ * Validates mobile type and converts to +614XXXXXXXX
+ * Uses libphonenumber-js for robust validation
  */
 export function formatAustralianPhone(phone: string): string {
-  // Remove all spaces, dashes, and parentheses
-  const cleaned = phone.replace(/[\s\-()]/g, '')
+  try {
+    const cleaned = phone.replace(/[\s\-()]/g, '')
+    const phoneNumber = parsePhoneNumber(cleaned, 'AU')
 
-  // If already in E.164 format with +61
-  if (cleaned.startsWith('+61')) {
-    return cleaned
+    if (!phoneNumber?.isValid()) {
+      throw new Error('Invalid Australian phone number')
+    }
+
+    if (phoneNumber.getType() !== 'MOBILE') {
+      throw new Error('Phone number must be an Australian mobile number')
+    }
+
+    return phoneNumber.format('E.164')
+  } catch (error) {
+    throw new Error(
+      `Failed to format phone number: ${error instanceof Error ? error.message : 'Unknown error'}`
+    )
   }
+}
 
-  // If starts with 61 (without +)
-  if (cleaned.startsWith('61') && cleaned.length === 11) {
-    return `+${cleaned}`
+/**
+ * Normalize phone number to E.164 format
+ * Converts Australian formats to +61XXXXXXXXX
+ */
+export function normalizePhoneNumber(phone: string): string {
+  try {
+    const cleaned = phone.replace(/[\s\-()]/g, '')
+    const phoneNumber = parsePhoneNumber(cleaned, 'AU')
+
+    if (!phoneNumber?.isValid()) {
+      throw new Error('Invalid phone number')
+    }
+
+    return phoneNumber.format('E.164')
+  } catch (error) {
+    throw new Error(
+      `Failed to normalize phone number: ${error instanceof Error ? error.message : 'Unknown error'}`
+    )
   }
-
-  // If starts with 0 (Australian format)
-  if (cleaned.startsWith('0') && cleaned.length === 10) {
-    return `+61${cleaned.substring(1)}`
-  }
-
-  // If it's just the number without country code or leading 0
-  if (cleaned.length === 9) {
-    return `+61${cleaned}`
-  }
-
-  throw new Error(`Invalid Australian phone number: ${phone}`)
 }
 
 /**
@@ -35,24 +52,31 @@ export function formatAustralianPhone(phone: string): string {
  */
 export function validateAustralianPhone(phone: string): boolean {
   try {
-    const formatted = formatAustralianPhone(phone)
-    // Check if it's a valid Australian mobile number (+614-9xx xxx xxx)
-    return /^\+61[4-9]\d{8}$/.test(formatted)
+    const cleaned = phone.replace(/[\s\-()]/g, '')
+    const phoneNumber = parsePhoneNumber(cleaned, 'AU')
+    return phoneNumber?.isValid() && phoneNumber?.getType() === 'MOBILE'
   } catch {
     return false
   }
 }
 
 /**
- * Display format for Australian phone
- * +61412345678 → 0412 345 678
+ * Format phone number for display
+ * Converts +61412345678 to 0412 345 678
  */
-export function displayAustralianPhone(phone: string): string {
+export function formatPhoneDisplay(phone: string): string {
   try {
-    const formatted = formatAustralianPhone(phone)
-    const number = formatted.replace('+61', '0')
-    return number.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3')
+    const phoneNumber = parsePhoneNumber(phone)
+    return phoneNumber?.formatNational() || phone
   } catch {
     return phone
   }
+}
+
+/**
+ * Display format for Australian phone (alias for formatPhoneDisplay)
+ * +61412345678 → 0412 345 678
+ */
+export function displayAustralianPhone(phone: string): string {
+  return formatPhoneDisplay(phone)
 }

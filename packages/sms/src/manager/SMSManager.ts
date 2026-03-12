@@ -1,29 +1,29 @@
 import {
-    SMSManager as ISMSManager,
-    SMSBatchResult,
-    SMSMessage,
-    SMSProvider,
-    SMSResult
-} from '@dashboard-link/shared';
-import { smsRegistry } from '../registry/SMSRegistry';
+  SMSManager as ISMSManager,
+  SMSBatchResult,
+  SMSMessage,
+  SMSProvider,
+  SMSResult,
+} from '@dashboard-link/shared'
+import { smsRegistry } from '../registry/SMSRegistry'
 
 /**
  * SMS Manager Implementation
  * Orchestrates SMS sending across multiple providers with fallback logic
  */
 export class SMSManagerImpl implements ISMSManager {
-  private registry = smsRegistry;
+  private registry = smsRegistry
 
   registerProvider(provider: SMSProvider): void {
-    this.registry.register(provider);
+    this.registry.register(provider)
   }
 
   getProvider(id: string): SMSProvider | undefined {
-    return this.registry.get(id);
+    return this.registry.get(id)
   }
 
   getAllProviders(): SMSProvider[] {
-    return this.registry.getAll();
+    return this.registry.getAll()
   }
 
   /**
@@ -31,25 +31,25 @@ export class SMSManagerImpl implements ISMSManager {
    * Tries each provider in order until one succeeds
    */
   async sendWithFallback(message: SMSMessage, providerIds: string[]): Promise<SMSResult> {
-    let lastError = 'No providers attempted';
+    let lastError = 'No providers attempted'
 
     for (const providerId of providerIds) {
-      const provider = this.registry.get(providerId);
+      const provider = this.registry.get(providerId)
       if (!provider) {
-        console.warn(`SMS provider '${providerId}' not found, skipping`);
-        continue;
+        console.warn(`SMS provider '${providerId}' not found, skipping`)
+        continue
       }
 
       try {
-        const result = await provider.send(message);
+        const result = await provider.send(message)
         if (result.success) {
-          return result;
+          return result
         }
-        lastError = result.error || 'Unknown error';
-        console.warn(`SMS provider '${providerId}' failed: ${lastError}`);
+        lastError = result.error || 'Unknown error'
+        console.warn(`SMS provider '${providerId}' failed: ${lastError}`)
       } catch (error) {
-        lastError = error instanceof Error ? error.message : 'Unknown error';
-        console.error(`SMS provider '${providerId}' threw error: ${lastError}`);
+        lastError = error instanceof Error ? error.message : 'Unknown error'
+        console.error(`SMS provider '${providerId}' threw error: ${lastError}`)
       }
     }
 
@@ -60,8 +60,8 @@ export class SMSManagerImpl implements ISMSManager {
       provider: 'fallback',
       timestamp: new Date().toISOString(),
       error: `All providers failed. Last error: ${lastError}`,
-      errorType: 'permanent'
-    };
+      errorType: 'permanent',
+    }
   }
 
   /**
@@ -69,7 +69,7 @@ export class SMSManagerImpl implements ISMSManager {
    */
   async sendToAll(message: SMSMessage, providerIds: string[]): Promise<SMSResult[]> {
     const promises = providerIds.map(async (providerId) => {
-      const provider = this.registry.get(providerId);
+      const provider = this.registry.get(providerId)
       if (!provider) {
         return {
           success: false,
@@ -77,12 +77,12 @@ export class SMSManagerImpl implements ISMSManager {
           provider: providerId,
           timestamp: new Date().toISOString(),
           error: `Provider '${providerId}' not found`,
-          errorType: 'permanent' as const
-        } as SMSResult;
+          errorType: 'permanent' as const,
+        } as SMSResult
       }
 
       try {
-        return await provider.send(message);
+        return await provider.send(message)
       } catch (error) {
         return {
           success: false,
@@ -90,12 +90,12 @@ export class SMSManagerImpl implements ISMSManager {
           provider: providerId,
           timestamp: new Date().toISOString(),
           error: error instanceof Error ? error.message : 'Unknown error',
-          errorType: 'temporary' as const
-        } as SMSResult;
+          errorType: 'temporary' as const,
+        } as SMSResult
       }
-    });
+    })
 
-    return Promise.all(promises);
+    return Promise.all(promises)
   }
 
   /**
@@ -107,10 +107,10 @@ export class SMSManagerImpl implements ISMSManager {
    * - Rate limits
    */
   getBestProvider(message: SMSMessage): SMSProvider | undefined {
-    const providers = this.registry.getAll();
-    
+    const providers = this.registry.getAll()
+
     if (providers.length === 0) {
-      return undefined;
+      return undefined
     }
 
     // Simple logic: return first healthy provider
@@ -118,15 +118,15 @@ export class SMSManagerImpl implements ISMSManager {
     for (const provider of providers) {
       // Check if provider supports the message type
       if (message.body.length > 1600 && !provider.supportsMMS?.()) {
-        continue; // Skip if message is too long and provider doesn't support MMS
+        continue // Skip if message is too long and provider doesn't support MMS
       }
 
       // In a real implementation, you would check health status here
       // For now, return the first available provider
-      return provider;
+      return provider
     }
 
-    return undefined;
+    return undefined
   }
 
   /**
@@ -137,36 +137,34 @@ export class SMSManagerImpl implements ISMSManager {
     providerId: string,
     options?: { parallel?: boolean; batchSize?: number }
   ): Promise<SMSBatchResult> {
-    const provider = this.registry.get(providerId);
+    const provider = this.registry.get(providerId)
     if (!provider) {
-      throw new Error(`SMS provider '${providerId}' not found`);
+      throw new Error(`SMS provider '${providerId}' not found`)
     }
 
-    const parallel = options?.parallel ?? true;
-    const batchSize = options?.batchSize ?? 100;
+    const parallel = options?.parallel ?? true
+    const batchSize = options?.batchSize ?? 100
 
-    const results: SMSResult[] = [];
+    const results: SMSResult[] = []
 
     if (parallel) {
       // Send all messages in parallel
-      const batches = this.chunkArray(messages, batchSize);
+      const batches = this.chunkArray(messages, batchSize)
       for (const batch of batches) {
-        const batchResults = await Promise.all(
-          batch.map(message => provider.send(message))
-        );
-        results.push(...batchResults);
+        const batchResults = await Promise.all(batch.map((message) => provider.send(message)))
+        results.push(...batchResults)
       }
     } else {
       // Send messages sequentially
       for (const message of messages) {
-        const result = await provider.send(message);
-        results.push(result);
+        const result = await provider.send(message)
+        results.push(result)
       }
     }
 
-    const successful = results.filter(r => r.success).length;
-    const failed = results.length - successful;
-    const totalCost = results.reduce((sum, r) => sum + (r.cost || 0), 0);
+    const successful = results.filter((r) => r.success).length
+    const failed = results.length - successful
+    const totalCost = results.reduce((sum, r) => sum + (r.cost || 0), 0)
 
     return {
       totalMessages: messages.length,
@@ -175,40 +173,40 @@ export class SMSManagerImpl implements ISMSManager {
       results,
       provider: providerId,
       timestamp: new Date().toISOString(),
-      totalCost
-    };
+      totalCost,
+    }
   }
 
   /**
    * Get provider health status
    */
   async getProviderHealth(): Promise<Record<string, boolean>> {
-    const providers = this.registry.getAll();
-    const health: Record<string, boolean> = {};
+    const providers = this.registry.getAll()
+    const health: Record<string, boolean> = {}
 
     await Promise.all(
       providers.map(async (provider) => {
         try {
-          const healthResult = await provider.getHealthCheck();
-          health[provider.id] = healthResult.healthy;
+          const healthResult = await provider.getHealthCheck()
+          health[provider.id] = healthResult.healthy
         } catch {
-          health[provider.id] = false;
+          health[provider.id] = false
         }
       })
-    );
+    )
 
-    return health;
+    return health
   }
 
   // Helper method
   private chunkArray<T>(array: T[], chunkSize: number): T[][] {
-    const chunks: T[][] = [];
+    const chunks: T[][] = []
     for (let i = 0; i < array.length; i += chunkSize) {
-      chunks.push(array.slice(i, i + chunkSize));
+      chunks.push(array.slice(i, i + chunkSize))
     }
-    return chunks;
+    return chunks
   }
 }
 
 // Singleton instance for easy access
-export const smsManager = new SMSManagerImpl();
+export const smsManager = new SMSManagerImpl()

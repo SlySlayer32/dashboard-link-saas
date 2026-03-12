@@ -1,8 +1,6 @@
 import type { Worker } from '@dashboard-link/shared'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 const DEV_MODE = import.meta.env.MODE === 'development'
 
 interface WorkersResponse {
@@ -85,16 +83,17 @@ export function useWorkers(options: UseWorkersOptions = {}) {
         // Filter based on search and status
         let filteredWorkers = mockWorkers
         if (status === 'active') {
-          filteredWorkers = mockWorkers.filter(w => w.active)
+          filteredWorkers = mockWorkers.filter((w) => w.active)
         } else if (status === 'inactive') {
-          filteredWorkers = mockWorkers.filter(w => !w.active)
+          filteredWorkers = mockWorkers.filter((w) => !w.active)
         }
 
         if (search.trim()) {
-          filteredWorkers = filteredWorkers.filter(w => 
-            w.name.toLowerCase().includes(search.toLowerCase()) ||
-            (w.email && w.email.toLowerCase().includes(search.toLowerCase())) ||
-            w.phone.includes(search)
+          filteredWorkers = filteredWorkers.filter(
+            (w) =>
+              w.name.toLowerCase().includes(search.toLowerCase()) ||
+              (w.email && w.email.toLowerCase().includes(search.toLowerCase())) ||
+              w.phone.includes(search)
           )
         }
 
@@ -234,4 +233,54 @@ export function useWorker(workerId: string) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   })
+}
+
+// Hook for worker mutations (create, update, delete)
+export function useWorkerMutations() {
+  const queryClient = useQueryClient()
+
+  const createWorker = useMutation({
+    mutationFn: (data: CreateWorkerDTO) => workerApi.createWorker(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workers'] })
+      toast.success('Worker created successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create worker')
+    },
+  })
+
+  const updateWorker = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateWorkerDTO & { updatedAt?: string } }) =>
+      workerApi.updateWorker(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workers'] })
+      queryClient.invalidateQueries({ queryKey: ['worker'] })
+      toast.success('Worker updated successfully')
+    },
+    onError: (error: Error & { code?: string }) => {
+      if (error.code === 'CONCURRENT_EDIT') {
+        toast.error('Worker was updated by another user. Please refresh and try again.')
+      } else {
+        toast.error(error.message || 'Failed to update worker')
+      }
+    },
+  })
+
+  const deleteWorker = useMutation({
+    mutationFn: (id: string) => workerApi.deleteWorker(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workers'] })
+      toast.success('Worker deleted successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete worker')
+    },
+  })
+
+  return {
+    createWorker,
+    updateWorker,
+    deleteWorker,
+  }
 }

@@ -14,15 +14,7 @@ interface SMSLogsParams {
 }
 
 export function useSMSLogs(params: SMSLogsParams = {}): UseQueryResult<SMSLogsResponse> {
-  const {
-    page = 1,
-    limit = 20,
-    workerId,
-    status,
-    dateFrom,
-    dateTo,
-    search,
-  } = params
+  const { page = 1, limit = 20, workerId, status, dateFrom, dateTo, search } = params
 
   return useQuery({
     queryKey: ['sms-logs', page, limit, workerId, status, dateFrom, dateTo, search],

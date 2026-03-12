@@ -135,7 +135,6 @@ sms.post('/send-dashboard-link', async (c) => {
       )
     }
 
-
     // Generate token - TODO: Implement proper token generation
     // const tokenData = await tokenManager.generateWorkerToken(workerId, admin.organization_id, {
     //   permissions: ['worker:access', 'sms:receive'],

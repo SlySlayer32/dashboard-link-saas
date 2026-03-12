@@ -1,8 +1,8 @@
-import { logger } from '../utils/logger.js';
-import { createClient } from '@supabase/supabase-js';
-import crypto from 'crypto';
-import { Context, Next } from 'hono';
-import { WebhookProvider, WebhookSignatureVerifier } from '../types/webhooks';
+import { logger } from '../utils/logger.js'
+import { createClient } from '@supabase/supabase-js'
+import crypto from 'crypto'
+import { Context, Next } from 'hono'
+import { WebhookProvider, WebhookSignatureVerifier } from '../types/webhooks'
 
 /**
  * Google Calendar webhook signature verifier
@@ -11,7 +11,7 @@ class GoogleCalendarVerifier implements WebhookSignatureVerifier {
   verifySignature(_payload: string, _signature: string, _secret: string): boolean {
     // Google Calendar uses channel-based notifications with no signature
     // Verification is done by checking the channel exists in our system
-    return true; // We'll verify at the plugin level
+    return true // We'll verify at the plugin level
   }
 }
 
@@ -21,12 +21,9 @@ class GoogleCalendarVerifier implements WebhookSignatureVerifier {
 class AirtableVerifier implements WebhookSignatureVerifier {
   verifySignature(payload: string, signature: string, secret: string): boolean {
     // Airtable uses HMAC-SHA256 signature
-    const expectedSignature = crypto
-      .createHmac('sha256', secret)
-      .update(payload)
-      .digest('base64');
-    
-    return signature === expectedSignature;
+    const expectedSignature = crypto.createHmac('sha256', secret).update(payload).digest('base64')
+
+    return signature === expectedSignature
   }
 }
 
@@ -36,12 +33,10 @@ class AirtableVerifier implements WebhookSignatureVerifier {
 class NotionVerifier implements WebhookSignatureVerifier {
   verifySignature(payload: string, signature: string, secret: string): boolean {
     // Notion uses HMAC-SHA256 signature with 'sha256=' prefix
-    const expectedSignature = 'sha256=' + crypto
-      .createHmac('sha256', secret)
-      .update(payload)
-      .digest('hex');
-    
-    return signature === expectedSignature;
+    const expectedSignature =
+      'sha256=' + crypto.createHmac('sha256', secret).update(payload).digest('hex')
+
+    return signature === expectedSignature
   }
 }
 
@@ -51,13 +46,13 @@ class NotionVerifier implements WebhookSignatureVerifier {
 function getVerifier(provider: WebhookProvider): WebhookSignatureVerifier {
   switch (provider) {
     case 'google-calendar':
-      return new GoogleCalendarVerifier();
+      return new GoogleCalendarVerifier()
     case 'airtable':
-      return new AirtableVerifier();
+      return new AirtableVerifier()
     case 'notion':
-      return new NotionVerifier();
+      return new NotionVerifier()
     default:
-      throw new Error(`No signature verifier for provider: ${provider}`);
+      throw new Error(`No signature verifier for provider: ${provider}`)
   }
 }
 
@@ -65,30 +60,26 @@ function getVerifier(provider: WebhookProvider): WebhookSignatureVerifier {
  * Rate limiting store for webhooks
  */
 class WebhookRateLimiter {
-  private static store = new Map<string, { count: number; resetTime: number }>();
+  private static store = new Map<string, { count: number; resetTime: number }>()
 
-  static isAllowed(
-    organizationId: string, 
-    pluginId: string, 
-    limitPerMinute: number
-  ): boolean {
-    const key = `${organizationId}:${pluginId}`;
-    const now = Date.now();
+  static isAllowed(organizationId: string, pluginId: string, limitPerMinute: number): boolean {
+    const key = `${organizationId}:${pluginId}`
+    const now = Date.now()
 
-    const record = this.store.get(key);
-    
+    const record = this.store.get(key)
+
     if (!record || now > record.resetTime) {
       // New window or expired
-      this.store.set(key, { count: 1, resetTime: now + 60000 });
-      return true;
+      this.store.set(key, { count: 1, resetTime: now + 60000 })
+      return true
     }
 
     if (record.count >= limitPerMinute) {
-      return false;
+      return false
     }
 
-    record.count++;
-    return true;
+    record.count++
+    return true
   }
 }
 
@@ -101,7 +92,7 @@ export const webhookAuth = (provider: WebhookProvider) => {
     const supabase = createClient(
       process.env.SUPABASE_URL || '',
       process.env.SUPABASE_SERVICE_KEY || ''
-    );
+    )
 
     // Get webhook configuration
     const { data: config, error: configError } = await supabase
@@ -109,85 +100,98 @@ export const webhookAuth = (provider: WebhookProvider) => {
       .select('*')
       .eq('plugin_id', provider)
       .eq('active', true)
-      .single();
+      .single()
 
     if (configError || !config) {
-      logger.warn('Webhook config not found', { provider, error: configError });
-      return c.json({
-        success: false,
-        error: {
-          code: 'WEBHOOK_NOT_CONFIGURED',
-          message: 'Webhook not configured for this provider'
-        }
-      }, 404);
+      logger.warn('Webhook config not found', { provider, error: configError })
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: 'WEBHOOK_NOT_CONFIGURED',
+            message: 'Webhook not configured for this provider',
+          },
+        },
+        404
+      )
     }
 
     // Rate limiting check
-    if (!WebhookRateLimiter.isAllowed(config.organization_id, provider, config.rate_limit_per_minute)) {
-      return c.json({
-        success: false,
-        error: {
-          code: 'RATE_LIMITED',
-          message: 'Webhook rate limit exceeded'
-        }
-      }, 429);
+    if (
+      !WebhookRateLimiter.isAllowed(config.organization_id, provider, config.rate_limit_per_minute)
+    ) {
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: 'RATE_LIMITED',
+            message: 'Webhook rate limit exceeded',
+          },
+        },
+        429
+      )
     }
 
     // Get raw body for signature verification
-    const body = await c.req.text();
-    const signature = c.req.header('webhook-signature') || 
-                     c.req.header('x-airtable-content-signature') ||
-                     c.req.header('x-notion-signature') ||
-                     '';
+    const body = await c.req.text()
+    const signature =
+      c.req.header('webhook-signature') ||
+      c.req.header('x-airtable-content-signature') ||
+      c.req.header('x-notion-signature') ||
+      ''
 
     // Verify signature
-    const verifier = getVerifier(provider);
-    const isValid = verifier.verifySignature(body, signature, config.secret);
+    const verifier = getVerifier(provider)
+    const isValid = verifier.verifySignature(body, signature, config.secret)
 
     if (!isValid) {
-      logger.warn('Invalid webhook signature', { 
-        provider, 
+      logger.warn('Invalid webhook signature', {
+        provider,
         organizationId: config.organization_id,
-        signature 
-      });
-      
-      return c.json({
-        success: false,
-        error: {
-          code: 'INVALID_SIGNATURE',
-          message: 'Webhook signature verification failed'
-        }
-      }, 401);
+        signature,
+      })
+
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: 'INVALID_SIGNATURE',
+            message: 'Webhook signature verification failed',
+          },
+        },
+        401
+      )
     }
 
     // Parse JSON body for route handler
-    let parsedBody;
+    let parsedBody
     try {
-      parsedBody = JSON.parse(body);
+      parsedBody = JSON.parse(body)
     } catch {
-      return c.json({
-        success: false,
-        error: {
-          code: 'INVALID_JSON',
-          message: 'Invalid JSON in webhook payload'
-        }
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: 'INVALID_JSON',
+            message: 'Invalid JSON in webhook payload',
+          },
+        },
+        400
+      )
     }
 
     // Store config and validated body in context
-    c.set('webhookConfig', config);
-    c.set('webhookBody', body);
-    c.set('webhookParsedBody', parsedBody);
+    c.set('webhookConfig', config)
+    c.set('webhookBody', body)
+    c.set('webhookParsedBody', parsedBody)
 
-    await next();
-  };
-};
+    await next()
+  }
+}
 
 /**
  * Get idempotency key from request headers
  */
 export function getIdempotencyKey(c: Context): string | undefined {
-  return c.req.header('idempotency-key') || 
-         c.req.header('x-idempotency-key') ||
-         undefined;
+  return c.req.header('idempotency-key') || c.req.header('x-idempotency-key') || undefined
 }

@@ -230,7 +230,6 @@ describe('Auth Store', () => {
         expiresAt: '2024-12-31T23:59:59Z',
         isAuthenticated: true,
       })
-
       ;(fetch as any).mockResolvedValueOnce({
         ok: false,
         json: async () => ({ message: 'Token refresh failed' }),

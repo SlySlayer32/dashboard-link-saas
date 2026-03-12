@@ -28,7 +28,7 @@ export {
   type PasswordPolicy,
   type SessionConfig,
   type UserRole,
-  type ValidationError
+  type ValidationError,
 } from './auth.types'
 
 // Token types - Export all from token.types
@@ -64,7 +64,7 @@ export {
   AuthorizationError,
   ConflictError,
   NotFoundError,
-  RateLimitError
+  RateLimitError,
 } from './errors'
 
 export * from './hono'

@@ -26,15 +26,14 @@ const badgeVariants = cva(
   }
 )
 
-export interface BadgeProps
-  extends React.HTMLAttributes<HTMLSpanElement> {
+export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info'
   size?: 'sm' | 'md' | 'lg'
 }
 
 /**
  * Badge component - status indicators for Zapier-style admin interface
- * 
+ *
  * Usage:
  * <Badge>Default</Badge>
  * <Badge variant="success">Connected</Badge>
@@ -50,10 +49,7 @@ export const Badge: React.FC<BadgeProps> = ({
   ...props
 }) => {
   return (
-    <span
-      className={`${badgeVariants({ variant, size })} ${className}`}
-      {...props}
-    >
+    <span className={`${badgeVariants({ variant, size })} ${className}`} {...props}>
       {children}
     </span>
   )

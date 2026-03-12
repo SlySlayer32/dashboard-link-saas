@@ -1,15 +1,10 @@
 import React from 'react'
 
-
 interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   error?: string
 }
 
-export const Textarea: React.FC<TextareaProps> = ({
-  className = '',
-  error,
-  ...props
-}) => {
+export const Textarea: React.FC<TextareaProps> = ({ className = '', error, ...props }) => {
   return (
     <div>
       <textarea
@@ -21,9 +16,7 @@ export const Textarea: React.FC<TextareaProps> = ({
         `}
         {...props}
       />
-      {error && (
-        <p className='mt-1 text-sm text-red-600'>{error}</p>
-      )}
+      {error && <p className='mt-1 text-sm text-red-600'>{error}</p>}
     </div>
   )
 }

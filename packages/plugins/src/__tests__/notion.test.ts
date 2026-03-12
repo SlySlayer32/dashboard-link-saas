@@ -1,8 +1,8 @@
 import type {
-    DateRange,
-    PluginConfig,
-    StandardScheduleItem,
-    StandardTaskItem
+  DateRange,
+  PluginConfig,
+  StandardScheduleItem,
+  StandardTaskItem,
 } from '@dashboard-link/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { BasePluginAdapter } from '../base/adapter'
@@ -39,25 +39,25 @@ describe('NotionAdapter', () => {
           id: 'page123',
           created_time: '2024-01-01T10:00:00Z',
           properties: {
-            'Worker': { rich_text: [{ plain_text: 'worker-123' }] },
-            'Date': { date: { start: '2024-01-01' } },
+            Worker: { rich_text: [{ plain_text: 'worker-123' }] },
+            Date: { date: { start: '2024-01-01' } },
             'Start Time': { rich_text: [{ plain_text: '09:00' }] },
             'End Time': { rich_text: [{ plain_text: '17:00' }] },
-            'Title': { title: [{ plain_text: 'Office Shift' }] },
-            'Location': { rich_text: [{ plain_text: 'Main Office' }] },
-            'Description': { rich_text: [{ plain_text: 'Regular work shift' }] }
-          }
-        }
+            Title: { title: [{ plain_text: 'Office Shift' }] },
+            Location: { rich_text: [{ plain_text: 'Main Office' }] },
+            Description: { rich_text: [{ plain_text: 'Regular work shift' }] },
+          },
+        },
       ]
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ results: mockPages })
+        json: async () => ({ results: mockPages }),
       })
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const config: PluginConfig = {
@@ -69,8 +69,8 @@ describe('NotionAdapter', () => {
           integrationSecret: 'secret123',
           scheduleDatabaseId: 'db123',
           workerProperty: 'Worker',
-          dateProperty: 'Date'
-        }
+          dateProperty: 'Date',
+        },
       }
 
       const result = await (adapter as any).fetchExternalSchedule('worker-123', dateRange, config)
@@ -80,11 +80,11 @@ describe('NotionAdapter', () => {
         {
           method: 'POST',
           headers: {
-            'Authorization': 'Bearer secret123',
+            Authorization: 'Bearer secret123',
             'Content-Type': 'application/json',
-            'Notion-Version': '2022-06-28'
+            'Notion-Version': '2022-06-28',
           },
-          body: expect.stringContaining('Worker')
+          body: expect.stringContaining('Worker'),
         }
       )
 
@@ -94,12 +94,12 @@ describe('NotionAdapter', () => {
     it('should use default property names', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ results: [] })
+        json: async () => ({ results: [] }),
       })
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const config: PluginConfig = {
@@ -109,8 +109,8 @@ describe('NotionAdapter', () => {
         enabled: true,
         settings: {
           integrationSecret: 'secret123',
-          scheduleDatabaseId: 'db123'
-        }
+          scheduleDatabaseId: 'db123',
+        },
       }
 
       await (adapter as any).fetchExternalSchedule('worker-123', dateRange, config)
@@ -118,7 +118,7 @@ describe('NotionAdapter', () => {
       expect(mockFetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          body: expect.stringContaining('Worker')
+          body: expect.stringContaining('Worker'),
         })
       )
     })
@@ -126,7 +126,7 @@ describe('NotionAdapter', () => {
     it('should handle missing integration secret or database ID', async () => {
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const config: PluginConfig = {
@@ -135,9 +135,9 @@ describe('NotionAdapter', () => {
         version: '1.0.0',
         enabled: true,
         settings: {
-          integrationSecret: 'secret123'
+          integrationSecret: 'secret123',
           // Missing scheduleDatabaseId
-        }
+        },
       }
 
       await expect(
@@ -148,12 +148,12 @@ describe('NotionAdapter', () => {
     it('should handle API errors', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        statusText: 'Unauthorized'
+        statusText: 'Unauthorized',
       })
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const config: PluginConfig = {
@@ -163,8 +163,8 @@ describe('NotionAdapter', () => {
         enabled: true,
         settings: {
           integrationSecret: 'invalid-secret',
-          scheduleDatabaseId: 'db123'
-        }
+          scheduleDatabaseId: 'db123',
+        },
       }
 
       await expect(
@@ -175,12 +175,12 @@ describe('NotionAdapter', () => {
     it('should properly construct filter with custom property names', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ results: [] })
+        json: async () => ({ results: [] }),
       })
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const config: PluginConfig = {
@@ -192,20 +192,20 @@ describe('NotionAdapter', () => {
           integrationSecret: 'secret123',
           scheduleDatabaseId: 'db123',
           workerProperty: 'Employee ID',
-          dateProperty: 'Schedule Date'
-        }
+          dateProperty: 'Schedule Date',
+        },
       }
 
       await (adapter as any).fetchExternalSchedule('worker-123', dateRange, config)
 
       const requestBody = JSON.parse(mockFetch.mock.calls[0][1]?.body as string) as {
-  filter: {
-    and: Array<{
-      property: string;
-      date?: { on_or_after?: string; on_or_before?: string };
-    }>;
-  };
-}
+        filter: {
+          and: Array<{
+            property: string
+            date?: { on_or_after?: string; on_or_before?: string }
+          }>
+        }
+      }
       expect(requestBody.filter.and[0].property).toBe('Employee ID')
       expect(requestBody.filter.and[1].property).toBe('Schedule Date')
     })
@@ -218,19 +218,19 @@ describe('NotionAdapter', () => {
           id: 'page456',
           created_time: '2024-01-01T10:00:00Z',
           properties: {
-            'Worker': { rich_text: [{ plain_text: 'worker-123' }] },
-            'Title': { title: [{ plain_text: 'Complete Report' }] },
-            'Description': { rich_text: [{ plain_text: 'Monthly report' }] },
+            Worker: { rich_text: [{ plain_text: 'worker-123' }] },
+            Title: { title: [{ plain_text: 'Complete Report' }] },
+            Description: { rich_text: [{ plain_text: 'Monthly report' }] },
             'Due Date': { date: { start: '2024-01-01' } },
-            'Priority': { select: { name: 'High' } },
-            'Status': { select: { name: 'Pending' } }
-          }
-        }
+            Priority: { select: { name: 'High' } },
+            Status: { select: { name: 'Pending' } },
+          },
+        },
       ]
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ results: mockPages })
+        json: async () => ({ results: mockPages }),
       })
 
       const config: PluginConfig = {
@@ -241,8 +241,8 @@ describe('NotionAdapter', () => {
         settings: {
           integrationSecret: 'secret123',
           tasksDatabaseId: 'task123',
-          workerProperty: 'Worker'
-        }
+          workerProperty: 'Worker',
+        },
       }
 
       const result = await (adapter as any).fetchExternalTasks('worker-123', config)
@@ -252,10 +252,10 @@ describe('NotionAdapter', () => {
         expect.objectContaining({
           method: 'POST',
           headers: {
-            'Authorization': 'Bearer secret123',
+            Authorization: 'Bearer secret123',
             'Content-Type': 'application/json',
-            'Notion-Version': '2022-06-28'
-          }
+            'Notion-Version': '2022-06-28',
+          },
         })
       )
 
@@ -265,7 +265,7 @@ describe('NotionAdapter', () => {
     it('should use default tasks database when not specified', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ results: [] })
+        json: async () => ({ results: [] }),
       })
 
       const config: PluginConfig = {
@@ -275,8 +275,8 @@ describe('NotionAdapter', () => {
         enabled: true,
         settings: {
           integrationSecret: 'secret123',
-          scheduleDatabaseId: 'db123'
-        }
+          scheduleDatabaseId: 'db123',
+        },
       }
 
       await (adapter as any).fetchExternalTasks('worker-123', config)
@@ -294,14 +294,14 @@ describe('NotionAdapter', () => {
         id: 'page123',
         created_time: '2024-01-01T10:00:00Z',
         properties: {
-          'Worker': { rich_text: [{ plain_text: 'worker-123' }] },
-          'Date': { date: { start: '2024-01-01' } },
+          Worker: { rich_text: [{ plain_text: 'worker-123' }] },
+          Date: { date: { start: '2024-01-01' } },
           'Start Time': { rich_text: [{ plain_text: '09:00' }] },
           'End Time': { rich_text: [{ plain_text: '17:00' }] },
-          'Title': { title: [{ plain_text: 'Office Shift' }] },
-          'Location': { rich_text: [{ plain_text: 'Main Office' }] },
-          'Description': { rich_text: [{ plain_text: 'Regular work shift' }] }
-        }
+          Title: { title: [{ plain_text: 'Office Shift' }] },
+          Location: { rich_text: [{ plain_text: 'Main Office' }] },
+          Description: { rich_text: [{ plain_text: 'Regular work shift' }] },
+        },
       }
 
       const result = (adapter as any).transformScheduleItem(externalPage)
@@ -316,8 +316,8 @@ describe('NotionAdapter', () => {
         metadata: {
           notionPageId: 'page123',
           createdTime: '2024-01-01T10:00:00Z',
-          workerId: 'worker-123'
-        }
+          workerId: 'worker-123',
+        },
       }
 
       expect(result).toEqual(expected)
@@ -328,12 +328,12 @@ describe('NotionAdapter', () => {
         id: 'page123',
         created_time: '2024-01-01T10:00:00Z',
         properties: {
-          'Worker': { rich_text: [{ plain_text: 'worker-123' }] },
-          'Date': { date: { start: '2024-01-01' } },
+          Worker: { rich_text: [{ plain_text: 'worker-123' }] },
+          Date: { date: { start: '2024-01-01' } },
           'Start Time': { rich_text: [{ plain_text: '09:00' }] },
           'End Time': { rich_text: [{ plain_text: '17:00' }] },
-          'Title': { title: [{ plain_text: 'Office Shift' }] }
-        }
+          Title: { title: [{ plain_text: 'Office Shift' }] },
+        },
       }
 
       const result = (adapter as any).transformScheduleItem(externalPage)
@@ -348,8 +348,8 @@ describe('NotionAdapter', () => {
         metadata: {
           notionPageId: 'page123',
           createdTime: '2024-01-01T10:00:00Z',
-          workerId: 'worker-123'
-        }
+          workerId: 'worker-123',
+        },
       })
     })
 
@@ -358,10 +358,10 @@ describe('NotionAdapter', () => {
         id: 'page123',
         created_time: '2024-01-01T10:00:00Z',
         properties: {
-          'Worker': { rich_text: [{ plain_text: 'worker-123' }] },
-          'Date': { date: { start: '2024-01-01' } }
+          Worker: { rich_text: [{ plain_text: 'worker-123' }] },
+          Date: { date: { start: '2024-01-01' } },
           // Missing Start Time and End Time
-        }
+        },
       }
 
       const result = (adapter as any).transformScheduleItem(invalidPage)
@@ -373,11 +373,11 @@ describe('NotionAdapter', () => {
         id: 'page123',
         created_time: '2024-01-01T10:00:00Z',
         properties: {
-          'Worker': { rich_text: [{ plain_text: 'worker-123' }] },
-          'Date': { date: { start: '2024-01-01' } },
+          Worker: { rich_text: [{ plain_text: 'worker-123' }] },
+          Date: { date: { start: '2024-01-01' } },
           'Start Time': { rich_text: [{ plain_text: '09:00' }] },
-          'End Time': { rich_text: [{ plain_text: '17:00' }] }
-        }
+          'End Time': { rich_text: [{ plain_text: '17:00' }] },
+        },
       }
 
       const result = (adapter as any).transformScheduleItem(externalPage)
@@ -389,11 +389,11 @@ describe('NotionAdapter', () => {
         id: 'page123',
         created_time: '2024-01-01T10:00:00Z',
         properties: {
-          'Date': { date: { start: '2024-01-01' } },
+          Date: { date: { start: '2024-01-01' } },
           'Start Time': { rich_text: [{ plain_text: '09:00' }] },
           'End Time': { rich_text: [{ plain_text: '17:00' }] },
-          'Title': { title: [{ plain_text: 'Office Shift' }] }
-        }
+          Title: { title: [{ plain_text: 'Office Shift' }] },
+        },
       }
 
       const result = (adapter as any).transformScheduleItem(externalPage)
@@ -407,13 +407,13 @@ describe('NotionAdapter', () => {
         id: 'page456',
         created_time: '2024-01-01T10:00:00Z',
         properties: {
-          'Worker': { rich_text: [{ plain_text: 'worker-123' }] },
-          'Title': { title: [{ plain_text: 'Complete Report' }] },
-          'Description': { rich_text: [{ plain_text: 'Monthly report' }] },
+          Worker: { rich_text: [{ plain_text: 'worker-123' }] },
+          Title: { title: [{ plain_text: 'Complete Report' }] },
+          Description: { rich_text: [{ plain_text: 'Monthly report' }] },
           'Due Date': { date: { start: '2024-01-01' } },
-          'Priority': { select: { name: 'High' } },
-          'Status': { select: { name: 'Pending' } }
-        }
+          Priority: { select: { name: 'High' } },
+          Status: { select: { name: 'Pending' } },
+        },
       }
 
       const result = (adapter as any).transformTaskItem(externalPage)
@@ -428,8 +428,8 @@ describe('NotionAdapter', () => {
         metadata: {
           notionPageId: 'page456',
           createdTime: '2024-01-01T10:00:00Z',
-          workerId: 'worker-123'
-        }
+          workerId: 'worker-123',
+        },
       }
 
       expect(result).toEqual(expected)
@@ -441,7 +441,7 @@ describe('NotionAdapter', () => {
         { priority: { name: 'Medium' }, expected: 'medium' },
         { priority: { name: 'Low' }, expected: 'low' },
         { priority: { name: 'URGENT' }, expected: 'medium' }, // default
-        { priority: undefined, expected: 'medium' } // default
+        { priority: undefined, expected: 'medium' }, // default
       ]
 
       testCases.forEach(({ priority, expected }) => {
@@ -449,10 +449,10 @@ describe('NotionAdapter', () => {
           id: 'page456',
           created_time: '2024-01-01T10:00:00Z',
           properties: {
-            'Worker': { rich_text: [{ plain_text: 'worker-123' }] },
-            'Title': { title: [{ plain_text: 'Test Task' }] },
-            'Priority': priority
-          }
+            Worker: { rich_text: [{ plain_text: 'worker-123' }] },
+            Title: { title: [{ plain_text: 'Test Task' }] },
+            Priority: priority,
+          },
         }
 
         const result = (adapter as any).transformTaskItem(externalPage)
@@ -466,7 +466,7 @@ describe('NotionAdapter', () => {
         { status: { name: 'In Progress' }, expected: 'in_progress' },
         { status: { name: 'Completed' }, expected: 'completed' },
         { status: { name: 'Done' }, expected: 'pending' }, // default
-        { status: undefined, expected: 'pending' } // default
+        { status: undefined, expected: 'pending' }, // default
       ]
 
       testCases.forEach(({ status, expected }) => {
@@ -474,10 +474,10 @@ describe('NotionAdapter', () => {
           id: 'page456',
           created_time: '2024-01-01T10:00:00Z',
           properties: {
-            'Worker': { rich_text: [{ plain_text: 'worker-123' }] },
-            'Title': { title: [{ plain_text: 'Test Task' }] },
-            'Status': status
-          }
+            Worker: { rich_text: [{ plain_text: 'worker-123' }] },
+            Title: { title: [{ plain_text: 'Test Task' }] },
+            Status: status,
+          },
         }
 
         const result = (adapter as any).transformTaskItem(externalPage)
@@ -490,11 +490,11 @@ describe('NotionAdapter', () => {
         id: 'page456',
         created_time: '2024-01-01T10:00:00Z',
         properties: {
-          'Worker': { rich_text: [{ plain_text: 'worker-123' }] },
-          'Title': { title: [{ plain_text: 'Simple Task' }] },
-          'Priority': { select: { name: 'Medium' } },
-          'Status': { select: { name: 'In Progress' } }
-        }
+          Worker: { rich_text: [{ plain_text: 'worker-123' }] },
+          Title: { title: [{ plain_text: 'Simple Task' }] },
+          Priority: { select: { name: 'Medium' } },
+          Status: { select: { name: 'In Progress' } },
+        },
       }
 
       const result = (adapter as any).transformTaskItem(externalPage)
@@ -509,8 +509,8 @@ describe('NotionAdapter', () => {
         metadata: {
           notionPageId: 'page456',
           createdTime: '2024-01-01T10:00:00Z',
-          workerId: 'worker-123'
-        }
+          workerId: 'worker-123',
+        },
       })
     })
 
@@ -519,9 +519,9 @@ describe('NotionAdapter', () => {
         id: 'page456',
         created_time: '2024-01-01T10:00:00Z',
         properties: {
-          'Worker': { rich_text: [{ plain_text: 'worker-123' }] }
+          Worker: { rich_text: [{ plain_text: 'worker-123' }] },
           // Missing title
-        }
+        },
       }
 
       const result = (adapter as any).transformTaskItem(invalidPage)
@@ -538,8 +538,8 @@ describe('NotionAdapter', () => {
         enabled: true,
         settings: {
           integrationSecret: 'secret123',
-          scheduleDatabaseId: 'db123'
-        }
+          scheduleDatabaseId: 'db123',
+        },
       }
 
       // Mock successful API calls
@@ -560,8 +560,8 @@ describe('NotionAdapter', () => {
         version: '1.0.0',
         enabled: true,
         settings: {
-          scheduleDatabaseId: 'db123'
-        }
+          scheduleDatabaseId: 'db123',
+        },
       }
 
       const result = await adapter.validateConfig(config)
@@ -577,8 +577,8 @@ describe('NotionAdapter', () => {
         version: '1.0.0',
         enabled: true,
         settings: {
-          integrationSecret: 'secret123'
-        }
+          integrationSecret: 'secret123',
+        },
       }
 
       const result = await adapter.validateConfig(config)
@@ -595,14 +595,14 @@ describe('NotionAdapter', () => {
         enabled: true,
         settings: {
           integrationSecret: 'invalid-secret',
-          scheduleDatabaseId: 'db123'
-        }
+          scheduleDatabaseId: 'db123',
+        },
       }
 
       // Mock failed API call
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        statusText: 'Unauthorized'
+        statusText: 'Unauthorized',
       })
 
       const result = await adapter.validateConfig(config)
@@ -619,8 +619,8 @@ describe('NotionAdapter', () => {
         enabled: true,
         settings: {
           integrationSecret: 'secret123',
-          scheduleDatabaseId: 'db123'
-        }
+          scheduleDatabaseId: 'db123',
+        },
       }
 
       // Mock network error
@@ -640,23 +640,23 @@ describe('NotionAdapter', () => {
           id: 'page123',
           created_time: '2024-01-01T10:00:00Z',
           properties: {
-            'Worker': { rich_text: [{ plain_text: 'worker-123' }] },
-            'Date': { date: { start: '2024-01-01' } },
+            Worker: { rich_text: [{ plain_text: 'worker-123' }] },
+            Date: { date: { start: '2024-01-01' } },
             'Start Time': { rich_text: [{ plain_text: '09:00' }] },
             'End Time': { rich_text: [{ plain_text: '17:00' }] },
-            'Title': { title: [{ plain_text: 'Office Shift' }] }
-          }
-        }
+            Title: { title: [{ plain_text: 'Office Shift' }] },
+          },
+        },
       ]
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ results: mockPages })
+        json: async () => ({ results: mockPages }),
       })
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const result = await adapter.getSchedule('worker-123', dateRange, {
@@ -664,7 +664,7 @@ describe('NotionAdapter', () => {
         name: 'Notion Plugin',
         version: '1.0.0',
         enabled: true,
-        settings: { integrationSecret: 'secret123', scheduleDatabaseId: 'db123' }
+        settings: { integrationSecret: 'secret123', scheduleDatabaseId: 'db123' },
       })
 
       expect(result.success).toBe(true)
@@ -679,7 +679,7 @@ describe('NotionAdapter', () => {
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const result = await adapter.getSchedule('worker-123', dateRange, {
@@ -687,7 +687,7 @@ describe('NotionAdapter', () => {
         name: 'Notion Plugin',
         version: '1.0.0',
         enabled: true,
-        settings: { integrationSecret: 'secret123', scheduleDatabaseId: 'db123' }
+        settings: { integrationSecret: 'secret123', scheduleDatabaseId: 'db123' },
       })
 
       expect(result.success).toBe(false)
@@ -704,17 +704,17 @@ describe('NotionAdapter', () => {
           id: 'page456',
           created_time: '2024-01-01T10:00:00Z',
           properties: {
-            'Worker': { rich_text: [{ plain_text: 'worker-123' }] },
-            'Title': { title: [{ plain_text: 'Complete Report' }] },
-            'Priority': { select: { name: 'High' } },
-            'Status': { select: { name: 'Pending' } }
-          }
-        }
+            Worker: { rich_text: [{ plain_text: 'worker-123' }] },
+            Title: { title: [{ plain_text: 'Complete Report' }] },
+            Priority: { select: { name: 'High' } },
+            Status: { select: { name: 'Pending' } },
+          },
+        },
       ]
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ results: mockPages })
+        json: async () => ({ results: mockPages }),
       })
 
       const result = await adapter.getTasks('worker-123', {
@@ -722,7 +722,7 @@ describe('NotionAdapter', () => {
         name: 'Notion Plugin',
         version: '1.0.0',
         enabled: true,
-        settings: { integrationSecret: 'secret123', scheduleDatabaseId: 'db123' }
+        settings: { integrationSecret: 'secret123', scheduleDatabaseId: 'db123' },
       })
 
       expect(result.success).toBe(true)
@@ -739,7 +739,7 @@ describe('NotionAdapter', () => {
         name: 'Notion Plugin',
         version: '1.0.0',
         enabled: true,
-        settings: { integrationSecret: 'secret123', scheduleDatabaseId: 'db123' }
+        settings: { integrationSecret: 'secret123', scheduleDatabaseId: 'db123' },
       })
 
       expect(result.success).toBe(false)

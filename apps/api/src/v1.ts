@@ -6,6 +6,7 @@ import { z } from 'zod'
 
 // Import routes
 import tokens from './routes/tokens'
+import { workers } from './routes/workers'
 
 // Import services
 import { SMSService } from './services/sms-service'
@@ -584,6 +585,7 @@ v1.post(
 // Mount tokens route
 v1.route('/tokens', tokens)
 
-// Import routes
+// Mount workers route
+v1.route('/workers', workers)
 
 export default v1

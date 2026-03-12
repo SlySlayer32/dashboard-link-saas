@@ -7,7 +7,6 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { useAutoRefresh } from './hooks/useAutoRefresh'
 import { LoginPage } from './pages/LoginPage'
 import { useAuthStore } from './store/auth'
-
 // Lazy load pages
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const WorkersPage = lazy(() => import('./pages/WorkersPage'))
@@ -26,6 +25,7 @@ function App() {
 
   return (
     <div className='min-h-screen bg-gray-50 flex'>
+      <Toaster position='top-right' />
       <DevLoginButton />
       {!user ? (
         // Login page - full screen without navigation

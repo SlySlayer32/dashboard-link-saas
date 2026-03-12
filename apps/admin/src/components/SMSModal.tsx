@@ -8,7 +8,10 @@ import { Textarea } from './ui/Textarea'
 
 // Form schema
 const smsFormSchema = z.object({
-  message: z.string().min(1, 'Message is required').max(1600, 'Message too long (max 1600 characters)'),
+  message: z
+    .string()
+    .min(1, 'Message is required')
+    .max(1600, 'Message too long (max 1600 characters)'),
   expiresIn: z.enum(['1h', '6h', '12h', '24h']),
   customMessage: z.string().optional(),
 })
@@ -79,14 +82,19 @@ export const SMSModal: React.FC<SMSModalProps> = ({
           <form onSubmit={handleSubmit(handleFormSubmit)}>
             <div className='bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4'>
               <div className='mb-4'>
-                <h3 className='text-lg leading-6 font-medium text-gray-900'>Send SMS to {workerName}</h3>
+                <h3 className='text-lg leading-6 font-medium text-gray-900'>
+                  Send SMS to {workerName}
+                </h3>
                 <p className='mt-1 text-sm text-gray-500'>Phone: {workerPhone}</p>
               </div>
 
               <div className='space-y-4'>
                 {/* Custom Message */}
                 <div>
-                  <label htmlFor='customMessage' className='block text-sm font-medium text-gray-700'>
+                  <label
+                    htmlFor='customMessage'
+                    className='block text-sm font-medium text-gray-700'
+                  >
                     Custom Message
                   </label>
                   <Textarea
@@ -115,11 +123,13 @@ export const SMSModal: React.FC<SMSModalProps> = ({
                     disabled={isLoading}
                   />
                   <div className='mt-1 flex justify-between items-center'>
-                    <p className='text-xs text-gray-500'>
-                      {messageLength}/1600 characters
-                    </p>
-                    <p className={`text-xs ${messageLength > 1600 ? 'text-red-500' : 'text-gray-500'}`}>
-                      {messageLength > 160 ? `${Math.ceil(messageLength / 160)} SMS segments` : '1 SMS segment'}
+                    <p className='text-xs text-gray-500'>{messageLength}/1600 characters</p>
+                    <p
+                      className={`text-xs ${messageLength > 1600 ? 'text-red-500' : 'text-gray-500'}`}
+                    >
+                      {messageLength > 160
+                        ? `${Math.ceil(messageLength / 160)} SMS segments`
+                        : '1 SMS segment'}
                     </p>
                   </div>
                 </div>

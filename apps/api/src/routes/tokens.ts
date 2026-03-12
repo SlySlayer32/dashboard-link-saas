@@ -52,14 +52,17 @@ tokens.get('/', zValidator('query', listTokensSchema), async (c) => {
     // Build base query
     let dbQuery = supabase
       .from('dashboard_tokens')
-      .select(`
+      .select(
+        `
         *,
         workers (
           id,
           full_name,
           phone_number
         )
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' }
+      )
       .eq('organization_id', tenant.orgId)
       .order('created_at', { ascending: false })
 
@@ -259,7 +262,8 @@ tokens.post('/regenerate', zValidator('json', regenerateTokenSchema), async (c) 
         organization_id: tenant.orgId,
         expires_at: expiresAt,
       })
-      .select(`
+      .select(
+        `
         id,
         created_at,
         expires_at,
@@ -268,7 +272,8 @@ tokens.post('/regenerate', zValidator('json', regenerateTokenSchema), async (c) 
           full_name,
           phone_number
         )
-      `)
+      `
+      )
       .single()
 
     if (insertError) {
@@ -321,7 +326,8 @@ tokens.post('/revoke', zValidator('json', revokeTokenSchema), async (c) => {
       .update({ revoked_at: new Date().toISOString() })
       .eq('id', tokenId)
       .eq('organization_id', tenant.orgId)
-      .select(`
+      .select(
+        `
         id,
         revoked_at,
         workers (
@@ -329,7 +335,8 @@ tokens.post('/revoke', zValidator('json', revokeTokenSchema), async (c) => {
           full_name,
           phone_number
         )
-      `)
+      `
+      )
       .single()
 
     if (error) {

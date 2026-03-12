@@ -3,7 +3,7 @@ import React from 'react'
 
 /**
  * Tabs component - navigation and step switching for Zapier-style admin interface
- * 
+ *
  * Usage:
  * <Tabs defaultValue="account">
  *   <TabsList>

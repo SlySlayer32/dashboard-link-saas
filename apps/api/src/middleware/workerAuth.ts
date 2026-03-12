@@ -1,6 +1,6 @@
-import { createTokenManager } from '@dashboard-link/tokens';
-import type { AppContext } from '../types.js';
-import { logger } from '../utils/logger.js';
+import { createTokenManager } from '@dashboard-link/tokens'
+import type { AppContext } from '../types.js'
+import { logger } from '../utils/logger.js'
 
 // Initialize token manager with database configuration for dashboard_tokens
 const tokenManager = createTokenManager({
@@ -11,8 +11,8 @@ const tokenManager = createTokenManager({
     cleanupExpired: true,
   },
   defaultExpiry: 28800, // 8 hours for worker tokens
-  refreshExpiry: 86400 // 24 hours
-});
+  refreshExpiry: 86400, // 24 hours
+})
 
 /**
  * Middleware to handle worker dashboard authentication via tokens
@@ -23,10 +23,7 @@ export const workerAuthMiddleware = async (c: AppContext, next: () => Promise<vo
     const token = c.req.param('token')
 
     if (!token) {
-      return c.json(
-        { success: false, error: 'No token provided' },
-        401
-      )
+      return c.json({ success: false, error: 'No token provided' }, 401)
     }
 
     // Validate token
@@ -34,16 +31,16 @@ export const workerAuthMiddleware = async (c: AppContext, next: () => Promise<vo
 
     if (!tokenValidation.valid || !tokenValidation.payload) {
       const errorMap: Record<string, string> = {
-        'NOT_FOUND': 'Invalid token',
-        'EXPIRED': 'Token has expired',
-        'INVALID': 'Invalid token',
-        'REVOKED': 'Token has been revoked'
+        NOT_FOUND: 'Invalid token',
+        EXPIRED: 'Token has expired',
+        INVALID: 'Invalid token',
+        REVOKED: 'Token has been revoked',
       }
 
       return c.json(
         {
           success: false,
-          error: errorMap[tokenValidation.error || 'NOT_FOUND']
+          error: errorMap[tokenValidation.error || 'NOT_FOUND'],
         },
         401
       )
@@ -57,7 +54,7 @@ export const workerAuthMiddleware = async (c: AppContext, next: () => Promise<vo
       return c.json(
         {
           success: false,
-          error: 'Invalid token structure'
+          error: 'Invalid token structure',
         },
         401
       )
@@ -70,9 +67,6 @@ export const workerAuthMiddleware = async (c: AppContext, next: () => Promise<vo
     return next()
   } catch (error) {
     logger.error('Worker auth middleware error', error as Error)
-    return c.json(
-      { success: false, error: 'Authentication failed' },
-      500
-    )
+    return c.json({ success: false, error: 'Authentication failed' }, 500)
   }
 }

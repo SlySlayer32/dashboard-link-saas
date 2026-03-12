@@ -12,13 +12,20 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "test": "turbo run test",
+    "test:unit": "vitest run",
     "clean": "turbo run clean && rm -rf node_modules",
     "postinstall": "simple-git-hooks",
     "db:migrate": "npx supabase db push",
     "db:seed": "npx supabase db reset",
     "db:reset": "npx supabase db reset",
     "db:start": "npx supabase start",
-    "db:stop": "npx supabase stop"
+    "db:stop": "npx supabase stop",
+    "typecheck": "turbo run typecheck",
+    "fix:all": "pnpm run lint:fix && pnpm run format",
+    "validate": "pnpm run typecheck && pnpm run lint && pnpm run format:check",
+    "dev:check": "bash scripts/dev-check.sh",
+    "lint:report": "bash scripts/lint-report.sh",
+    "pre-commit": "lint-staged"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

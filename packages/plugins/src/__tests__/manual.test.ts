@@ -1,9 +1,9 @@
 import type {
-    DateRange,
-    PluginConfig,
-    StandardScheduleItem,
-    StandardTaskItem,
-    ValidationResult
+  DateRange,
+  PluginConfig,
+  StandardScheduleItem,
+  StandardTaskItem,
+  ValidationResult,
 } from '@dashboard-link/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { BasePluginAdapter } from '../base/adapter'
@@ -12,7 +12,7 @@ import { ManualAdapter } from '../manual'
 // Mock Supabase
 const mockCreateClient = vi.fn()
 vi.mock('@supabase/supabase-js', () => ({
-  createClient: mockCreateClient
+  createClient: mockCreateClient,
 }))
 
 describe('ManualAdapter', () => {
@@ -30,19 +30,19 @@ describe('ManualAdapter', () => {
               lt: vi.fn(() => ({
                 order: vi.fn(() => ({
                   data: null,
-                  error: null
-                }))
-              }))
-            }))
+                  error: null,
+                })),
+              })),
+            })),
           })),
           lt: vi.fn(() => ({
             order: vi.fn(() => ({
               data: null,
-              error: null
-            }))
-          }))
-        }))
-      }))
+              error: null,
+            })),
+          })),
+        })),
+      })),
     }
     mockCreateClient.mockReturnValue(mockSupabase)
   })
@@ -69,8 +69,8 @@ describe('ManualAdapter', () => {
           start_time: '2024-01-01T09:00:00Z',
           end_time: '2024-01-01T17:00:00Z',
           location: 'Office',
-          description: 'Regular shift'
-        }
+          description: 'Regular shift',
+        },
       ]
 
       // Mock the Supabase chain
@@ -80,24 +80,26 @@ describe('ManualAdapter', () => {
         lt: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({
           data: mockScheduleData,
-          error: null
-        })
+          error: null,
+        }),
       }
 
       mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue(mockChain)
+        select: vi.fn().mockReturnValue(mockChain),
       })
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
-      const result = await (adapter as any).fetchExternalSchedule(
-        'worker-123',
-        dateRange,
-        { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} }
-      )
+      const result = await (adapter as any).fetchExternalSchedule('worker-123', dateRange, {
+        id: 'manual-plugin',
+        name: 'Manual Plugin',
+        version: '1.0.0',
+        enabled: true,
+        settings: {},
+      })
 
       expect(mockSupabase.from).toHaveBeenCalledWith('manual_schedule_items')
       expect(mockChain.eq).toHaveBeenCalledWith('worker_id', 'worker-123')
@@ -115,21 +117,27 @@ describe('ManualAdapter', () => {
         lt: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({
           data: null,
-          error: mockError
-        })
+          error: mockError,
+        }),
       }
 
       mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue(mockChain)
+        select: vi.fn().mockReturnValue(mockChain),
       })
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       await expect(
-        (adapter as any).fetchExternalSchedule('worker-123', dateRange, { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} })
+        (adapter as any).fetchExternalSchedule('worker-123', dateRange, {
+          id: 'manual-plugin',
+          name: 'Manual Plugin',
+          version: '1.0.0',
+          enabled: true,
+          settings: {},
+        })
       ).rejects.toThrow('Database connection failed')
     })
   })
@@ -144,8 +152,8 @@ describe('ManualAdapter', () => {
           description: 'Monthly report',
           due_date: '2024-01-01T17:00:00Z',
           priority: 'high',
-          status: 'pending'
-        }
+          status: 'pending',
+        },
       ]
 
       const mockChain = {
@@ -153,18 +161,21 @@ describe('ManualAdapter', () => {
         lt: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({
           data: mockTaskData,
-          error: null
-        })
+          error: null,
+        }),
       }
 
       mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue(mockChain)
+        select: vi.fn().mockReturnValue(mockChain),
       })
 
-      const result = await (adapter as any).fetchExternalTasks(
-        'worker-123',
-        { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} }
-      )
+      const result = await (adapter as any).fetchExternalTasks('worker-123', {
+        id: 'manual-plugin',
+        name: 'Manual Plugin',
+        version: '1.0.0',
+        enabled: true,
+        settings: {},
+      })
 
       expect(mockSupabase.from).toHaveBeenCalledWith('manual_task_items')
       expect(mockChain.eq).toHaveBeenCalledWith('worker_id', 'worker-123')
@@ -181,7 +192,7 @@ describe('ManualAdapter', () => {
         start_time: '2024-01-01T09:00:00Z',
         end_time: '2024-01-01T17:00:00Z',
         location: 'Office',
-        description: 'Regular shift'
+        description: 'Regular shift',
       }
 
       const result = (adapter as any).transformScheduleItem(externalItem)
@@ -195,8 +206,8 @@ describe('ManualAdapter', () => {
         description: 'Regular shift',
         metadata: {
           source: 'manual',
-          workerId: 'worker-123'
-        }
+          workerId: 'worker-123',
+        },
       }
 
       expect(result).toEqual(expected)
@@ -208,7 +219,7 @@ describe('ManualAdapter', () => {
         worker_id: 'worker-123',
         title: 'Test Shift',
         start_time: '2024-01-01T09:00:00Z',
-        end_time: '2024-01-01T17:00:00Z'
+        end_time: '2024-01-01T17:00:00Z',
       }
 
       const result = (adapter as any).transformScheduleItem(externalItem)
@@ -222,8 +233,8 @@ describe('ManualAdapter', () => {
         description: undefined,
         metadata: {
           source: 'manual',
-          workerId: 'worker-123'
-        }
+          workerId: 'worker-123',
+        },
       })
     })
 
@@ -231,7 +242,7 @@ describe('ManualAdapter', () => {
       const invalidItem = {
         id: '1',
         worker_id: 'worker-123',
-        title: 'Test Shift'
+        title: 'Test Shift',
         // Missing start_time and end_time
       }
 
@@ -249,7 +260,7 @@ describe('ManualAdapter', () => {
         description: 'Monthly report',
         due_date: '2024-01-01T17:00:00Z',
         priority: 'high',
-        status: 'pending'
+        status: 'pending',
       }
 
       const result = (adapter as any).transformTaskItem(externalItem)
@@ -263,8 +274,8 @@ describe('ManualAdapter', () => {
         status: 'pending',
         metadata: {
           source: 'manual',
-          workerId: 'worker-123'
-        }
+          workerId: 'worker-123',
+        },
       }
 
       expect(result).toEqual(expected)
@@ -276,7 +287,7 @@ describe('ManualAdapter', () => {
         worker_id: 'worker-123',
         title: 'Complete Report',
         priority: 'medium',
-        status: 'in_progress'
+        status: 'in_progress',
       }
 
       const result = (adapter as any).transformTaskItem(externalItem)
@@ -290,15 +301,15 @@ describe('ManualAdapter', () => {
         status: 'in_progress',
         metadata: {
           source: 'manual',
-          workerId: 'worker-123'
-        }
+          workerId: 'worker-123',
+        },
       })
     })
 
     it('should return null for invalid item', () => {
       const invalidItem = {
         id: '1',
-        worker_id: 'worker-123'
+        worker_id: 'worker-123',
         // Missing title
       }
 
@@ -314,14 +325,14 @@ describe('ManualAdapter', () => {
         name: 'Manual Plugin',
         version: '1.0.0',
         enabled: true,
-        settings: {}
+        settings: {},
       }
 
       const result = await adapter.validateConfig(config)
 
       const expected: ValidationResult = {
         valid: true,
-        errors: []
+        errors: [],
       }
 
       expect(result).toEqual(expected)
@@ -334,8 +345,8 @@ describe('ManualAdapter', () => {
         version: '1.0.0',
         enabled: true,
         settings: {
-          anySetting: 'any-value'
-        }
+          anySetting: 'any-value',
+        },
       }
 
       const result = await adapter.validateConfig(config)
@@ -355,8 +366,8 @@ describe('ManualAdapter', () => {
           start_time: '2024-01-01T09:00:00Z',
           end_time: '2024-01-01T17:00:00Z',
           location: 'Office',
-          description: 'Regular shift'
-        }
+          description: 'Regular shift',
+        },
       ]
 
       // Mock fetchExternalSchedule
@@ -364,10 +375,16 @@ describe('ManualAdapter', () => {
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
-      const result = await adapter.getSchedule('worker-123', dateRange, { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} })
+      const result = await adapter.getSchedule('worker-123', dateRange, {
+        id: 'manual-plugin',
+        name: 'Manual Plugin',
+        version: '1.0.0',
+        enabled: true,
+        settings: {},
+      })
 
       expect(result.success).toBe(true)
       expect(result.data).toHaveLength(1)
@@ -383,10 +400,16 @@ describe('ManualAdapter', () => {
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
-      const result = await adapter.getSchedule('worker-123', dateRange, { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} })
+      const result = await adapter.getSchedule('worker-123', dateRange, {
+        id: 'manual-plugin',
+        name: 'Manual Plugin',
+        version: '1.0.0',
+        enabled: true,
+        settings: {},
+      })
 
       expect(result.success).toBe(false)
       expect(result.data).toEqual([])
@@ -407,13 +430,19 @@ describe('ManualAdapter', () => {
           description: 'Monthly report',
           due_date: '2024-01-01T17:00:00Z',
           priority: 'high',
-          status: 'pending'
-        }
+          status: 'pending',
+        },
       ]
 
       vi.spyOn(adapter as any, 'fetchExternalTasks').mockResolvedValue(mockExternalData)
 
-      const result = await adapter.getTasks('worker-123', { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} })
+      const result = await adapter.getTasks('worker-123', {
+        id: 'manual-plugin',
+        name: 'Manual Plugin',
+        version: '1.0.0',
+        enabled: true,
+        settings: {},
+      })
 
       expect(result.success).toBe(true)
       expect(result.data).toHaveLength(1)
@@ -426,7 +455,13 @@ describe('ManualAdapter', () => {
       const mockError = new Error('Database connection failed')
       vi.spyOn(adapter as any, 'fetchExternalTasks').mockRejectedValue(mockError)
 
-      const result = await adapter.getTasks('worker-123', { id: 'manual-plugin', name: 'Manual Plugin', version: '1.0.0', enabled: true, settings: {} })
+      const result = await adapter.getTasks('worker-123', {
+        id: 'manual-plugin',
+        name: 'Manual Plugin',
+        version: '1.0.0',
+        enabled: true,
+        settings: {},
+      })
 
       expect(result.success).toBe(false)
       expect(result.data).toEqual([])

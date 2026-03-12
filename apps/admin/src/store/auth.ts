@@ -18,8 +18,16 @@ interface AuthState {
   error: string | null
 
   // Actions
-  login: (credentials: { email: string; password: string }) => Promise<{ success: boolean; error?: string }>
-  register: (userData: { email: string; password: string; name: string; organizationName: string }) => Promise<{ success: boolean; error?: string }>
+  login: (credentials: {
+    email: string
+    password: string
+  }) => Promise<{ success: boolean; error?: string }>
+  register: (userData: {
+    email: string
+    password: string
+    name: string
+    organizationName: string
+  }) => Promise<{ success: boolean; error?: string }>
   logout: () => void
   clearError: () => void
   checkAuth: () => Promise<void>
@@ -33,22 +41,27 @@ const mockAuthService = {
       success: true,
       user: { id: '1', email: credentials.email, name: 'Test User' },
       tokens: { accessToken: 'mock-token', refreshToken: 'mock-refresh' },
-      error: undefined
+      error: undefined,
     }
   },
 
-  register: async (userData: { email: string; password: string; name: string; organizationName: string }) => {
+  register: async (userData: {
+    email: string
+    password: string
+    name: string
+    organizationName: string
+  }) => {
     // Mock successful registration
     return {
       success: true,
       user: { id: '1', email: userData.email, name: userData.name },
-      error: undefined
+      error: undefined,
     }
   },
 
   logout: async () => {
     return { success: true }
-  }
+  },
 }
 
 // Create Zustand store
@@ -75,7 +88,7 @@ export const useAuthStore = create<AuthState>()(
               refreshToken: result.tokens.refreshToken,
               isAuthenticated: true,
               isLoading: false,
-              error: null
+              error: null,
             })
             return { success: true }
           } else {
@@ -85,7 +98,7 @@ export const useAuthStore = create<AuthState>()(
               refreshToken: null,
               isAuthenticated: false,
               isLoading: false,
-              error: result.error || 'Login failed'
+              error: result.error || 'Login failed',
             })
             return { success: false, error: result.error }
           }
@@ -96,7 +109,7 @@ export const useAuthStore = create<AuthState>()(
             refreshToken: null,
             isAuthenticated: false,
             isLoading: false,
-            error: 'An unexpected error occurred'
+            error: 'An unexpected error occurred',
           })
           return { success: false, error: 'An unexpected error occurred' }
         }
@@ -112,7 +125,7 @@ export const useAuthStore = create<AuthState>()(
             // Auto-login after registration
             const loginResult = await mockAuthService.login({
               email: userData.email,
-              password: userData.password
+              password: userData.password,
             })
 
             if (loginResult.success && loginResult.user && loginResult.tokens) {
@@ -122,7 +135,7 @@ export const useAuthStore = create<AuthState>()(
                 refreshToken: loginResult.tokens.refreshToken,
                 isAuthenticated: true,
                 isLoading: false,
-                error: null
+                error: null,
               })
               return { success: true }
             }
@@ -134,7 +147,7 @@ export const useAuthStore = create<AuthState>()(
             refreshToken: null,
             isAuthenticated: false,
             isLoading: false,
-            error: result.error || 'Registration failed'
+            error: result.error || 'Registration failed',
           })
           return { success: false, error: result.error }
         } catch {
@@ -144,7 +157,7 @@ export const useAuthStore = create<AuthState>()(
             refreshToken: null,
             isAuthenticated: false,
             isLoading: false,
-            error: 'An unexpected error occurred'
+            error: 'An unexpected error occurred',
           })
           return { success: false, error: 'An unexpected error occurred' }
         }
@@ -157,7 +170,7 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: null,
           isAuthenticated: false,
           isLoading: false,
-          error: null
+          error: null,
         })
       },
 
@@ -172,7 +185,7 @@ export const useAuthStore = create<AuthState>()(
           // In real implementation, validate token with server
           set({ isAuthenticated: true })
         }
-      }
+      },
     }),
     {
       name: 'auth-storage',
@@ -180,8 +193,8 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         token: state.token,
         refreshToken: state.refreshToken,
-        isAuthenticated: state.isAuthenticated
-      })
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 )
@@ -191,23 +204,25 @@ export const useAuth = () => useAuthStore((state) => state.user)
 export const useAuthIsAuthenticated = () => useAuthStore((state) => state.isAuthenticated)
 export const useAuthIsLoading = () => useAuthStore((state) => state.isLoading)
 export const useAuthError = () => useAuthStore((state) => state.error)
-export const useAuthActions = () => useAuthStore((state) => ({
-  login: state.login,
-  register: state.register,
-  logout: state.logout,
-  clearError: state.clearError,
-  checkAuth: state.checkAuth
-}))
+export const useAuthActions = () =>
+  useAuthStore((state) => ({
+    login: state.login,
+    register: state.register,
+    logout: state.logout,
+    clearError: state.clearError,
+    checkAuth: state.checkAuth,
+  }))
 
 // Development helper for quick login
 export const useDevLogin = () => {
   const { login } = useAuthActions()
-  
+
   return {
-    devLogin: () => login({
-      email: 'dev@example.com',
-      password: 'dev-password'
-    })
+    devLogin: () =>
+      login({
+        email: 'dev@example.com',
+        password: 'dev-password',
+      }),
   }
 }
 

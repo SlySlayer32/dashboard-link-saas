@@ -1,11 +1,11 @@
 /**
  * MSW Request Handlers for API Integration Tests
- * 
+ *
  * Mock external API calls (SMS provider, plugin APIs) for testing
  * without hitting real services.
  */
 
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw'
 
 /**
  * MobileMessage.com.au SMS API Mocks
@@ -13,22 +13,16 @@ import { http, HttpResponse } from 'msw';
 export const smsHandlers = [
   // Send SMS endpoint
   http.post('https://api.mobilemessage.com.au/v1/send', async ({ request }) => {
-    const body = await request.json() as { to: string; message: string }
+    const body = (await request.json()) as { to: string; message: string }
 
     // Simulate validation errors
     if (!body.to || !body.message) {
-      return HttpResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      )
+      return HttpResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
     // Simulate invalid phone number
     if (!body.to.match(/^\+61\d{9}$/)) {
-      return HttpResponse.json(
-        { error: 'Invalid Australian phone number' },
-        { status: 400 }
-      )
+      return HttpResponse.json({ error: 'Invalid Australian phone number' }, { status: 400 })
     }
 
     // Success response
@@ -177,7 +171,7 @@ export const notionHandlers = [
 export const errorHandlers = [
   // Simulate SMS provider timeout
   http.post('https://api.mobilemessage.com.au/v1/send', async () => {
-    await new Promise(resolve => setTimeout(resolve, 10000)) // 10s timeout
+    await new Promise((resolve) => setTimeout(resolve, 10000)) // 10s timeout
     return HttpResponse.json({ error: 'Timeout' }, { status: 504 })
   }),
 

@@ -1,21 +1,47 @@
 export interface Worker {
-  id: string;
-  organization_id: string;
-  full_name: string;
-  phone_number: string; // E.164 format: +61412345678
-  calendar_email?: string;
-  created_at: string;
-  updated_at: string;
+  id: string
+  organizationId: string
+  name: string
+  phone: string // E.164 format: +61412345678
+  email?: string
+  active: boolean
+  deletedAt: string | null
+  metadata: Record<string, unknown>
+  createdAt: string
+  updatedAt: string
 }
 
 export interface CreateWorkerDTO {
-  full_name: string;
-  phone_number: string;
-  calendar_email?: string;
+  name: string
+  phone: string
+  email?: string
+  metadata?: Record<string, unknown>
 }
 
 export interface UpdateWorkerDTO {
-  full_name?: string;
-  phone_number?: string;
-  calendar_email?: string;
+  name?: string
+  phone?: string
+  email?: string
+  active?: boolean
+  metadata?: Record<string, unknown>
+}
+
+// API Request/Response Types
+export interface CreateWorkerRequest {
+  name: string
+  phone: string // Accepts AU formats: "04XX XXX XXX", "0412345678", "+614XXXXXXXX"
+}
+
+export interface UpdateWorkerRequest {
+  name?: string
+  phone?: string // Accepts AU formats
+}
+
+export interface WorkerListResponse {
+  workers: Worker[]
+  total: number
+}
+
+export interface WorkerResponse {
+  worker: Worker
 }

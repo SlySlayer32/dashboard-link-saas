@@ -27,7 +27,7 @@ export const createDelayedLoader = (
   return {
     start: () => {
       if (timeoutId) clearTimeout(timeoutId)
-      timeoutId = (setTimeout(() => setLoading(true), delay) as unknown) as number
+      timeoutId = setTimeout(() => setLoading(true), delay) as unknown as number
     },
     stop: () => {
       if (timeoutId) clearTimeout(timeoutId)
@@ -80,7 +80,7 @@ export const createLoadingManager = (minDisplayTime: number = 300) => {
       const remaining = Math.max(0, minDisplayTime - elapsed)
 
       if (remaining > 0) {
-        minDisplayTimeout = (setTimeout(callback, remaining) as unknown) as number
+        minDisplayTimeout = setTimeout(callback, remaining) as unknown as number
       } else {
         callback()
       }

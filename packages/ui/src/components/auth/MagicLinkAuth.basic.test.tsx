@@ -16,7 +16,7 @@ describe('MagicLinkAuth - Basic Tests', () => {
 
   it('should render modal with tabs', () => {
     render(<MagicLinkAuth {...defaultProps} />)
-    
+
     expect(screen.getByText('Dashboard Link')).toBeInTheDocument()
     expect(screen.getByText('Email Magic Link')).toBeInTheDocument()
     expect(screen.getByText('Password')).toBeInTheDocument()
@@ -25,27 +25,29 @@ describe('MagicLinkAuth - Basic Tests', () => {
 
   it('should show magic link form by default', () => {
     render(<MagicLinkAuth {...defaultProps} />)
-    
-    expect(screen.getByText('Get a secure link sent to your email. No password needed.')).toBeInTheDocument()
+
+    expect(
+      screen.getByText('Get a secure link sent to your email. No password needed.')
+    ).toBeInTheDocument()
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Send Magic Link' })).toBeInTheDocument()
   })
 
   it('should switch tabs', () => {
     render(<MagicLinkAuth {...defaultProps} />)
-    
+
     // Click password tab
     const passwordTab = screen.getByRole('tab', { name: 'Password' })
     fireEvent.click(passwordTab)
-    
+
     // Should show password form
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
-    
+
     // Click sign up tab
     const signUpTab = screen.getByRole('tab', { name: 'Sign Up' })
     fireEvent.click(signUpTab)
-    
+
     // Should show signup form
     expect(screen.getByLabelText('Organization Name')).toBeInTheDocument()
     expect(screen.getByLabelText('Confirm Password')).toBeInTheDocument()

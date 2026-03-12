@@ -1,61 +1,61 @@
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 interface LogContext {
-    [key: string]: unknown;
+  [key: string]: unknown
 }
 
 class Logger {
-    private context: LogContext = {};
+  private context: LogContext = {}
 
-    setContext(context: LogContext) {
-        this.context = { ...this.context, ...context };
+  setContext(context: LogContext) {
+    this.context = { ...this.context, ...context }
+  }
+
+  clearContext() {
+    this.context = {}
+  }
+
+  private log(level: LogLevel, message: string, meta?: LogContext) {
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      level,
+      message,
+      ...this.context,
+      ...meta,
     }
 
-    clearContext() {
-        this.context = {};
+    const output = JSON.stringify(logEntry)
+
+    switch (level) {
+      case 'error':
+        console.error(output)
+        break
+      case 'warn':
+        console.warn(output)
+        break
+      case 'debug':
+        console.debug(output)
+        break
+      default:
+        console.log(output)
     }
+  }
 
-    private log(level: LogLevel, message: string, meta?: LogContext) {
-        const logEntry = {
-            timestamp: new Date().toISOString(),
-            level,
-            message,
-            ...this.context,
-            ...meta,
-        };
+  debug(message: string, meta?: LogContext) {
+    this.log('debug', message, meta)
+  }
 
-        const output = JSON.stringify(logEntry);
+  info(message: string, meta?: LogContext) {
+    this.log('info', message, meta)
+  }
 
-        switch (level) {
-            case 'error':
-                console.error(output);
-                break;
-            case 'warn':
-                console.warn(output);
-                break;
-            case 'debug':
-                console.debug(output);
-                break;
-            default:
-                console.log(output);
-        }
-    }
+  warn(message: string, meta?: LogContext) {
+    this.log('warn', message, meta)
+  }
 
-    debug(message: string, meta?: LogContext) {
-        this.log('debug', message, meta);
-    }
-
-    info(message: string, meta?: LogContext) {
-        this.log('info', message, meta);
-    }
-
-    warn(message: string, meta?: LogContext) {
-        this.log('warn', message, meta);
-    }
-
-    error(message: string, meta?: LogContext) {
-        this.log('error', message, meta);
-    }
+  error(message: string, meta?: LogContext) {
+    this.log('error', message, meta)
+  }
 }
 
-export const logger = new Logger();
+export const logger = new Logger()

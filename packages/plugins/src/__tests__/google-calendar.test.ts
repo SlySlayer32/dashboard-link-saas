@@ -1,8 +1,4 @@
-import type {
-    DateRange,
-    PluginConfig,
-    StandardScheduleItem
-} from '@dashboard-link/shared'
+import type { DateRange, PluginConfig, StandardScheduleItem } from '@dashboard-link/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { BasePluginAdapter } from '../base/adapter'
 import { GoogleCalendarAdapter } from '../google-calendar'
@@ -41,18 +37,18 @@ describe('GoogleCalendarAdapter', () => {
           location: 'Conference Room A',
           start: { dateTime: '2024-01-01T10:00:00Z' },
           end: { dateTime: '2024-01-01T11:00:00Z' },
-          htmlLink: 'https://calendar.google.com/event'
-        }
+          htmlLink: 'https://calendar.google.com/event',
+        },
       ]
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ items: mockEvents })
+        json: async () => ({ items: mockEvents }),
       })
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const config: PluginConfig = {
@@ -62,8 +58,8 @@ describe('GoogleCalendarAdapter', () => {
         enabled: true,
         settings: {
           calendarId: 'primary',
-          accessToken: 'test-token'
-        }
+          accessToken: 'test-token',
+        },
       }
 
       const result = await (adapter as any).fetchExternalSchedule('worker-123', dateRange, config)
@@ -72,9 +68,9 @@ describe('GoogleCalendarAdapter', () => {
         expect.stringContaining('https://www.googleapis.com/calendar/v3/calendars/primary/events?'),
         {
           headers: {
-            'Authorization': 'Bearer test-token',
-            'Content-Type': 'application/json'
-          }
+            Authorization: 'Bearer test-token',
+            'Content-Type': 'application/json',
+          },
         }
       )
 
@@ -84,12 +80,12 @@ describe('GoogleCalendarAdapter', () => {
     it('should use default calendar ID when not provided', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ items: [] })
+        json: async () => ({ items: [] }),
       })
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const config: PluginConfig = {
@@ -98,8 +94,8 @@ describe('GoogleCalendarAdapter', () => {
         version: '1.0.0',
         enabled: true,
         settings: {
-          accessToken: 'test-token'
-        }
+          accessToken: 'test-token',
+        },
       }
 
       await (adapter as any).fetchExternalSchedule('worker-123', dateRange, config)
@@ -113,7 +109,7 @@ describe('GoogleCalendarAdapter', () => {
     it('should handle missing access token', async () => {
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const config: PluginConfig = {
@@ -121,7 +117,7 @@ describe('GoogleCalendarAdapter', () => {
         name: 'Google Calendar Plugin',
         version: '1.0.0',
         enabled: true,
-        settings: {}
+        settings: {},
       }
 
       await expect(
@@ -132,12 +128,12 @@ describe('GoogleCalendarAdapter', () => {
     it('should handle API errors', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        statusText: 'Unauthorized'
+        statusText: 'Unauthorized',
       })
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const config: PluginConfig = {
@@ -146,8 +142,8 @@ describe('GoogleCalendarAdapter', () => {
         version: '1.0.0',
         enabled: true,
         settings: {
-          accessToken: 'invalid-token'
-        }
+          accessToken: 'invalid-token',
+        },
       }
 
       await expect(
@@ -158,12 +154,12 @@ describe('GoogleCalendarAdapter', () => {
     it('should handle empty response', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({})
+        json: async () => ({}),
       })
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const config: PluginConfig = {
@@ -172,8 +168,8 @@ describe('GoogleCalendarAdapter', () => {
         version: '1.0.0',
         enabled: true,
         settings: {
-          accessToken: 'test-token'
-        }
+          accessToken: 'test-token',
+        },
       }
 
       const result = await (adapter as any).fetchExternalSchedule('worker-123', dateRange, config)
@@ -183,12 +179,12 @@ describe('GoogleCalendarAdapter', () => {
     it('should properly encode calendar ID', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ items: [] })
+        json: async () => ({ items: [] }),
       })
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const config: PluginConfig = {
@@ -198,8 +194,8 @@ describe('GoogleCalendarAdapter', () => {
         enabled: true,
         settings: {
           calendarId: 'user@example.com',
-          accessToken: 'test-token'
-        }
+          accessToken: 'test-token',
+        },
       }
 
       await (adapter as any).fetchExternalSchedule('worker-123', dateRange, config)
@@ -213,7 +209,10 @@ describe('GoogleCalendarAdapter', () => {
 
   describe('fetchExternalTasks', () => {
     it('should return empty array as Google Calendar does not support tasks', async () => {
-      const result = await (adapter as any).fetchExternalTasks('worker-123', { enabled: true, settings: {} })
+      const result = await (adapter as any).fetchExternalTasks('worker-123', {
+        enabled: true,
+        settings: {},
+      })
       expect(result).toEqual([])
     })
   })
@@ -228,7 +227,7 @@ describe('GoogleCalendarAdapter', () => {
         start: { dateTime: '2024-01-01T10:00:00Z' },
         end: { dateTime: '2024-01-01T11:00:00Z' },
         htmlLink: 'https://calendar.google.com/event',
-        attendees: [{ email: 'user@example.com' }]
+        attendees: [{ email: 'user@example.com' }],
       }
 
       const result = (adapter as any).transformScheduleItem(externalEvent)
@@ -243,8 +242,8 @@ describe('GoogleCalendarAdapter', () => {
         metadata: {
           googleEventId: 'event123',
           htmlLink: 'https://calendar.google.com/event',
-          attendees: [{ email: 'user@example.com' }]
-        }
+          attendees: [{ email: 'user@example.com' }],
+        },
       }
 
       expect(result).toEqual(expected)
@@ -255,7 +254,7 @@ describe('GoogleCalendarAdapter', () => {
         id: 'event123',
         summary: 'All Day Event',
         start: { date: '2024-01-01' },
-        end: { date: '2024-01-02' }
+        end: { date: '2024-01-02' },
       }
 
       const result = (adapter as any).transformScheduleItem(externalEvent)
@@ -268,8 +267,8 @@ describe('GoogleCalendarAdapter', () => {
         location: undefined,
         description: undefined,
         metadata: {
-          googleEventId: 'event123'
-        }
+          googleEventId: 'event123',
+        },
       })
     })
 
@@ -278,7 +277,7 @@ describe('GoogleCalendarAdapter', () => {
         id: 'event123',
         summary: 'Simple Event',
         start: { dateTime: '2024-01-01T10:00:00Z' },
-        end: { dateTime: '2024-01-01T11:00:00Z' }
+        end: { dateTime: '2024-01-01T11:00:00Z' },
       }
 
       const result = (adapter as any).transformScheduleItem(externalEvent)
@@ -291,8 +290,8 @@ describe('GoogleCalendarAdapter', () => {
         location: undefined,
         description: undefined,
         metadata: {
-          googleEventId: 'event123'
-        }
+          googleEventId: 'event123',
+        },
       })
     })
 
@@ -300,7 +299,7 @@ describe('GoogleCalendarAdapter', () => {
       const externalEvent = {
         id: 'event123',
         start: { dateTime: '2024-01-01T10:00:00Z' },
-        end: { dateTime: '2024-01-01T11:00:00Z' }
+        end: { dateTime: '2024-01-01T11:00:00Z' },
       }
 
       const result = (adapter as any).transformScheduleItem(externalEvent)
@@ -311,7 +310,7 @@ describe('GoogleCalendarAdapter', () => {
     it('should return null for invalid event', () => {
       const invalidEvent = {
         id: 'event123',
-        summary: 'Invalid Event'
+        summary: 'Invalid Event',
         // Missing start and end
       }
 
@@ -336,13 +335,13 @@ describe('GoogleCalendarAdapter', () => {
         enabled: true,
         settings: {
           calendarId: 'primary',
-          accessToken: 'test-token'
-        }
+          accessToken: 'test-token',
+        },
       }
 
       // Mock successful API call
       mockFetch.mockResolvedValueOnce({
-        ok: true
+        ok: true,
       })
 
       const result = await adapter.validateConfig(config)
@@ -358,8 +357,8 @@ describe('GoogleCalendarAdapter', () => {
         version: '1.0.0',
         enabled: true,
         settings: {
-          calendarId: 'primary'
-        }
+          calendarId: 'primary',
+        },
       }
 
       const result = await adapter.validateConfig(config)
@@ -376,14 +375,14 @@ describe('GoogleCalendarAdapter', () => {
         enabled: true,
         settings: {
           calendarId: 'primary',
-          accessToken: 'invalid-token'
-        }
+          accessToken: 'invalid-token',
+        },
       }
 
       // Mock failed API call
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        statusText: 'Unauthorized'
+        statusText: 'Unauthorized',
       })
 
       const result = await adapter.validateConfig(config)
@@ -400,8 +399,8 @@ describe('GoogleCalendarAdapter', () => {
         enabled: true,
         settings: {
           calendarId: 'primary',
-          accessToken: 'test-token'
-        }
+          accessToken: 'test-token',
+        },
       }
 
       // Mock network error
@@ -421,18 +420,18 @@ describe('GoogleCalendarAdapter', () => {
           id: 'event123',
           summary: 'Team Meeting',
           start: { dateTime: '2024-01-01T10:00:00Z' },
-          end: { dateTime: '2024-01-01T11:00:00Z' }
-        }
+          end: { dateTime: '2024-01-01T11:00:00Z' },
+        },
       ]
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ items: mockEvents })
+        json: async () => ({ items: mockEvents }),
       })
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const result = await adapter.getSchedule('worker-123', dateRange, {
@@ -440,7 +439,7 @@ describe('GoogleCalendarAdapter', () => {
         name: 'Google Calendar Plugin',
         version: '1.0.0',
         enabled: true,
-        settings: { accessToken: 'test-token' }
+        settings: { accessToken: 'test-token' },
       })
 
       expect(result.success).toBe(true)
@@ -455,7 +454,7 @@ describe('GoogleCalendarAdapter', () => {
 
       const dateRange: DateRange = {
         start: '2024-01-01T00:00:00Z',
-        end: '2024-01-02T00:00:00Z'
+        end: '2024-01-02T00:00:00Z',
       }
 
       const result = await adapter.getSchedule('worker-123', dateRange, {
@@ -463,7 +462,7 @@ describe('GoogleCalendarAdapter', () => {
         name: 'Google Calendar Plugin',
         version: '1.0.0',
         enabled: true,
-        settings: { accessToken: 'test-token' }
+        settings: { accessToken: 'test-token' },
       })
 
       expect(result.success).toBe(false)
@@ -475,12 +474,12 @@ describe('GoogleCalendarAdapter', () => {
 
   describe('getTasks', () => {
     it('should return empty tasks response', async () => {
-      const result = await adapter.getTasks('worker-123', { 
+      const result = await adapter.getTasks('worker-123', {
         id: 'google-calendar-plugin',
         name: 'Google Calendar Plugin',
         version: '1.0.0',
-        enabled: true, 
-        settings: {} 
+        enabled: true,
+        settings: {},
       })
 
       expect(result.success).toBe(true)

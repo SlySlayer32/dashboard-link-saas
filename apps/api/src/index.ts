@@ -4,7 +4,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
 import type { AppContext } from './types'
-import v1 from './v1'; // Import versioned API
+import v1 from './v1' // Import versioned API
 
 // Import middleware and config
 import { validateRuntimeDependencies } from './config/env'

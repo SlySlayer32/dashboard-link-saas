@@ -27,9 +27,9 @@ interface ThemeProviderProps {
   defaultTheme?: ThemeMode
 }
 
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ 
-  children, 
-  defaultTheme = 'light' 
+export const ThemeProvider: React.FC<ThemeProviderProps> = ({
+  children,
+  defaultTheme = 'light',
 }) => {
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     // Check for saved theme or system preference
@@ -48,7 +48,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
   const setTheme = (newTheme: ThemeMode) => {
     setThemeState(newTheme)
-    
+
     // Save to localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('theme', newTheme)
@@ -59,11 +59,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     // Apply CSS custom properties
     const root = document.documentElement
     const vars = cssVars[theme]
-    
+
     Object.entries(vars).forEach(([key, value]) => {
       root.style.setProperty(key, value)
     })
-    
+
     // Update data attribute for CSS targeting
     root.setAttribute('data-theme', theme)
   }, [theme])

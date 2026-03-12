@@ -6,7 +6,10 @@ import { logger } from '../utils/logger.js'
 // Validation schemas
 export const createTokenSchema = z.object({
   workerId: z.string().uuid(),
-  expiresIn: z.string().regex(/^\d+[hdm]$/).default('8h'), // 8h, 24h, 7d, 30m
+  expiresIn: z
+    .string()
+    .regex(/^\d+[hdm]$/)
+    .default('8h'), // 8h, 24h, 7d, 30m
 })
 
 export const revokeTokenSchema = z.object({
@@ -50,7 +53,11 @@ export class TokenService {
   /**
    * Create a new dashboard token for a worker
    */
-  async createToken(workerId: string, organizationId: string, expiresIn: string = '8h'): Promise<CreateTokenResult> {
+  async createToken(
+    workerId: string,
+    organizationId: string,
+    expiresIn: string = '8h'
+  ): Promise<CreateTokenResult> {
     // Verify worker belongs to organization
     const { data: worker, error: workerError } = await this.supabase
       .from('workers')
@@ -115,7 +122,8 @@ export class TokenService {
     }
     error?: 'not_found' | 'expired' | 'revoked' | 'invalid'
   }> {
-    if (!token || token.length !== 64) { // 32 bytes = 64 hex chars
+    if (!token || token.length !== 64) {
+      // 32 bytes = 64 hex chars
       return { valid: false, error: 'invalid' }
     }
 
@@ -125,14 +133,16 @@ export class TokenService {
     // Find token with worker info using direct query
     const { data: tokenData, error } = await (this.supabase
       .from('dashboard_tokens' as any)
-      .select(`
+      .select(
+        `
         *,
         workers!inner (
           id,
           full_name,
           organization_id
         )
-      `)
+      `
+      )
       .eq('token_hash', tokenHash)
       .single() as any)
 
@@ -166,23 +176,29 @@ export class TokenService {
   async listTokens(
     organizationId: string,
     options: z.infer<typeof tokenQuerySchema>
-  ): Promise<{ tokens: any[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
+  ): Promise<{
+    tokens: any[]
+    pagination: { page: number; limit: number; total: number; totalPages: number }
+  }> {
     const { page, limit, workerId, status, dateFrom, dateTo } = options
     const offset = (page - 1) * limit
 
     // Build query using direct approach
-    let query = (this.supabase
+    let query = this.supabase
       .from('dashboard_tokens' as any)
-      .select(`
+      .select(
+        `
         *,
         workers (
           id,
           full_name,
           phone_number
         )
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' }
+      )
       .eq('organization_id', organizationId)
-      .order('created_at', { ascending: false }) as any)
+      .order('created_at', { ascending: false }) as any
 
     // Add filters
     if (workerId) {
@@ -245,21 +261,32 @@ export class TokenService {
       { data: revokedTokens },
       { data: recentTokens },
     ] = await Promise.all([
-      (this.supabase.from('dashboard_tokens' as any).select('id', { count: 'exact' }).eq('organization_id', organizationId) as any),
-      (this.supabase.from('dashboard_tokens' as any).select('id', { count: 'exact' })
+      this.supabase
+        .from('dashboard_tokens' as any)
+        .select('id', { count: 'exact' })
+        .eq('organization_id', organizationId) as any,
+      this.supabase
+        .from('dashboard_tokens' as any)
+        .select('id', { count: 'exact' })
         .eq('organization_id', organizationId)
         .is('revoked_at', null)
-        .gt('expires_at', now) as any),
-      (this.supabase.from('dashboard_tokens' as any).select('id', { count: 'exact' })
+        .gt('expires_at', now) as any,
+      this.supabase
+        .from('dashboard_tokens' as any)
+        .select('id', { count: 'exact' })
         .eq('organization_id', organizationId)
         .lt('expires_at', now)
-        .is('revoked_at', null) as any),
-      (this.supabase.from('dashboard_tokens' as any).select('id', { count: 'exact' })
+        .is('revoked_at', null) as any,
+      this.supabase
+        .from('dashboard_tokens' as any)
+        .select('id', { count: 'exact' })
         .eq('organization_id', organizationId)
-        .not('revoked_at', 'is', null) as any),
-      (this.supabase.from('dashboard_tokens' as any).select('id', { count: 'exact' })
+        .not('revoked_at', 'is', null) as any,
+      this.supabase
+        .from('dashboard_tokens' as any)
+        .select('id', { count: 'exact' })
         .eq('organization_id', organizationId)
-        .gte('created_at', sevenDaysAgo) as any),
+        .gte('created_at', sevenDaysAgo) as any,
     ])
 
     return {
@@ -274,7 +301,10 @@ export class TokenService {
   /**
    * Revoke a specific token
    */
-  async revokeToken(tokenId: string, organizationId: string): Promise<{ id: string; revokedAt: string }> {
+  async revokeToken(
+    tokenId: string,
+    organizationId: string
+  ): Promise<{ id: string; revokedAt: string }> {
     const { data: token, error } = await (this.supabase
       .from('dashboard_tokens' as any)
       .update({ revoked_at: new Date().toISOString() } as any)
@@ -306,7 +336,9 @@ export class TokenService {
   /**
    * Bulk revoke all expired tokens for an organization
    */
-  async bulkRevokeExpired(organizationId: string): Promise<{ revokedCount: number; revokedAt: string }> {
+  async bulkRevokeExpired(
+    organizationId: string
+  ): Promise<{ revokedCount: number; revokedAt: string }> {
     const now = new Date().toISOString()
 
     const { data: revokedTokens, error } = await (this.supabase

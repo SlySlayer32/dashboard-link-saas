@@ -1,10 +1,10 @@
 import { BasePluginAdapter } from '../base/BasePluginAdapter'
 import {
-    PluginConfig,
-    PluginConfigSchema,
-    PluginValidationResult,
-    StandardScheduleItem,
-    StandardTaskItem,
+  PluginConfig,
+  PluginConfigSchema,
+  PluginValidationResult,
+  StandardScheduleItem,
+  StandardTaskItem,
 } from '../contracts'
 
 // Google Calendar API response types

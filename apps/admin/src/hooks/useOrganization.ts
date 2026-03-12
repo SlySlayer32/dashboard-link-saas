@@ -1,21 +1,21 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '../store/auth';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuthStore } from '../store/auth'
 
 interface Organization {
-  id: string;
-  name: string;
-  sms_sender_id?: string;
-  default_token_expiry_hours: number;
-  metadata: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
+  id: string
+  name: string
+  sms_sender_id?: string
+  default_token_expiry_hours: number
+  metadata: Record<string, unknown>
+  created_at: string
+  updated_at: string
 }
 
 interface UpdateOrganizationRequest {
-  name?: string;
-  sms_sender_id?: string;
-  default_token_expiry_hours?: number;
-  metadata?: Record<string, unknown>;
+  name?: string
+  sms_sender_id?: string
+  default_token_expiry_hours?: number
+  metadata?: Record<string, unknown>
 }
 
 async function fetchOrganization(token: string): Promise<Organization> {
@@ -24,14 +24,14 @@ async function fetchOrganization(token: string): Promise<Organization> {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-  });
+  })
 
   if (!response.ok) {
-    throw new Error('Failed to fetch organization');
+    throw new Error('Failed to fetch organization')
   }
 
-  const data = await response.json();
-  return data.data;
+  const data = await response.json()
+  return data.data
 }
 
 async function updateOrganization(
@@ -45,15 +45,15 @@ async function updateOrganization(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
-  });
+  })
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Failed to update organization');
+    const error = await response.json()
+    throw new Error(error.error?.message || 'Failed to update organization')
   }
 
-  const result = await response.json();
-  return result.data;
+  const result = await response.json()
+  return result.data
 }
 
 async function deleteOrganization(token: string): Promise<void> {
@@ -63,46 +63,45 @@ async function deleteOrganization(token: string): Promise<void> {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-  });
+  })
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'Failed to delete organization');
+    const error = await response.json()
+    throw new Error(error.error?.message || 'Failed to delete organization')
   }
 }
 
 export function useOrganization() {
-  const { token } = useAuthStore();
+  const { token } = useAuthStore()
 
   return useQuery({
     queryKey: ['organization'],
     queryFn: () => fetchOrganization(token || ''),
     enabled: !!token,
     staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+  })
 }
 
 export function useUpdateOrganization() {
-  const { token } = useAuthStore();
-  const queryClient = useQueryClient();
+  const { token } = useAuthStore()
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: UpdateOrganizationRequest) =>
-      updateOrganization(token || '', data),
+    mutationFn: (data: UpdateOrganizationRequest) => updateOrganization(token || '', data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['organization'],
-      });
+      })
     },
-  });
+  })
 }
 
 export function useDeleteOrganization() {
-  const { token } = useAuthStore();
+  const { token } = useAuthStore()
 
   return useMutation({
     mutationFn: () => deleteOrganization(token || ''),
-  });
+  })
 }
 
-export type { Organization, UpdateOrganizationRequest };
+export type { Organization, UpdateOrganizationRequest }

@@ -1,31 +1,31 @@
-import type { ScheduleItem } from '@dashboard-link/shared';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '../store/auth';
+import type { ScheduleItem } from '@dashboard-link/shared'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuthStore } from '../store/auth'
 
 interface CreateScheduleItemRequest {
-  title: string;
-  startTime: string;
-  endTime: string;
-  location?: string;
-  description?: string;
+  title: string
+  startTime: string
+  endTime: string
+  location?: string
+  description?: string
 }
 
 interface UpdateScheduleItemRequest {
-  title?: string;
-  startTime?: string;
-  endTime?: string;
-  location?: string;
-  description?: string;
+  title?: string
+  startTime?: string
+  endTime?: string
+  location?: string
+  description?: string
 }
 
 interface ScheduleItemsResponse {
-  data: ScheduleItem[];
+  data: ScheduleItem[]
   pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
 }
 
 async function fetchScheduleItems(
@@ -39,10 +39,10 @@ async function fetchScheduleItems(
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
-  });
+  })
 
-  if (startDate) params.append('startDate', startDate);
-  if (endDate) params.append('endDate', endDate);
+  if (startDate) params.append('startDate', startDate)
+  if (endDate) params.append('endDate', endDate)
 
   const response = await fetch(
     `${import.meta.env.VITE_API_URL}/workers/${workerId}/schedule-items?${params}`,
@@ -52,13 +52,13 @@ async function fetchScheduleItems(
         'Content-Type': 'application/json',
       },
     }
-  );
+  )
 
   if (!response.ok) {
-    throw new Error('Failed to fetch schedule items');
+    throw new Error('Failed to fetch schedule items')
   }
 
-  return response.json();
+  return response.json()
 }
 
 async function createScheduleItem(
@@ -76,14 +76,14 @@ async function createScheduleItem(
       },
       body: JSON.stringify(data),
     }
-  );
+  )
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to create schedule item');
+    const error = await response.json()
+    throw new Error(error.error || 'Failed to create schedule item')
   }
 
-  return response.json();
+  return response.json()
 }
 
 async function updateScheduleItem(
@@ -91,41 +91,35 @@ async function updateScheduleItem(
   itemId: string,
   data: UpdateScheduleItemRequest
 ): Promise<ScheduleItem> {
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/schedule-items/${itemId}`,
-    {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    }
-  );
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/schedule-items/${itemId}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to update schedule item');
+    const error = await response.json()
+    throw new Error(error.error || 'Failed to update schedule item')
   }
 
-  return response.json();
+  return response.json()
 }
 
 async function deleteScheduleItem(token: string, itemId: string): Promise<void> {
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/schedule-items/${itemId}`,
-    {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/schedule-items/${itemId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to delete schedule item');
+    const error = await response.json()
+    throw new Error(error.error || 'Failed to delete schedule item')
   }
 }
 
@@ -136,19 +130,18 @@ export function useScheduleItems(
   page = 1,
   limit = 20
 ) {
-  const { token } = useAuthStore();
+  const { token } = useAuthStore()
 
   return useQuery({
     queryKey: ['schedule-items', workerId, startDate, endDate, page, limit],
-    queryFn: () =>
-      fetchScheduleItems(token || '', workerId, startDate, endDate, page, limit),
+    queryFn: () => fetchScheduleItems(token || '', workerId, startDate, endDate, page, limit),
     enabled: !!token && !!workerId,
-  });
+  })
 }
 
 export function useCreateScheduleItem(workerId: string) {
-  const { token } = useAuthStore();
-  const queryClient = useQueryClient();
+  const { token } = useAuthStore()
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (data: CreateScheduleItemRequest) =>
@@ -156,14 +149,14 @@ export function useCreateScheduleItem(workerId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['schedule-items', workerId],
-      });
+      })
     },
-  });
+  })
 }
 
 export function useUpdateScheduleItem() {
-  const { token } = useAuthStore();
-  const queryClient = useQueryClient();
+  const { token } = useAuthStore()
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: ({ itemId, data }: { itemId: string; data: UpdateScheduleItemRequest }) =>
@@ -171,24 +164,23 @@ export function useUpdateScheduleItem() {
     onSuccess: (_, { _itemId }) => {
       queryClient.invalidateQueries({
         queryKey: ['schedule-items'],
-      });
+      })
     },
-  });
+  })
 }
 
 export function useDeleteScheduleItem() {
-  const { token } = useAuthStore();
-  const queryClient = useQueryClient();
+  const { token } = useAuthStore()
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (itemId: string) => deleteScheduleItem(token || '', itemId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['schedule-items'],
-      });
+      })
     },
-  });
+  })
 }
 
-export type { CreateScheduleItemRequest, ScheduleItem, UpdateScheduleItemRequest };
-
+export type { CreateScheduleItemRequest, ScheduleItem, UpdateScheduleItemRequest }

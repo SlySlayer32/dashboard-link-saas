@@ -6,11 +6,13 @@
  */
 
 import { getWorkerRepository } from '@dashboard-link/database'
+import { createWorkerSchema, updateWorkerSchema } from '@dashboard-link/shared/validators/worker'
+import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
+import { supabase } from '../lib/db.js'
 import { authMiddleware } from '../middleware/auth'
 import { WorkerService } from '../services/WorkerService'
 import type { AppContext } from '../types'
-import { supabase } from '../lib/db.js'
 import { logger } from '../utils/logger.js'
 
 const workers = new Hono<AppContext>()
@@ -95,9 +97,9 @@ workers.get('/:id', async (c) => {
 })
 
 // Create worker
-workers.post('/', async (c) => {
+workers.post('/', zValidator('json', createWorkerSchema), async (c) => {
   const userId = c.get('userId')
-  const body = await c.req.json()
+  const body = c.req.valid('json')
 
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)
@@ -114,31 +116,49 @@ workers.post('/', async (c) => {
     return c.json({ worker, dashboard }, 201)
   } catch (error) {
     if (error instanceof Error) {
-      if (error.message.includes('name')) {
-        return c.json({ error: error.message }, 400)
+      // Duplicate phone number (FR-016)
+      if (error.message.includes('already in use')) {
+        return c.json(
+          {
+            error: 'Phone number already in use by an active worker',
+            field: 'phone',
+          },
+          409
+        )
       }
-      if (error.message.includes('phone')) {
-        return c.json({ error: error.message }, 400)
-      }
-      if (error.message.includes('email')) {
-        return c.json({ error: error.message }, 400)
+      // Validation errors (FR-020)
+      if (
+        error.message.includes('name') ||
+        error.message.includes('phone') ||
+        error.message.includes('email')
+      ) {
+        return c.json(
+          {
+            error: error.message,
+            field: error.message.toLowerCase().includes('name')
+              ? 'name'
+              : error.message.toLowerCase().includes('phone')
+                ? 'phone'
+                : 'email',
+          },
+          400
+        )
       }
     }
 
-    return c.json(
-      {
-        error: error instanceof Error ? error.message : 'Failed to create worker',
-      },
-      400
+    logger.error(
+      'Failed to create worker',
+      error instanceof Error ? error : new Error(String(error))
     )
+    return c.json({ error: 'Failed to create worker' }, 500)
   }
 })
 
-// Update worker
-workers.patch('/:id', async (c) => {
+// Update worker (changed from PATCH to PUT per spec)
+workers.put('/:id', zValidator('json', updateWorkerSchema), async (c) => {
   const id = c.req.param('id')
   const userId = c.get('userId')
-  const body = await c.req.json()
+  const body = c.req.valid('json')
 
   if (!userId) {
     return c.json({ error: 'Not authorized' }, 401)
@@ -149,32 +169,63 @@ workers.patch('/:id', async (c) => {
     const worker = await workerService.updateWorker(id, body, organizationId)
     return c.json(worker)
   } catch (error) {
-    if (error instanceof Error && error.message === 'Worker not found') {
-      return c.json({ error: 'Worker not found' }, 404)
-    }
-
     if (error instanceof Error) {
-      if (error.message.includes('name')) {
-        return c.json({ error: error.message }, 400)
+      // Worker not found
+      if (error.message === 'Worker not found') {
+        return c.json({ error: 'Worker not found' }, 404)
       }
-      if (error.message.includes('phone')) {
-        return c.json({ error: error.message }, 400)
+
+      // Concurrent edit conflict (FR-019, U1)
+      if ((error as any).statusCode === 409 && error.message.includes('updated by another user')) {
+        return c.json(
+          {
+            error: 'Worker was updated by another user. Please refresh and try again.',
+            code: 'CONCURRENT_EDIT',
+          },
+          409
+        )
       }
-      if (error.message.includes('email')) {
-        return c.json({ error: error.message }, 400)
+
+      // Duplicate phone number (FR-016)
+      if (error.message.includes('already in use')) {
+        return c.json(
+          {
+            error: 'Phone number already in use by an active worker',
+            field: 'phone',
+          },
+          409
+        )
+      }
+
+      // Validation errors (FR-020)
+      if (
+        error.message.includes('name') ||
+        error.message.includes('phone') ||
+        error.message.includes('email')
+      ) {
+        return c.json(
+          {
+            error: error.message,
+            field: error.message.toLowerCase().includes('name')
+              ? 'name'
+              : error.message.toLowerCase().includes('phone')
+                ? 'phone'
+                : 'email',
+          },
+          400
+        )
       }
     }
 
-    return c.json(
-      {
-        error: error instanceof Error ? error.message : 'Failed to update worker',
-      },
-      400
+    logger.error(
+      'Failed to update worker',
+      error instanceof Error ? error : new Error(String(error))
     )
+    return c.json({ error: 'Failed to update worker' }, 500)
   }
 })
 
-// Delete worker
+// Delete worker (soft delete)
 workers.delete('/:id', async (c) => {
   const id = c.req.param('id')
   const userId = c.get('userId')
@@ -186,13 +237,17 @@ workers.delete('/:id', async (c) => {
   try {
     const organizationId = await getOrganizationId(userId)
     await workerService.deleteWorker(id, organizationId)
-    return c.json({ message: 'Worker deleted successfully' })
+    return c.json({ message: 'Worker soft deleted successfully' })
   } catch (error) {
     if (error instanceof Error && error.message === 'Worker not found') {
       return c.json({ error: 'Worker not found' }, 404)
     }
 
-    return c.json({ error: 'Failed to delete worker' }, 400)
+    logger.error(
+      'Failed to delete worker',
+      error instanceof Error ? error : new Error(String(error))
+    )
+    return c.json({ error: 'Failed to delete worker' }, 500)
   }
 })
 
@@ -317,4 +372,3 @@ async function createDefaultDashboard(workerId: string, organizationId: string) 
 }
 
 export { workers }
-

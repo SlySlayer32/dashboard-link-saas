@@ -23,23 +23,20 @@ const mockAuthStore = {
 }
 
 // Create a test QueryClient
-const createTestQueryClient = () => new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-      gcTime: 0,
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
     },
-  },
-})
+  })
 
 // Test wrapper component
 const TestWrapper = ({ children }: { children: React.ReactNode }) => {
   const queryClient = createTestQueryClient()
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  )
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }
 
 vi.mock('../store/auth', () => ({
@@ -230,7 +227,7 @@ describe('Smoke Tests - End-to-End Auth Flow', () => {
 
       fireEvent.change(emailInput, { target: { value: 'wrong@example.com' } })
       fireEvent.change(passwordInput, { target: { value: 'wrongpassword' } })
-      
+
       // Handle the promise rejection properly
       try {
         await fireEvent.click(loginButton)

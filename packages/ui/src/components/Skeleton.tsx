@@ -45,5 +45,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
     )
   }
 
-  return <div className={`${skeletonVariants({ variant })} ${className}`} style={style} {...props} />
+  return (
+    <div className={`${skeletonVariants({ variant })} ${className}`} style={style} {...props} />
+  )
 }

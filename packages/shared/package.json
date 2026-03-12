@@ -35,6 +35,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint --config ../../eslint.config.js src",
     "clean": "rm -rf dist"
   },

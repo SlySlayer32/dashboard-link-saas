@@ -3,7 +3,7 @@
  * Ready for translations without active translation work
  */
 
-export type TranslationKey = 
+export type TranslationKey =
   // Authentication
   | 'auth.login.title'
   | 'auth.login.subtitle'
@@ -23,7 +23,7 @@ export type TranslationKey =
   | 'auth.signup.createAccount'
   | 'auth.signup.hasAccount'
   | 'auth.signup.signIn'
-  
+
   // Dashboard
   | 'dashboard.title'
   | 'dashboard.subtitle'
@@ -31,7 +31,7 @@ export type TranslationKey =
   | 'dashboard.recentActivity'
   | 'dashboard.quickActions'
   | 'dashboard.stats'
-  
+
   // Common UI
   | 'common.loading'
   | 'common.error'
@@ -51,7 +51,7 @@ export type TranslationKey =
   | 'common.close'
   | 'common.confirm'
   | 'common.back'
-  
+
   // Mobile Dashboard
   | 'mobile.dashboard.title'
   | 'mobile.schedule.title'
@@ -59,7 +59,7 @@ export type TranslationKey =
   | 'mobile.refresh'
   | 'mobile.noData'
   | 'mobile.offline'
-  
+
   // Forms
   | 'form.required'
   | 'form.optional'
@@ -155,7 +155,7 @@ export const defaultTranslations: TranslationNamespace = {
       password: 'Password',
       forgotPassword: 'Forgot password?',
       signIn: 'Sign in',
-      noAccount: "Need an account?",
+      noAccount: 'Need an account?',
       signUp: 'Sign up',
     },
     signup: {
@@ -238,14 +238,14 @@ export const useTranslation = (): UseTranslationReturn => {
   const t = (key: TranslationKey): string => {
     const keys = key.split('.')
     let value: any = defaultTranslations
-    
+
     for (const k of keys) {
       value = value?.[k]
     }
-    
+
     return value || key
   }
-  
+
   return {
     t,
     locale: 'en',
@@ -264,4 +264,4 @@ export const supportedLocales = [
   'zh', // Chinese
 ] as const
 
-export type SupportedLocale = typeof supportedLocales[number]
+export type SupportedLocale = (typeof supportedLocales)[number]

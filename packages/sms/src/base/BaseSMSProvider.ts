@@ -1,14 +1,14 @@
 import {
-    SMSConfigValidationResult,
-    SMSDeliveryReport,
-    SMSError,
-    SMSHealthResult,
-    SMSMessage,
-    SMSProvider,
-    SMSProviderConfig,
-    SMSResult,
-    SMSStatus
-} from '@dashboard-link/shared';
+  SMSConfigValidationResult,
+  SMSDeliveryReport,
+  SMSError,
+  SMSHealthResult,
+  SMSMessage,
+  SMSProvider,
+  SMSProviderConfig,
+  SMSResult,
+  SMSStatus,
+} from '@dashboard-link/shared'
 
 /**
  * Base SMS Provider Adapter
@@ -16,28 +16,28 @@ import {
  * Following Zapier's adapter pattern
  */
 export abstract class BaseSMSProvider implements SMSProvider {
-  abstract readonly id: string;
-  abstract readonly name: string;
-  abstract readonly version: string;
-  abstract readonly description?: string;
+  abstract readonly id: string
+  abstract readonly name: string
+  abstract readonly version: string
+  abstract readonly description?: string
 
   // Abstract methods that each provider must implement
-  abstract send(message: SMSMessage): Promise<SMSResult>;
-  abstract getStatus(messageId: string): Promise<SMSStatus>;
-  abstract validateConfig(config: SMSProviderConfig): Promise<SMSConfigValidationResult>;
-  abstract getHealthCheck(): Promise<SMSHealthResult>;
+  abstract send(message: SMSMessage): Promise<SMSResult>
+  abstract getStatus(messageId: string): Promise<SMSStatus>
+  abstract validateConfig(config: SMSProviderConfig): Promise<SMSConfigValidationResult>
+  abstract getHealthCheck(): Promise<SMSHealthResult>
 
   // Optional capabilities with default implementations
   supportsDeliveryReports(): boolean {
-    return false;
+    return false
   }
 
   supportsScheduledMessages(): boolean {
-    return false;
+    return false
   }
 
   supportsMMS(): boolean {
-    return false;
+    return false
   }
 
   // Common utility methods
@@ -54,8 +54,8 @@ export abstract class BaseSMSProvider implements SMSProvider {
       timestamp: new Date().toISOString(),
       cost,
       deliveryReport,
-      metadata: providerData
-    };
+      metadata: providerData,
+    }
   }
 
   protected createErrorResult(
@@ -70,8 +70,8 @@ export abstract class BaseSMSProvider implements SMSProvider {
       timestamp: new Date().toISOString(),
       error,
       errorType: errorType as 'temporary' | 'permanent' | 'rate_limit' | 'invalid_number',
-      metadata: providerData
-    };
+      metadata: providerData,
+    }
   }
 
   protected createHealthResult(
@@ -85,8 +85,8 @@ export abstract class BaseSMSProvider implements SMSProvider {
       responseTime,
       error,
       lastChecked: new Date().toISOString(),
-      metadata
-    };
+      metadata,
+    }
   }
 
   protected createValidationResult(
@@ -97,8 +97,8 @@ export abstract class BaseSMSProvider implements SMSProvider {
     return {
       valid,
       errors,
-      warnings
-    };
+      warnings,
+    }
   }
 
   protected createStatus(
@@ -116,33 +116,33 @@ export abstract class BaseSMSProvider implements SMSProvider {
       deliveredAt,
       errorReason,
       cost,
-      metadata
-    };
+      metadata,
+    }
   }
 
   // Common validation logic
   protected validatePhoneNumber(phone: string): boolean {
     // Basic E.164 validation
-    const e164Regex = /^\+[1-9]\d{1,14}$/;
-    return e164Regex.test(phone);
+    const e164Regex = /^\+[1-9]\d{1,14}$/
+    return e164Regex.test(phone)
   }
 
   protected validateMessage(message: SMSMessage): string[] {
-    const errors: string[] = [];
+    const errors: string[] = []
 
     if (!message.to) {
-      errors.push('Recipient phone number is required');
+      errors.push('Recipient phone number is required')
     } else if (!this.validatePhoneNumber(message.to)) {
-      errors.push('Invalid phone number format (must be E.164)');
+      errors.push('Invalid phone number format (must be E.164)')
     }
 
     if (!message.body) {
-      errors.push('Message body is required');
+      errors.push('Message body is required')
     } else if (message.body.length > 1600) {
-      errors.push('Message body too long (max 1600 characters)');
+      errors.push('Message body too long (max 1600 characters)')
     }
 
-    return errors;
+    return errors
   }
 
   // Rate limiting helper
@@ -150,12 +150,12 @@ export abstract class BaseSMSProvider implements SMSProvider {
     config: SMSProviderConfig,
     currentUsage: number
   ): Promise<boolean> {
-    const rateLimit = config.rateLimits;
-    if (!rateLimit) return true;
+    const rateLimit = config.rateLimits
+    if (!rateLimit) return true
 
     // Check per-second limit
     if (rateLimit.messagesPerSecond && currentUsage >= rateLimit.messagesPerSecond) {
-      return false;
+      return false
     }
 
     // Check per-day limit (would need to track daily usage)
@@ -164,7 +164,7 @@ export abstract class BaseSMSProvider implements SMSProvider {
       // For now, we'll assume it's not exceeded
     }
 
-    return true;
+    return true
   }
 
   // Retry logic helper
@@ -173,26 +173,26 @@ export abstract class BaseSMSProvider implements SMSProvider {
     maxAttempts: number = 3,
     baseDelayMs: number = 1000
   ): Promise<T> {
-    let lastError: Error;
+    let lastError: Error
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        return await operation();
+        return await operation()
       } catch (error) {
-        lastError = error as Error;
-        
+        lastError = error as Error
+
         if (attempt === maxAttempts) {
-          throw lastError;
+          throw lastError
         }
 
         // Exponential backoff
-        const delay = baseDelayMs * Math.pow(2, attempt - 1);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        const delay = baseDelayMs * Math.pow(2, attempt - 1)
+        await new Promise((resolve) => setTimeout(resolve, delay))
       }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    throw lastError!;
+    throw lastError!
   }
 
   // Transform helper for provider-specific formats
@@ -202,7 +202,7 @@ export abstract class BaseSMSProvider implements SMSProvider {
       body: message.body,
       from: message.from,
       // Add provider-specific transformations in subclasses
-    };
+    }
   }
 
   // Transform helper for provider responses
@@ -211,6 +211,6 @@ export abstract class BaseSMSProvider implements SMSProvider {
     messageId: string
   ): SMSResult {
     // Default transformation - override in subclasses
-    return this.createSuccessResult(messageId, response);
+    return this.createSuccessResult(messageId, response)
   }
 }

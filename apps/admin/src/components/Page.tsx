@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../utils/supabase';
+import { useEffect, useState } from 'react'
+import { supabase } from '../utils/supabase'
 
 interface Todo {
-  id: string;
-  text: string;
-  created_at: string;
+  id: string
+  text: string
+  created_at: string
 }
 
 function Page() {
@@ -14,9 +14,7 @@ function Page() {
   useEffect(() => {
     async function getTodos() {
       try {
-        const { data: todos, error } = await supabase
-          .from('todos')
-          .select('*')
+        const { data: todos, error } = await supabase.from('todos').select('*')
 
         if (error) {
           console.error('Error fetching todos:', error)

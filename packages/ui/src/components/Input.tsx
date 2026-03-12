@@ -24,8 +24,7 @@ const inputVariants = cva(
   }
 )
 
-export interface InputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   variant?: 'default' | 'error' | 'success'
   size?: 'sm' | 'md' | 'lg'
   label?: string
@@ -36,7 +35,7 @@ export interface InputProps
 
 /**
  * Input component - form inputs for Zapier-style admin interface
- * 
+ *
  * Usage:
  * <Input placeholder="Enter name" />
  * <Input label="Email" type="email" required />
@@ -59,17 +58,17 @@ export const Input: React.FC<InputProps> = ({
   const finalVariant = hasError ? 'error' : variant
 
   return (
-    <div className="space-y-2">
+    <div className='space-y-2'>
       {label && (
         <LabelPrimitive.Root
           htmlFor={inputId}
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
         >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className='text-red-500 ml-1'>*</span>}
         </LabelPrimitive.Root>
       )}
-      
+
       <input
         id={inputId}
         className={`${inputVariants({ variant: finalVariant, size })} ${className}`}
@@ -77,15 +76,15 @@ export const Input: React.FC<InputProps> = ({
         aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
         {...props}
       />
-      
+
       {error && (
-        <p id={`${inputId}-error`} className="text-sm text-red-600">
+        <p id={`${inputId}-error`} className='text-sm text-red-600'>
           {error}
         </p>
       )}
-      
+
       {helperText && !error && (
-        <p id={`${inputId}-helper`} className="text-sm text-gray-600">
+        <p id={`${inputId}-helper`} className='text-sm text-gray-600'>
           {helperText}
         </p>
       )}

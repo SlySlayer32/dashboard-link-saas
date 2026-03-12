@@ -1,9 +1,9 @@
-import { supabase } from '../lib/db.js';
+import { supabase } from '../lib/db.js'
 
 export interface UpdateOrganizationData {
-  name?: string;
-  sms_limit_per_hour?: number;
-  default_token_expiry_hours?: number;
+  name?: string
+  sms_limit_per_hour?: number
+  default_token_expiry_hours?: number
 }
 
 export class OrganizationService {
@@ -15,13 +15,13 @@ export class OrganizationService {
       .from('organizations')
       .select('*')
       .eq('id', orgId)
-      .single();
+      .single()
 
     if (error) {
-      throw new Error(`Failed to get organization: ${error.message}`);
+      throw new Error(`Failed to get organization: ${error.message}`)
     }
 
-    return data;
+    return data
   }
 
   /**
@@ -36,14 +36,14 @@ export class OrganizationService {
       })
       .eq('id', orgId)
       .select()
-      .single();
+      .single()
 
     if (error) {
-      throw new Error(`Failed to update organization: ${error.message}`);
+      throw new Error(`Failed to update organization: ${error.message}`)
     }
 
-    return data;
+    return data
   }
 }
 
-export const organizationService = new OrganizationService();
+export const organizationService = new OrganizationService()

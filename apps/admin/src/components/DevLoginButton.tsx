@@ -12,7 +12,7 @@ export const DevLoginButton: React.FC = () => {
 
   if (isAuthenticated) {
     return (
-      <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-3 py-1 rounded-md text-sm">
+      <div className='fixed top-4 right-4 z-50 bg-green-500 text-white px-3 py-1 rounded-md text-sm'>
         Dev Mode: Authenticated
       </div>
     )
@@ -21,7 +21,7 @@ export const DevLoginButton: React.FC = () => {
   return (
     <button
       onClick={devLogin}
-      className="fixed top-4 right-4 z-50 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-md text-sm transition-colors"
+      className='fixed top-4 right-4 z-50 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-md text-sm transition-colors'
     >
       Dev Login
     </button>

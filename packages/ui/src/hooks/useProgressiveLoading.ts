@@ -37,10 +37,10 @@ export const useProgressiveLoading = <T>(
     setIsLoading(true)
 
     // Add a small delay to prevent UI blocking
-    timeoutRef.current = (setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       setVisibleCount((prev) => Math.min(prev + batchSize, items.length))
       setIsLoading(false)
-    }, delay) as unknown) as number
+    }, delay) as unknown as number
   }, [batchSize, delay, hasMore, isLoading, items.length])
 
   const reset = useCallback(() => {

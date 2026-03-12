@@ -24,14 +24,17 @@ function DashboardPage() {
   }, [error, navigate])
 
   // Handle token validation
-  const handleValidateToken = useCallback(async (_tokenToValidate: string) => {
-    setIsValidating(true)
-    try {
-      await refetch()
-    } finally {
-      setIsValidating(false)
-    }
-  }, [refetch])
+  const handleValidateToken = useCallback(
+    async (_tokenToValidate: string) => {
+      setIsValidating(true)
+      try {
+        await refetch()
+      } finally {
+        setIsValidating(false)
+      }
+    },
+    [refetch]
+  )
 
   // Pull-to-refresh functionality
   const startY = useRef<number | null>(null)

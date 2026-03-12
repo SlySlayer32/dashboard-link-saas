@@ -14,19 +14,18 @@ export * from './contracts'
 
 // Re-export types from shared package for convenience
 export type {
-    PluginAdapter,
-    PluginBatchResult,
-    PluginConfig,
-    PluginConfigSchema,
-    PluginError,
-    PluginExecutionResult,
-    PluginHealthResult,
-    PluginManager,
-    PluginMetadata,
-    PluginRegistry,
-    PluginResponse,
-    PluginValidationResult,
-    StandardScheduleItem,
-    StandardTaskItem
+  PluginAdapter,
+  PluginBatchResult,
+  PluginConfig,
+  PluginConfigSchema,
+  PluginError,
+  PluginExecutionResult,
+  PluginHealthResult,
+  PluginManager,
+  PluginMetadata,
+  PluginRegistry,
+  PluginResponse,
+  PluginValidationResult,
+  StandardScheduleItem,
+  StandardTaskItem,
 } from '@dashboard-link/shared'
-

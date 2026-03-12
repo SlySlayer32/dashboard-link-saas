@@ -2,52 +2,31 @@
  * Phone number utilities for Australian numbers
  */
 
-// Australian phone number regex patterns
-const AU_PHONE_REGEX = {
-  // International format: +61 4xx xxx xxx
-  international: /^\+61\s?4\d{2}\s?\d{3}\s?\d{3}$/,
-  // Domestic format: 04xx xxx xxx
-  domestic: /^04\d{2}\s?\d{3}\s?\d{3}$/,
-  // Basic pattern (without spaces): 04xxxxxxxx or +614xxxxxxxx
-  basic: /^(\+?61|0)4\d{8}$/,
-}
+import {
+  formatAustralianPhone as formatPhone,
+  validateAustralianPhone as validatePhone,
+} from '@dashboard-link/shared'
 
 /**
  * Validate Australian phone number
  */
 export function validateAustralianPhone(phone: string): boolean {
   if (!phone) return false
-
-  // Remove all spaces and dashes for validation
-  const cleanPhone = phone.replace(/[\s-]/g, '')
-
-  return AU_PHONE_REGEX.basic.test(cleanPhone)
+  return validatePhone(phone)
 }
 
 /**
  * Format phone number to Australian standard format
  * @param phone - Input phone number
- * @returns Formatted phone number in +61 4xx xxx xxx format
+ * @returns Formatted phone number in E.164 format
  */
 export function formatAustralianPhone(phone: string): string {
   if (!phone) return ''
-
-  // Remove all non-digit characters
-  const cleanPhone = phone.replace(/\D/g, '')
-
-  // Handle different formats
-  if (cleanPhone.startsWith('614')) {
-    // Already has country code, format it
-    const formatted = cleanPhone.replace(/(\+?61)(4\d{2})(\d{3})(\d{3})/, '+61 $2 $3 $4')
-    return formatted
-  } else if (cleanPhone.startsWith('04')) {
-    // Domestic format, add country code
-    const formatted = cleanPhone.replace(/(04\d{2})(\d{3})(\d{3})/, '+61 $1 $2 $3')
-    return formatted
+  try {
+    return formatPhone(phone)
+  } catch {
+    return phone
   }
-
-  // Return original if can't format
-  return phone
 }
 
 /**
@@ -57,21 +36,7 @@ export function formatAustralianPhone(phone: string): string {
  */
 export function formatPhoneForDisplay(phone: string): string {
   if (!phone) return ''
-
-  // Remove all non-digit characters
-  const cleanPhone = phone.replace(/\D/g, '')
-
-  if (cleanPhone.startsWith('614')) {
-    // Convert to domestic format
-    const formatted = cleanPhone.replace(/(\+?61)(4\d{2})(\d{3})(\d{3})/, '0$2 $3 $4')
-    return formatted
-  } else if (cleanPhone.startsWith('04')) {
-    // Already domestic, just format
-    const formatted = cleanPhone.replace(/(04\d{2})(\d{3})(\d{3})/, '$1 $2 $3')
-    return formatted
-  }
-
-  return phone
+  return formatPhoneDisplay(phone)
 }
 
 /**
