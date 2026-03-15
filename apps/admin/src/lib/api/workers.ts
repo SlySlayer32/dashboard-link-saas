@@ -4,26 +4,15 @@
  * Type-safe API client for worker management endpoints
  */
 
-import type { Worker, CreateWorkerDTO, UpdateWorkerDTO } from '@dashboard-link/shared'
+import type {
+  CreateWorkerDTO,
+  UpdateWorkerDTO,
+  Worker,
+  WorkerListResponse,
+  WorkerResponse,
+} from '@dashboard-link/shared/src/types/worker'
 
 const API_BASE = '/api/v1'
-
-export interface WorkerListResponse {
-  workers: Worker[]
-}
-
-export interface WorkerResponse {
-  worker: Worker
-  dashboard?: {
-    id: string
-    name: string
-    workerId: string
-    organizationId: string
-    active: boolean
-    createdAt: string
-    updatedAt: string
-  }
-}
 
 export interface ApiError {
   error: string
@@ -34,7 +23,7 @@ export interface ApiError {
 /**
  * Get all workers for the authenticated user's organization
  */
-export async function getWorkers(): Promise<Worker[]> {
+export async function getWorkers(): Promise<WorkerListResponse> {
   const response = await fetch(`${API_BASE}/workers`, {
     credentials: 'include',
   })
@@ -44,7 +33,7 @@ export async function getWorkers(): Promise<Worker[]> {
     throw new Error(error.error || 'Failed to fetch workers')
   }
 
-  return response.json()
+  return response.json() as Promise<WorkerListResponse>
 }
 
 /**
@@ -60,7 +49,9 @@ export async function getWorker(id: string): Promise<Worker> {
     throw new Error(error.error || 'Failed to fetch worker')
   }
 
-  return response.json()
+  const data = (await response.json()) as WorkerResponse
+
+  return data.worker
 }
 
 /**
@@ -87,7 +78,7 @@ export async function createWorker(data: CreateWorkerDTO): Promise<WorkerRespons
     throw new Error(error.error || 'Failed to create worker')
   }
 
-  return response.json()
+  return response.json() as Promise<WorkerResponse>
 }
 
 /**
@@ -112,8 +103,12 @@ export async function updateWorker(
     // Handle specific error cases
     if (response.status === 409) {
       if (error.code === 'CONCURRENT_EDIT') {
-        const concurrentError = new Error(error.error || 'Worker was updated by another user')
-        ;(concurrentError as any).code = 'CONCURRENT_EDIT'
+        const concurrentError = new Error(
+          error.error || 'Worker was updated by another user'
+        ) as Error & {
+          code?: string
+        }
+        concurrentError.code = 'CONCURRENT_EDIT'
         throw concurrentError
       }
       throw new Error(error.error || 'Phone number already in use')
@@ -126,7 +121,9 @@ export async function updateWorker(
     throw new Error(error.error || 'Failed to update worker')
   }
 
-  return response.json()
+  const result = (await response.json()) as WorkerResponse
+
+  return result.worker
 }
 
 /**

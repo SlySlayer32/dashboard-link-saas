@@ -1,5 +1,5 @@
 ---
-trigger: always
+trigger: always_on
 description: MVP scope boundaries — what is and is not being built in Dashboard Link
 ---
 

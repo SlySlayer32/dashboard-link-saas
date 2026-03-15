@@ -269,8 +269,8 @@ export class WebhookService {
    */
   private async enqueueWebhookJob(
     _provider: string,
-    payload: unknown,
-    eventType: string
+    _payload: unknown,
+    _eventType: string
   ): Promise<void> {
     // const _job = {
     //     id: crypto.randomUUID(),

@@ -1,6 +1,8 @@
 import { getOrganizationRepository, getWorkerRepository } from '@dashboard-link/database'
 import { TenantContext, tenantMiddleware } from '@dashboard-link/shared'
 import { zValidator } from '@hono/zod-validator'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 import { Hono } from 'hono'
 import { z } from 'zod'
 
@@ -21,8 +23,12 @@ const v1 = new Hono<{
     tenantId: string
     userId: string
     userRole: string
+    supabase: SupabaseClient
   }
 }>()
+
+// Initialize Supabase client
+const supabase = createClient(process.env.SUPABASE_URL || '', process.env.SUPABASE_ANON_KEY || '')
 
 // Apply tenant middleware to all v1 routes except auth and webhooks
 v1.use('*', async (c, next) => {
@@ -365,22 +371,19 @@ v1.post(
       }
 
       // Save dashboard to database
-      await c.env.DB.prepare(
-        `
-            INSERT INTO dashboards (id, worker_id, organization_id, name, config, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `
-      )
-        .bind(
-          dashboard.id,
-          dashboard.worker_id,
-          dashboard.organization_id,
-          dashboard.name,
-          JSON.stringify(dashboard.config),
-          dashboard.created_at,
-          dashboard.updated_at
-        )
-        .run()
+      const { error } = await supabase.from('dashboards').insert({
+        id: dashboard.id,
+        worker_id: dashboard.worker_id,
+        organization_id: dashboard.organization_id,
+        name: dashboard.name,
+        config: dashboard.config,
+        created_at: dashboard.created_at,
+        updated_at: dashboard.updated_at,
+      })
+
+      if (error) {
+        throw error
+      }
 
       return c.json(
         {
@@ -422,18 +425,25 @@ v1.post(
 
     try {
       // Get dashboard with worker info
-      const { results } = await c.env.DB.prepare(
+      const { data: results, error } = await supabase
+        .from('dashboards')
+        .select(
+          `
+          *,
+          workers (
+            name as worker_name,
+            phone as worker_phone
+          )
         `
-            SELECT d.*, w.name as worker_name, w.phone as worker_phone
-            FROM dashboards d
-            JOIN workers w ON d.worker_id = w.id
-            WHERE d.id = ? AND d.organization_id = ?
-        `
-      )
-        .bind(dashboardId, tenant.orgId)
-        .all()
+        )
+        .eq('id', dashboardId)
+        .eq('organization_id', tenant.orgId)
 
-      if (results.length === 0) {
+      if (error) {
+        throw error
+      }
+
+      if (!results || results.length === 0) {
         return c.json(
           {
             success: false,
@@ -446,12 +456,7 @@ v1.post(
         )
       }
 
-      const dashboard = results[0] as {
-        worker_id: string
-        worker_name: string
-        worker_phone: string
-        org_id: string
-      }
+      const dashboard = results[0] as any
 
       // Create secure token
       const tokenService = new TokenService()
@@ -542,22 +547,19 @@ v1.post(
         updated_at: new Date().toISOString(),
       }
 
-      await c.env.DB.prepare(
-        `
-            INSERT INTO adapter_configs (id, organization_id, adapter_type, config, enabled, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `
-      )
-        .bind(
-          config.id,
-          config.organization_id,
-          config.adapter_type,
-          JSON.stringify(config.config),
-          config.enabled,
-          config.created_at,
-          config.updated_at
-        )
-        .run()
+      const { error } = await supabase.from('adapter_configs').insert({
+        id: config.id,
+        organization_id: config.organization_id,
+        adapter_type: config.adapter_type,
+        config: config.config,
+        enabled: config.enabled,
+        created_at: config.created_at,
+        updated_at: config.updated_at,
+      })
+
+      if (error) {
+        throw error
+      }
 
       return c.json(
         {

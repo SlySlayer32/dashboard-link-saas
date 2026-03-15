@@ -1,4 +1,5 @@
 import { Suspense, lazy } from 'react'
+import { Toaster } from 'react-hot-toast'
 import { Route, Routes } from 'react-router-dom'
 import { DevLoginButton } from './components/DevLoginButton'
 import { Navigation } from './components/Navigation'

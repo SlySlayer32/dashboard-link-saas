@@ -1,5 +1,5 @@
 ---
-trigger: always
+trigger: always_on
 description: Project identity, docs index, and tech stack for Dashboard Link
 ---
 
@@ -30,6 +30,10 @@ Goal: Prove 3–5 businesses prefer this over WhatsApp for daily worker comms
 | `/docs/4-decisions/ADR/` | All architecture decision records |
 | `/docs/5-dev-guide/SETUP.md` | Dev environment setup |
 | `/docs/6-product/FEATURES.md` | Feature build status — check before adding anything |
+| `/docs/devlog/INDEX.md` | Master development log index — all entries |
+| `/docs/devlog/decisions.md` | All architectural and product decisions |
+| `/docs/devlog/bugs.md` | Bug history — open and closed |
+| `/docs/PROOF.md` | Auto-generated proof of development |
 
 ## Locked Tech Stack
 Do not suggest alternatives. These decisions are final.

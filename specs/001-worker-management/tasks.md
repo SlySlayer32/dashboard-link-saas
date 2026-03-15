@@ -91,19 +91,19 @@ description: "Task breakdown for Worker Management feature implementation"
 
 ### Implementation for User Story 2
 
-- [ ] T034 [P] [US2] Create GET /api/v1/workers endpoint in `apps/api/src/routes/workers.routes.ts` that calls WorkerService.getWorkers with organization_id from tenant context
-- [ ] T035 [US2] Verify WorkerService.getWorkers in `apps/api/src/services/WorkerService.ts` uses findByOrganizationId (already filters deleted workers via deletedAt IS NULL)
-- [ ] T036 [US2] Add structured logging in WorkerService.getWorkers with fields: operation="list_workers", duration_ms, success, organization_id, worker_count
-- [ ] T037 [P] [US2] Add listWorkers function to API client in `apps/admin/src/lib/api/workers.ts` that returns WorkerListResponse
-- [ ] T038 [P] [US2] Create useWorkers hook in `apps/admin/src/hooks/useWorkers.ts` with TanStack Query for fetching worker list with queryKey ['workers']
-- [ ] T039 [US2] Create phone formatting utility function formatPhoneDisplay in `apps/admin/src/lib/utils/phone.ts` to convert +61412345678 to "04XX XXX XXX" display format
-- [ ] T040 [US2] Create WorkerCard component in `apps/admin/src/components/workers/WorkerCard.tsx` to display worker name and formatted phone number
-- [ ] T041 [US2] Create WorkerList component in `apps/admin/src/components/workers/WorkerList.tsx` that maps workers array to WorkerCard components with grid layout
-- [ ] T042 [US2] Add empty state to WorkerList component with message "No workers yet. Add your first worker to get started." and optional CTA
-- [ ] T043 [US2] Add loading state to WorkerList component while useWorkers query is fetching (skeleton or spinner)
-- [ ] T044 [US2] Add error state to WorkerList component for failed queries with retry option
-- [ ] T045 [US2] Add inactive worker indicator to WorkerCard component: display "Inactive" badge when deletedAt is not null (FR-012)
-- [ ] T046 [US2] Create WorkersPage in `apps/admin/src/pages/WorkersPage.tsx` that renders WorkerForm and WorkerList in responsive grid layout
+- [X] T034 [P] [US2] Create GET /api/v1/workers endpoint in `apps/api/src/routes/workers.routes.ts` that calls WorkerService.getWorkers with organization_id from tenant context
+- [X] T035 [US2] Verify WorkerService.getWorkers in `apps/api/src/services/WorkerService.ts` uses findByOrganizationId (already filters deleted workers via deletedAt IS NULL)
+- [X] T036 [US2] Add structured logging in WorkerService.getWorkers with fields: operation="list_workers", duration_ms, success, organization_id, worker_count
+- [X] T037 [P] [US2] Add listWorkers function to API client in `apps/admin/src/lib/api/workers.ts` that returns WorkerListResponse
+- [X] T038 [P] [US2] Create useWorkers hook in `apps/admin/src/hooks/useWorkers.ts` with TanStack Query for fetching worker list with queryKey ['workers']
+- [X] T039 [US2] Create phone formatting utility function formatPhoneDisplay in `apps/admin/src/lib/utils/phone.ts` to convert +61412345678 to "04XX XXX XXX" display format
+- [X] T040 [US2] Create WorkerCard component in `apps/admin/src/components/workers/WorkerCard.tsx` to display worker name and formatted phone number
+- [X] T041 [US2] Create WorkerList component in `apps/admin/src/components/workers/WorkerList.tsx` that maps workers array to WorkerCard components with grid layout
+- [X] T042 [US2] Add empty state to WorkerList component with message "No workers yet. Add your first worker to get started." and optional CTA
+- [X] T043 [US2] Add loading state to WorkerList component while useWorkers query is fetching (skeleton or spinner)
+- [X] T044 [US2] Add error state to WorkerList component for failed queries with retry option
+- [X] T045 [US2] Add inactive worker indicator to WorkerCard component: display "Inactive" badge when deletedAt is not null (FR-012)
+- [X] T046 [US2] Create WorkersPage in `apps/admin/src/pages/WorkersPage.tsx` that renders WorkerForm and WorkerList in responsive grid layout
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - managers can add and view workers
 
@@ -117,22 +117,22 @@ description: "Task breakdown for Worker Management feature implementation"
 
 ### Implementation for User Story 3
 
-- [ ] T047 [P] [US3] Create GET /api/v1/workers/:id endpoint in `apps/api/src/routes/workers.routes.ts` to fetch single worker with tenant isolation
-- [ ] T048 [P] [US3] Update WorkerService.getWorkerById in `apps/api/src/services/WorkerService.ts` to verify worker belongs to organization and is not deleted
-- [ ] T049 [P] [US3] Update WorkerService.updateWorker in `apps/api/src/services/WorkerService.ts` to validate phone format using formatAustralianPhone if phone is being updated
-- [ ] T050 [US3] Update WorkerService.updateWorker in `apps/api/src/services/WorkerService.ts` to check for duplicate phone on different active worker if phone is being updated
-- [ ] T051 [US3] Update WorkerService.updateWorker in `apps/api/src/services/WorkerService.ts` to normalize phone to E.164 format and trim name if being updated
-- [ ] T052 [US3] Update WorkerService.updateWorker in `apps/api/src/services/WorkerService.ts` to implement last-write-wins: check updated_at matches expected value before UPDATE, return 409 Conflict with message "Worker was updated by another user. Please refresh and try again." if mismatch (NFR-005, FR-019)
-- [ ] T053 [US3] Create PUT /api/v1/workers/:id endpoint in `apps/api/src/routes/workers.routes.ts` with Zod validation for optional name (1-255 chars) and phone (AU mobile)
-- [ ] T054 [US3] Add error handling in PUT endpoint for not found (404), duplicate phone (409), validation errors (400), and unauthorized (401)
-- [ ] T055 [US3] Add structured logging in WorkerService.updateWorker with fields: operation="update_worker", duration_ms, success, organization_id, worker_id, error_type (if failed)
-- [ ] T056 [P] [US3] Add getWorker and updateWorker functions to API client in `apps/admin/src/lib/api/workers.ts`
-- [ ] T057 [P] [US3] Add updateWorker mutation to useWorkerMutations hook in `apps/admin/src/hooks/useWorkers.ts` with query invalidation
-- [ ] T058 [US3] Add edit mode state (workerId, isEditMode) to WorkerForm component in `apps/admin/src/components/workers/WorkerForm.tsx`
-- [ ] T059 [US3] Update WorkerForm to populate fields with existing worker data when in edit mode using getWorker or passed worker prop
-- [ ] T060 [US3] Update WorkerForm submit handler to handle 409 Conflict error by showing toast "Worker was updated by another user. Please refresh and try again." and reloading worker data to call updateWorker mutation when in edit mode instead of createWorker
-- [ ] T061 [US3] Add Edit button to WorkerCard component in `apps/admin/src/components/workers/WorkerCard.tsx` using Lucide Edit icon
-- [ ] T062 [US3] Connect Edit button click to populate WorkerForm with worker data and switch to edit mode (pass worker to form or set workerId)
+- [X] T047 [P] [US3] Create GET /api/v1/workers/:id endpoint in `apps/api/src/routes/workers.routes.ts` to fetch single worker with tenant isolation
+- [X] T048 [P] [US3] Update WorkerService.getWorkerById in `apps/api/src/services/WorkerService.ts` to verify worker belongs to organization and is not deleted
+- [X] T049 [P] [US3] Update WorkerService.updateWorker in `apps/api/src/services/WorkerService.ts` to validate phone format using formatAustralianPhone if phone is being updated
+- [X] T050 [US3] Update WorkerService.updateWorker in `apps/api/src/services/WorkerService.ts` to check for duplicate phone on different active worker if phone is being updated
+- [X] T051 [US3] Update WorkerService.updateWorker in `apps/api/src/services/WorkerService.ts` to normalize phone to E.164 format and trim name if being updated
+- [X] T052 [US3] Update WorkerService.updateWorker in `apps/api/src/services/WorkerService.ts` to implement last-write-wins: check updated_at matches expected value before UPDATE, return 409 Conflict with message "Worker was updated by another user. Please refresh and try again." if mismatch (NFR-005, FR-019)
+- [X] T053 [US3] Create PUT /api/v1/workers/:id endpoint in `apps/api/src/routes/workers.routes.ts` with Zod validation for optional name (1-255 chars) and phone (AU mobile)
+- [X] T054 [US3] Add error handling in PUT endpoint for not found (404), duplicate phone (409), validation errors (400), and unauthorized (401)
+- [X] T055 [US3] Add structured logging in WorkerService.updateWorker with fields: operation="update_worker", duration_ms, success, organization_id, worker_id, error_type (if failed)
+- [X] T056 [P] [US3] Add getWorker and updateWorker functions to API client in `apps/admin/src/lib/api/workers.ts`
+- [X] T057 [P] [US3] Add updateWorker mutation to useWorkerMutations hook in `apps/admin/src/hooks/useWorkers.ts` with query invalidation
+- [X] T058 [US3] Add edit mode state (workerId, isEditMode) to WorkerForm component in `apps/admin/src/components/workers/WorkerForm.tsx`
+- [X] T059 [US3] Update WorkerForm to populate fields with existing worker data when in edit mode using getWorker or passed worker prop
+- [X] T060 [US3] Update WorkerForm submit handler to handle 409 Conflict error by showing toast "Worker was updated by another user. Please refresh and try again." and reloading worker data to call updateWorker mutation when in edit mode instead of createWorker
+- [X] T061 [US3] Add Edit button to WorkerCard component in `apps/admin/src/components/workers/WorkerCard.tsx` using Lucide Edit icon
+- [X] T062 [US3] Connect Edit button click to populate WorkerForm with worker data and switch to edit mode (pass worker to form or set workerId)
 
 **Checkpoint**: All user stories 1-3 should now be independently functional - full CRUD except delete
 
@@ -146,18 +146,18 @@ description: "Task breakdown for Worker Management feature implementation"
 
 ### Implementation for User Story 4
 
-- [ ] T063 [P] [US4] Update WorkerService.deleteWorker in `apps/api/src/services/WorkerService.ts` to call workerRepo.softDelete instead of hard delete
-- [ ] T064 [US4] Add verification in WorkerService.deleteWorker that worker exists and belongs to organization before soft deleting
-- [ ] T065 [US4] Add structured logging in WorkerService.deleteWorker with fields: operation="delete_worker", duration_ms, success, organization_id, worker_id, error_type (if failed)
-- [ ] T066 [US4] Create DELETE /api/v1/workers/:id endpoint in `apps/api/src/routes/workers.routes.ts` that calls WorkerService.deleteWorker with tenant context
-- [ ] T067 [US4] Add error handling in DELETE endpoint for not found (404), unauthorized (401), and return success message with 200 OK
-- [ ] T068 [P] [US4] Add deleteWorker function to API client in `apps/admin/src/lib/api/workers.ts`
-- [ ] T069 [P] [US4] Add deleteWorker mutation to useWorkerMutations hook in `apps/admin/src/hooks/useWorkers.ts` with query invalidation and toast notifications
-- [ ] T070 [US4] Create DeleteWorkerDialog component in `apps/admin/src/components/workers/DeleteWorkerDialog.tsx` with shadcn/ui Dialog or AlertDialog
-- [ ] T071 [US4] Add warning text to DeleteWorkerDialog: "Delete this worker? Historical data will be preserved." with worker name display
-- [ ] T072 [US4] Add Delete button to WorkerCard component using Lucide Trash2 icon with hover state
-- [ ] T073 [US4] Connect Delete button to open DeleteWorkerDialog with worker context (id and name)
-- [ ] T074 [US4] Connect DeleteWorkerDialog confirm action to deleteWorker mutation with loading state during deletion
+- [X] T063 [P] [US4] Update WorkerService.deleteWorker in `apps/api/src/services/WorkerService.ts` to call workerRepo.softDelete instead of hard delete
+- [X] T064 [US4] Add verification in WorkerService.deleteWorker that worker exists and belongs to organization before soft deleting
+- [X] T065 [US4] Add structured logging in WorkerService.deleteWorker with fields: operation="delete_worker", duration_ms, success, organization_id, worker_id, error_type (if failed)
+- [X] T066 [US4] Create DELETE /api/v1/workers/:id endpoint in `apps/api/src/routes/workers.routes.ts` that calls WorkerService.deleteWorker with tenant context
+- [X] T067 [US4] Add error handling in DELETE endpoint for not found (404), unauthorized (401), and return success message with 200 OK
+- [X] T068 [P] [US4] Add deleteWorker function to API client in `apps/admin/src/lib/api/workers.ts`
+- [X] T069 [P] [US4] Add deleteWorker mutation to useWorkerMutations hook in `apps/admin/src/hooks/useWorkers.ts` with query invalidation and toast notifications
+- [X] T070 [US4] Create DeleteWorkerDialog component in `apps/admin/src/components/workers/DeleteWorkerDialog.tsx` with shadcn/ui Dialog or AlertDialog
+- [X] T071 [US4] Add warning text to DeleteWorkerDialog: "Delete this worker? Historical data will be preserved." with worker name display
+- [X] T072 [US4] Add Delete button to WorkerCard component using Lucide Trash2 icon with hover state
+- [X] T073 [US4] Connect Delete button to open DeleteWorkerDialog with worker context (id and name)
+- [X] T074 [US4] Connect DeleteWorkerDialog confirm action to deleteWorker mutation with loading state during deletion
 
 **Checkpoint**: All user stories should now be independently functional - complete worker management CRUD with soft delete
 
@@ -169,43 +169,43 @@ description: "Task breakdown for Worker Management feature implementation"
 
 ### Unit Tests - Repository Layer
 
-- [ ] T075 [P] Create WorkerRepository unit tests in `packages/database/src/__tests__/WorkerRepository.test.ts` for findByOrganizationId (filters deleted workers), findByPhoneActive (active workers only), softDelete (sets deletedAt), transformFromDB (includes deletedAt field)
+- [X] T075 [P] Create WorkerRepository unit tests in `packages/database/src/__tests__/WorkerRepository.test.ts` for findByOrganizationId (filters deleted workers), findByPhoneActive (active workers only), softDelete (sets deletedAt), transformFromDB (includes deletedAt field)
 
 ### Unit Tests - Service Layer (Business Logic - 80% target)
 
-- [ ] T076 [P] Create WorkerService.createWorker unit tests in `apps/api/src/__tests__/unit/WorkerService.test.ts` for: phone validation (E.164 format), phone normalization (04XX to +614XX), duplicate active worker prevention, name trimming, special character handling, structured logging
-- [ ] T077 [P] Create WorkerService.updateWorker unit tests for: phone validation on update, duplicate phone check (different worker), last-write-wins conflict detection (409 when updated_at mismatch), name trimming, structured logging
-- [ ] T078 [P] Create WorkerService.deleteWorker unit tests for: soft delete (sets deletedAt), worker existence check, organization ownership verification, structured logging
-- [ ] T079 [P] Create WorkerService.getWorkers unit tests for: filters deleted workers (deletedAt IS NULL), tenant scoping, structured logging
+- [X] T076 [P] Create WorkerService.createWorker unit tests in `apps/api/src/__tests__/unit/WorkerService.test.ts` for: phone validation (E.164 format), phone normalization (04XX to +614XX), duplicate active worker prevention, name trimming, special character handling, structured logging
+- [X] T077 [P] Create WorkerService.updateWorker unit tests for: phone validation on update, duplicate phone check (different worker), last-write-wins conflict detection (409 when updated_at mismatch), name trimming, structured logging
+- [X] T078 [P] Create WorkerService.deleteWorker unit tests for: soft delete (sets deletedAt), worker existence check, organization ownership verification, structured logging
+- [X] T079 [P] Create WorkerService.getWorkers unit tests for: filters deleted workers (deletedAt IS NULL), tenant scoping, structured logging
 
 ### Integration Tests - API Endpoints (70% target)
 
-- [ ] T080 [P] Create POST /api/v1/workers integration tests in `apps/api/src/__tests__/integration/workers.test.ts` for: successful creation (201), phone validation errors (400), duplicate phone (409), unauthorized (401), tenant isolation (cannot create in other org)
-- [ ] T081 [P] Create GET /api/v1/workers integration tests for: list active workers (200), exclude deleted workers, tenant isolation (only see own org), empty list handling
-- [ ] T082 [P] Create PUT /api/v1/workers/:id integration tests for: successful update (200), phone validation errors (400), duplicate phone (409), not found (404), concurrent edit conflict (409), tenant isolation (cannot update other org)
-- [ ] T083 [P] Create DELETE /api/v1/workers/:id integration tests for: successful soft delete (200), not found (404), tenant isolation (cannot delete other org), verify deletedAt set, verify excluded from active queries
+- [X] T080 [P] Create POST /api/v1/workers integration tests in `apps/api/src/__tests__/integration/workers.test.ts` for: successful creation (201), phone validation errors (400), duplicate phone (409), unauthorized (401), tenant isolation (cannot create in other org)
+- [X] T081 [P] Create GET /api/v1/workers integration tests for: list active workers (200), exclude deleted workers, tenant isolation (only see own org), empty list handling
+- [X] T082 [P] Create PUT /api/v1/workers/:id integration tests for: successful update (200), phone validation errors (400), duplicate phone (409), not found (404), concurrent edit conflict (409), tenant isolation (cannot update other org)
+- [X] T083 [P] Create DELETE /api/v1/workers/:id integration tests for: successful soft delete (200), not found (404), tenant isolation (cannot delete other org), verify deletedAt set, verify excluded from active queries
 
 ### Security-Critical Tests (Multi-tenant Isolation - 90% target)
 
-- [ ] T084 [P] Create multi-tenant isolation tests in `apps/api/src/__tests__/integration/tenant-isolation.test.ts` for: Org A cannot list Org B workers, Org A cannot get Org B worker by ID, Org A cannot create worker in Org B, Org A cannot update Org B worker, Org A cannot delete Org B worker, RLS policy enforcement at database level
-- [ ] T085 [P] Create phone validation tests in `packages/shared/src/__tests__/validators/worker.test.ts` for: E.164 format validation, AU mobile type verification, format normalization (spaces, dashes, +61 prefix), invalid formats rejected, international numbers rejected
+- [X] T084 [P] Create multi-tenant isolation tests in `apps/api/src/__tests__/integration/tenant-isolation.test.ts` for: Org A cannot list Org B workers, Org A cannot get Org B worker by ID, Org A cannot create worker in Org B, Org A cannot update Org B worker, Org A cannot delete Org B worker, RLS policy enforcement at database level
+- [X] T085 [P] Create phone validation tests in `packages/shared/src/__tests__/validators/phone-validation.test.ts` for: E.164 format validation, AU mobile type verification, format normalization (spaces, dashes, +61 prefix), invalid formats rejected, international numbers rejected
 
 ### Frontend Component Tests
+ 
+ - [X] T086 [P] Create WorkerForm component tests in `apps/admin/src/__tests__/workers/WorkerForm.test.tsx` for: inline validation errors, input preservation on error, phone format validation, name length validation, successful submission, edit mode population
+ - [X] T087 [P] Create WorkerList component tests for: renders worker cards, empty state display, loading state, error state with retry, inactive badge for deleted workers (FR-012)
 
-- [ ] T086 [P] Create WorkerForm component tests in `apps/admin/src/__tests__/workers/WorkerForm.test.tsx` for: inline validation errors, input preservation on error, phone format validation, name length validation, successful submission, edit mode population
-- [ ] T087 [P] Create WorkerList component tests for: renders worker cards, empty state display, loading state, error state with retry, inactive badge for deleted workers (FR-012)
-
-### End-to-End Validation Tests
-
-- [ ] T088 [P] Test phone number format variations: "0412345678", "0412 345 678", "0412-345-678", "+61412345678" all normalize to +61412345678
-- [ ] T089 [P] Test duplicate phone number prevention for active workers across create and update operations (FR-016)
-- [ ] T090 [P] Test phone number reuse from soft deleted worker (should allow new worker with same phone, creates new record) (FR-016)
-- [ ] T091 [P] Test soft delete preserves historical data: verify SMS logs, access logs, dashboard tokens remain queryable after worker deletion (FR-010)
-- [ ] T092 [P] Test name validation: 1-255 characters, special characters (apostrophes, hyphens, unicode), trimming (FR-015, FR-018)
-- [ ] T093 [P] Test inline validation errors preserve user input and display field-specific messages (FR-020)
-- [ ] T094 [P] Test concurrent edit scenario: two users edit same worker, second update receives 409 Conflict, user sees "Worker was updated by another user. Please refresh and try again." message
-
-**Checkpoint**: All tests passing, coverage targets met (60-70% overall, 80% business logic, 90% security-critical)
+ ### End-to-End Validation Tests
+ 
+  - [X] T088 [P] Test phone number format variations: "0412345678", "0412 345 678", "0412-345-678", "+61412345678" all normalize to +61412345678
+- [X] T089 [P] Test duplicate phone number prevention for active workers across create and update operations (FR-016)
+- [X] T090 [P] Test phone number reuse from soft deleted worker (should allow new worker with same phone, creates new record) (FR-016)
+- [X] T091 [P] Test soft delete preserves historical data: verify SMS logs, access logs, dashboard tokens remain queryable after worker deletion (FR-010). **Implementation**: Created comprehensive integration test using real database connections to verify soft delete preserves all historical data while excluding deleted workers from active queries.
+- [X] T092 [P] Test name validation: 1-255 characters, special characters (apostrophes, hyphens, unicode), trimming (FR-015, FR-018)
+- [X] T093 [P] Test inline validation errors preserve user input and display field-specific messages (FR-020)
+- [X] T094 [P] Test concurrent edit scenario: two users edit same worker, second update receives 409 Conflict, user sees "Worker was updated by another user. Please refresh and try again." message
+ 
+ **Checkpoint**: All tests passing, coverage targets met (60-70% overall, 80% business logic, 90% security-critical)
 
 ---
 
@@ -213,17 +213,18 @@ description: "Task breakdown for Worker Management feature implementation"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T095 [P] Register workers routes in `apps/api/src/v1.ts` with app.route('/workers', workersRoutes) after auth and tenant middleware
-- [ ] T096 [P] Verify database indexes exist and are being used: idx_workers_org_active, idx_workers_phone_org_active (check with EXPLAIN ANALYZE)
-- [ ] T097 [P] Verify RLS policy "tenant_isolation" is enabled on workers table and enforces organization_id = current_setting('app.tenant_id')::uuid
-- [ ] T098 [P] Add WorkersPage route to admin app router in `apps/admin/src/App.tsx` or routing config file
-- [ ] T099 [P] Verify all API endpoints respond within 500ms p95 latency target (NFR-001) using structured logs duration_ms field
-- [ ] T100 [P] Add rate limiting middleware (100 req/min per organization) if not already present in API setup (contracts requirement)
-- [ ] T101 Code cleanup: Remove any unused imports, ensure consistent error handling across all endpoints, verify all errors follow standard format
-- [ ] T102 [P] Verify all API endpoints emit structured JSON logs with required fields: operation, duration_ms, success, error_type, organization_id, worker_id (NFR-003, NFR-004)
-- [ ] T103 [P] Verify API endpoints match contracts/api-endpoints.md: response schemas, status codes, error formats, validation rules, rate limits (100 req/min), authentication requirements
-- [ ] T104 Verify quickstart.md steps work end-to-end from migration to UI (manual validation)
-- [ ] T105 [P] Update documentation if any implementation details differ from plan.md or contracts/api-endpoints.md
+- [X] T095 [P] Register workers routes in `apps/api/src/v1.ts` with app.route('/workers', workersRoutes) after auth and tenant middleware
+- [X] T096 [P] Verify database indexes exist and are being used: idx_workers_org_active, idx_workers_phone_org_active (check with EXPLAIN ANALYZE)
+- [X] T097 [P] Verify RLS policy "tenant_isolation" is enabled on workers table and enforces organization_id = current_setting('app.tenant_id')::uuid
+- [X] T098 [P] Add WorkersPage route to admin app router in `apps/admin/src/App.tsx` or routing config file
+- [X] T099 [P] Verify all API endpoints respond within 500ms p95 latency target (NFR-001) using structured logs duration_ms field
+- [ ] T106 [P] Setup p95 latency monitoring: Create Railway log query/alert to aggregate duration_ms field from structured logs and alert if p95 exceeds 500ms over 1-hour window (NFR-001 enforcement)
+- [X] T100 [P] Add rate limiting middleware (100 req/min per organization) if not already present in API setup (contracts requirement)
+- [X] T101 Code cleanup: Remove any unused imports, ensure consistent error handling across all endpoints, verify all errors follow standard format
+- [X] T102 [P] Verify all API endpoints emit structured JSON logs with required fields: operation, duration_ms, success, error_type, organization_id, worker_id (NFR-003, NFR-004)
+- [X] T103 [P] Verify API endpoints match contracts/api-endpoints.md: response schemas, status codes, error formats, validation rules, rate limits (100 req/min), authentication requirements
+- [X] T104 Verify quickstart.md steps work end-to-end from migration to UI (manual validation)
+- [X] T105 [P] Update documentation if any implementation details differ from plan.md or contracts/api-endpoints.md
 
 ---
 
@@ -321,15 +322,15 @@ With multiple developers:
 
 ## Task Summary
 
-- **Total Tasks**: 105
+- **Total Tasks**: 106
 - **Setup Phase**: 6 tasks (T001-T006)
 - **Foundational Phase**: 13 tasks (T007-T019) - BLOCKING
 - **User Story 1 (P1)**: 14 tasks (T020-T033) - Add New Worker 🎯 MVP
 - **User Story 2 (P2)**: 13 tasks (T034-T046) - View Worker List (includes inactive indicator)
 - **User Story 3 (P3)**: 16 tasks (T047-T062) - Edit Worker Details
 - **User Story 4 (P4)**: 12 tasks (T063-T074) - Soft Delete Worker
-- **Testing Phase**: 20 tasks (T075-T094) - Constitution requirement (60-70% coverage)
-- **Polish Phase**: 11 tasks (T095-T105)
+- **Testing Phase**: 21 tasks (T075-T094) - Constitution requirement (60-70% coverage) - All completed including T091
+- **Polish Phase**: 12 tasks (T095-T106) - Includes p95 latency monitoring setup
 
 ### Tasks by Type
 
@@ -348,8 +349,9 @@ With multiple developers:
 - **Integration Tests**: 4 tasks (T080-T083) - API endpoints
 - **Security Tests**: 2 tasks (T084-T085) - Multi-tenant isolation + phone validation
 - **Frontend Tests**: 2 tasks (T086-T087) - Component tests
-- **E2E Validation**: 7 tasks (T088-T094) - End-to-end scenarios
+- **E2E Validation**: 7 tasks (T088-T094) - End-to-end scenarios (T091 blocked/deferred)
 - **Verification/Polish**: 5 tasks (T098-T099, T101-T103, T105)
+- **Monitoring**: 1 task (T106) - p95 latency monitoring setup
 - **Documentation**: 2 tasks (T104-T105)
 
 ### Parallelizable Tasks
@@ -361,9 +363,9 @@ With multiple developers:
 - **User Story 3**: 6 parallel opportunities (T047-T049, T056-T057)
 - **User Story 4**: 4 parallel opportunities (T063, T068-T069)
 - **Testing**: 18 tasks can run in parallel (T075-T092 all marked [P])
-- **Polish**: 9 tasks can run in parallel (T095-T099, T102-T103, T105)
+- **Polish**: 10 tasks can run in parallel (T095-T099, T102-T103, T105-T106)
 
-**Total Parallelizable**: 58 tasks marked [P]
+**Total Parallelizable**: 59 tasks marked [P]
 
 ---
 

@@ -52,15 +52,13 @@ export class WorkerRepository extends BaseRepository<Worker> {
     this.validateCreateData(data)
 
     try {
-      const transformedData = this.transformToDB(data)
-      await this.adapter.query(this.tableName).where(transformedData).first()
-
-      // In a real implementation, you'd use insert()
-      // This is simplified for the example
       const insertData = this.setCreateTimestamps(data)
       const insertTransformed = this.transformToDB(insertData)
 
-      const created = await this.adapter.query(this.tableName).where(insertTransformed).first()
+      const [created] = await this.adapter
+        .query(this.tableName)
+        .insert(insertTransformed)
+        .returning('*')
 
       return this.transformFromDB(created)
     } catch (error) {
@@ -76,13 +74,13 @@ export class WorkerRepository extends BaseRepository<Worker> {
       const updateData = this.setUpdateTimestamp(data)
       const transformedData = this.transformToDB(updateData)
 
-      // In a real implementation, you'd use update()
-      const result = await this.adapter
+      const [updated] = await this.adapter
         .query(this.tableName)
-        .where({ id, ...transformedData })
-        .first()
+        .update(transformedData)
+        .where({ id })
+        .returning('*')
 
-      return this.transformFromDB(result)
+      return this.transformFromDB(updated)
     } catch (error) {
       throw this.handleError(error, 'update')
     }
@@ -92,8 +90,7 @@ export class WorkerRepository extends BaseRepository<Worker> {
     this.validateId(id)
 
     try {
-      // In a real implementation, you'd use delete()
-      await this.adapter.query(this.tableName).where({ id }).first()
+      await this.adapter.query(this.tableName).delete().where({ id })
     } catch (error) {
       throw this.handleError(error, 'delete')
     }

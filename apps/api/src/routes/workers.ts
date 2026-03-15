@@ -6,58 +6,105 @@
  */
 
 import { getWorkerRepository } from '@dashboard-link/database'
-import { createWorkerSchema, updateWorkerSchema } from '@dashboard-link/shared/validators/worker'
+import { createWorkerSchema, updateWorkerSchema } from '@dashboard-link/shared'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { supabase } from '../lib/db.js'
+import { z } from 'zod'
 import { authMiddleware } from '../middleware/auth'
+import { rateLimit } from '../middleware/rate-limit'
+import { tenantMiddleware } from '../middleware/tenant.middleware'
 import { WorkerService } from '../services/WorkerService'
-import type { AppContext } from '../types'
+import type { AppContextVariables } from '../types'
 import { logger } from '../utils/logger.js'
 
-const workers = new Hono<AppContext>()
+const workers = new Hono<{ Variables: AppContextVariables }>()
 
 // Initialize service with repository
-const workerService = new WorkerService(getWorkerRepository())
+const workerRepository = getWorkerRepository()
+const workerService = new WorkerService(workerRepository)
+
+const listWorkersQuerySchema = z.object({
+  include_deleted: z.coerce.boolean().optional().default(false),
+  search: z.string().trim().optional(),
+  limit: z.coerce.number().min(1).max(1000).optional().default(100),
+})
+
+const createValidationErrorBody = (issues: Array<{ field: string; message: string }>) => ({
+  error: 'Validation failed',
+  details: issues,
+})
+
+const createFieldValidationError = (field: string, message: string) =>
+  createValidationErrorBody([{ field, message }])
 
 // All routes require authentication
 workers.use('*', authMiddleware)
+workers.use('*', tenantMiddleware)
+workers.use('*', rateLimit({ windowMs: 60_000, maxRequests: 100 }))
 
 // List workers
-workers.get('/', async (c) => {
-  const userId = c.get('userId')
+workers.get(
+  '/',
+  zValidator('query', listWorkersQuerySchema, (result, c) => {
+    if (!result.success) {
+      return c.json(
+        createValidationErrorBody(
+          result.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          }))
+        ),
+        400
+      )
+    }
+  }),
+  async (c) => {
+    const organizationId = c.get('organizationId')
+    const query = c.req.valid('query')
 
-  if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
+    if (!organizationId) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+
+    try {
+      const workerList = query.search
+        ? query.include_deleted
+          ? await workerService.searchWorkersIncludingDeleted(
+              organizationId,
+              query.search,
+              query.limit
+            )
+          : await workerService.searchWorkers(organizationId, query.search, query.limit)
+        : query.include_deleted
+          ? await workerService.getWorkersIncludingDeleted(organizationId, query.limit)
+          : (await workerService.getWorkers(organizationId)).slice(0, query.limit)
+      return c.json({ workers: workerList, total: workerList.length })
+    } catch (error) {
+      logger.error(
+        'Failed to retrieve workers',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          operation: 'list_workers',
+          success: false,
+          organization_id: organizationId,
+          error_type: 'unknown',
+        }
+      )
+      return c.json({ error: 'Failed to retrieve workers' }, 500)
+    }
   }
-
-  try {
-    // Get user's organization (this would typically use AdminRepository)
-    // For now, we'll use a placeholder implementation
-    const organizationId = await getOrganizationId(userId)
-
-    const workers = await workerService.getWorkers(organizationId)
-    return c.json(workers)
-  } catch (error) {
-    logger.error(
-      'Failed to retrieve workers',
-      error instanceof Error ? error : new Error(String(error))
-    )
-    return c.json({ error: 'Failed to retrieve workers' }, 500)
-  }
-})
+)
 
 // Get worker by ID with SMS statistics
 workers.get('/:id/stats', async (c) => {
   const id = c.req.param('id')
-  const userId = c.get('userId')
+  const organizationId = c.get('organizationId')
 
-  if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
+  if (!organizationId) {
+    return c.json({ error: 'Unauthorized' }, 401)
   }
 
   try {
-    const organizationId = await getOrganizationId(userId)
     const stats = await workerService.getWorkerStats(id, organizationId)
     return c.json(stats)
   } catch (error) {
@@ -72,21 +119,20 @@ workers.get('/:id/stats', async (c) => {
 // Get worker by ID
 workers.get('/:id', async (c) => {
   const id = c.req.param('id')
-  const userId = c.get('userId')
+  const organizationId = c.get('organizationId')
 
-  if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
+  if (!organizationId) {
+    return c.json({ error: 'Unauthorized' }, 401)
   }
 
   try {
-    const organizationId = await getOrganizationId(userId)
     const worker = await workerService.getWorkerById(id, organizationId)
 
     if (!worker) {
       return c.json({ error: 'Worker not found' }, 404)
     }
 
-    return c.json(worker)
+    return c.json({ worker })
   } catch (error) {
     logger.error(
       'Failed to retrieve worker',
@@ -98,22 +144,16 @@ workers.get('/:id', async (c) => {
 
 // Create worker
 workers.post('/', zValidator('json', createWorkerSchema), async (c) => {
-  const userId = c.get('userId')
+  const organizationId = c.get('organizationId')
   const body = c.req.valid('json')
 
-  if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
+  if (!organizationId) {
+    return c.json({ error: 'Unauthorized' }, 401)
   }
 
   try {
-    const organizationId = await getOrganizationId(userId)
     const worker = await workerService.createWorker(body, organizationId)
-
-    // Create default dashboard for worker (this would use DashboardService)
-    // For now, we'll include a placeholder
-    const dashboard = await createDefaultDashboard(worker.id, organizationId)
-
-    return c.json({ worker, dashboard }, 201)
+    return c.json({ worker }, 201)
   } catch (error) {
     if (error instanceof Error) {
       // Duplicate phone number (FR-016)
@@ -121,7 +161,6 @@ workers.post('/', zValidator('json', createWorkerSchema), async (c) => {
         return c.json(
           {
             error: 'Phone number already in use by an active worker',
-            field: 'phone',
           },
           409
         )
@@ -133,14 +172,14 @@ workers.post('/', zValidator('json', createWorkerSchema), async (c) => {
         error.message.includes('email')
       ) {
         return c.json(
-          {
-            error: error.message,
-            field: error.message.toLowerCase().includes('name')
+          createFieldValidationError(
+            error.message.toLowerCase().includes('name')
               ? 'name'
               : error.message.toLowerCase().includes('phone')
                 ? 'phone'
                 : 'email',
-          },
+            error.message
+          ),
           400
         )
       }
@@ -155,89 +194,103 @@ workers.post('/', zValidator('json', createWorkerSchema), async (c) => {
 })
 
 // Update worker (changed from PATCH to PUT per spec)
-workers.put('/:id', zValidator('json', updateWorkerSchema), async (c) => {
-  const id = c.req.param('id')
-  const userId = c.get('userId')
-  const body = c.req.valid('json')
+workers.put(
+  '/:id',
+  zValidator('json', updateWorkerSchema, (result, c) => {
+    if (!result.success) {
+      return c.json(
+        createValidationErrorBody(
+          result.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          }))
+        ),
+        400
+      )
+    }
+  }),
+  async (c) => {
+    const id = c.req.param('id')
+    const organizationId = c.get('organizationId')
+    const body = c.req.valid('json')
 
-  if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
-  }
-
-  try {
-    const organizationId = await getOrganizationId(userId)
-    const worker = await workerService.updateWorker(id, body, organizationId)
-    return c.json(worker)
-  } catch (error) {
-    if (error instanceof Error) {
-      // Worker not found
-      if (error.message === 'Worker not found') {
-        return c.json({ error: 'Worker not found' }, 404)
-      }
-
-      // Concurrent edit conflict (FR-019, U1)
-      if ((error as any).statusCode === 409 && error.message.includes('updated by another user')) {
-        return c.json(
-          {
-            error: 'Worker was updated by another user. Please refresh and try again.',
-            code: 'CONCURRENT_EDIT',
-          },
-          409
-        )
-      }
-
-      // Duplicate phone number (FR-016)
-      if (error.message.includes('already in use')) {
-        return c.json(
-          {
-            error: 'Phone number already in use by an active worker',
-            field: 'phone',
-          },
-          409
-        )
-      }
-
-      // Validation errors (FR-020)
-      if (
-        error.message.includes('name') ||
-        error.message.includes('phone') ||
-        error.message.includes('email')
-      ) {
-        return c.json(
-          {
-            error: error.message,
-            field: error.message.toLowerCase().includes('name')
-              ? 'name'
-              : error.message.toLowerCase().includes('phone')
-                ? 'phone'
-                : 'email',
-          },
-          400
-        )
-      }
+    if (!organizationId) {
+      return c.json({ error: 'Unauthorized' }, 401)
     }
 
-    logger.error(
-      'Failed to update worker',
-      error instanceof Error ? error : new Error(String(error))
-    )
-    return c.json({ error: 'Failed to update worker' }, 500)
+    try {
+      const worker = await workerService.updateWorker(id, body, organizationId)
+      return c.json({ worker })
+    } catch (error) {
+      if (error instanceof Error) {
+        // Worker not found
+        if (error.message === 'Worker not found') {
+          return c.json({ error: 'Worker not found' }, 404)
+        }
+
+        // Concurrent edit conflict (FR-019, U1)
+        if (
+          'statusCode' in error &&
+          error.statusCode === 409 &&
+          error.message.includes('updated by another user')
+        ) {
+          return c.json(
+            {
+              error: 'Worker was updated by another user. Please refresh and try again.',
+            },
+            409
+          )
+        }
+
+        // Duplicate phone number (FR-016)
+        if (error.message.includes('already in use')) {
+          return c.json(
+            createFieldValidationError('phone', 'Phone number already in use by an active worker'),
+            409
+          )
+        }
+
+        // Validation errors (FR-020)
+        if (
+          error.message.includes('name') ||
+          error.message.includes('phone') ||
+          error.message.includes('email')
+        ) {
+          return c.json(
+            createFieldValidationError(
+              error.message.toLowerCase().includes('name')
+                ? 'name'
+                : error.message.toLowerCase().includes('phone')
+                  ? 'phone'
+                  : 'email',
+              error.message
+            ),
+            400
+          )
+        }
+      }
+
+      logger.error(
+        'Failed to update worker',
+        error instanceof Error ? error : new Error(String(error))
+      )
+      return c.json({ error: 'Failed to update worker' }, 500)
+    }
   }
-})
+)
 
 // Delete worker (soft delete)
 workers.delete('/:id', async (c) => {
   const id = c.req.param('id')
-  const userId = c.get('userId')
+  const organizationId = c.get('organizationId')
 
-  if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
+  if (!organizationId) {
+    return c.json({ error: 'Unauthorized' }, 401)
   }
 
   try {
-    const organizationId = await getOrganizationId(userId)
     await workerService.deleteWorker(id, organizationId)
-    return c.json({ message: 'Worker soft deleted successfully' })
+    return c.json({ success: true, message: 'Worker deleted successfully' }, 200)
   } catch (error) {
     if (error instanceof Error && error.message === 'Worker not found') {
       return c.json({ error: 'Worker not found' }, 404)
@@ -256,15 +309,14 @@ workers.delete('/:id', async (c) => {
 // Search workers
 workers.get('/search/:query', async (c) => {
   const query = c.req.param('query')
-  const userId = c.get('userId')
+  const organizationId = c.get('organizationId')
   const limit = parseInt(c.req.query('limit') || '10')
 
-  if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
+  if (!organizationId) {
+    return c.json({ error: 'Unauthorized' }, 401)
   }
 
   try {
-    const organizationId = await getOrganizationId(userId)
     const workers = await workerService.searchWorkers(organizationId, query, limit)
     return c.json(workers)
   } catch (error) {
@@ -278,14 +330,13 @@ workers.get('/search/:query', async (c) => {
 
 // Get active workers
 workers.get('/active/list', async (c) => {
-  const userId = c.get('userId')
+  const organizationId = c.get('organizationId')
 
-  if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
+  if (!organizationId) {
+    return c.json({ error: 'Unauthorized' }, 401)
   }
 
   try {
-    const organizationId = await getOrganizationId(userId)
     const workers = await workerService.getActiveWorkers(organizationId)
     return c.json(workers)
   } catch (error) {
@@ -300,14 +351,13 @@ workers.get('/active/list', async (c) => {
 // Activate worker
 workers.post('/:id/activate', async (c) => {
   const id = c.req.param('id')
-  const userId = c.get('userId')
+  const organizationId = c.get('organizationId')
 
-  if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
+  if (!organizationId) {
+    return c.json({ error: 'Unauthorized' }, 401)
   }
 
   try {
-    const organizationId = await getOrganizationId(userId)
     const worker = await workerService.activateWorker(id, organizationId)
     return c.json(worker)
   } catch (error) {
@@ -322,14 +372,13 @@ workers.post('/:id/activate', async (c) => {
 // Deactivate worker
 workers.post('/:id/deactivate', async (c) => {
   const id = c.req.param('id')
-  const userId = c.get('userId')
+  const organizationId = c.get('organizationId')
 
-  if (!userId) {
-    return c.json({ error: 'Not authorized' }, 401)
+  if (!organizationId) {
+    return c.json({ error: 'Unauthorized' }, 401)
   }
 
   try {
-    const organizationId = await getOrganizationId(userId)
     const worker = await workerService.deactivateWorker(id, organizationId)
     return c.json(worker)
   } catch (error) {
@@ -340,35 +389,5 @@ workers.post('/:id/deactivate', async (c) => {
     return c.json({ error: 'Failed to deactivate worker' }, 500)
   }
 })
-
-// Helper functions - using direct Supabase queries per spec T042 (MVP approach)
-
-async function getOrganizationId(userId: string): Promise<string> {
-  const { data, error } = await supabase
-    .from('users')
-    .select('organization_id')
-    .eq('id', userId)
-    .single()
-
-  if (error || !data) {
-    throw new Error('User not found or not authorized')
-  }
-
-  return data.organization_id
-}
-
-async function createDefaultDashboard(workerId: string, organizationId: string) {
-  // This would typically use DashboardService
-  // For now, we'll return a placeholder
-  return {
-    id: 'dashboard-placeholder',
-    name: 'Default Dashboard',
-    workerId,
-    organizationId,
-    active: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-}
 
 export { workers }

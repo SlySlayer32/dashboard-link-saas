@@ -10,6 +10,8 @@ import type { Worker } from '@dashboard-link/shared'
 import { formatAustralianPhone } from '@dashboard-link/shared'
 import { logger } from '../utils/logger.js'
 
+type WorkerServiceError = Error & { statusCode?: number }
+
 export interface CreateWorkerRequest {
   name: string
   phone: string
@@ -37,17 +39,81 @@ export class WorkerService {
   constructor(private workerRepo: WorkerRepository) {}
 
   async getWorkers(organizationId: string): Promise<Worker[]> {
-    return this.workerRepo.findByOrganizationId(organizationId)
+    const startTime = Date.now()
+
+    try {
+      const workers = await this.workerRepo.findByOrganizationId(organizationId)
+
+      logger.info('Workers retrieved successfully', {
+        operation: 'get_workers',
+        duration_ms: Date.now() - startTime,
+        success: true,
+        organization_id: organizationId,
+        worker_count: workers.length,
+      })
+
+      return workers
+    } catch (error) {
+      logger.error(
+        'Failed to list workers',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          operation: 'get_workers',
+          duration_ms: Date.now() - startTime,
+          success: false,
+          organization_id: organizationId,
+          worker_count: 0,
+          error_type: 'unknown',
+        }
+      )
+
+      throw error
+    }
   }
 
   async getWorkerById(id: string, organizationId: string): Promise<Worker | null> {
-    const worker = await this.workerRepo.findById(id)
+    const startTime = Date.now()
 
-    if (!worker || worker.organizationId !== organizationId) {
-      return null
+    try {
+      const worker = await this.workerRepo.findById(id)
+
+      if (!worker || worker.organizationId !== organizationId) {
+        logger.warn('Worker not found', {
+          operation: 'get_worker',
+          duration_ms: Date.now() - startTime,
+          success: false,
+          organization_id: organizationId,
+          worker_id: id,
+          error_type: 'not_found',
+        })
+        return null
+      }
+
+      logger.info('Worker retrieved successfully', {
+        operation: 'get_worker',
+        duration_ms: Date.now() - startTime,
+        success: true,
+        organization_id: organizationId,
+        worker_id: id,
+      })
+
+      return worker
+    } catch (error) {
+      logger.error(
+        'Failed to retrieve worker',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          operation: 'get_worker',
+          duration_ms: Date.now() - startTime,
+          success: false,
+          organization_id: organizationId,
+          worker_id: id,
+          error_type: 'unknown',
+        }
+      )
+
+      throw error
     }
-
-    return worker
   }
 
   async getWorkerStats(
@@ -75,6 +141,8 @@ export class WorkerService {
     const startTime = Date.now()
 
     try {
+      this.validateWorkerData(data)
+
       // Validate and format phone number
       const formattedPhone = formatAustralianPhone(data.phone)
 
@@ -82,8 +150,8 @@ export class WorkerService {
       const existingWorker = await this.workerRepo.findByPhoneActive(formattedPhone, organizationId)
       if (existingWorker) {
         logger.error('Duplicate phone number detected', new Error('Phone number already in use'), {
-          operation: 'createWorker',
-          organizationId,
+          operation: 'create_worker',
+          organization_id: organizationId,
           phone: formattedPhone,
           error_type: 'duplicate_phone',
         })
@@ -103,11 +171,11 @@ export class WorkerService {
       const worker = await this.workerRepo.create(workerData)
 
       logger.info('Worker created successfully', {
-        operation: 'createWorker',
+        operation: 'create_worker',
         duration_ms: Date.now() - startTime,
         success: true,
-        organizationId,
-        workerId: worker.id,
+        organization_id: organizationId,
+        worker_id: worker.id,
       })
 
       return worker
@@ -116,10 +184,10 @@ export class WorkerService {
         'Failed to create worker',
         error instanceof Error ? error : new Error(String(error)),
         {
-          operation: 'createWorker',
+          operation: 'create_worker',
           duration_ms: Date.now() - startTime,
           success: false,
-          organizationId,
+          organization_id: organizationId,
           error_type:
             error instanceof Error && error.message.includes('duplicate')
               ? 'duplicate_phone'
@@ -138,6 +206,8 @@ export class WorkerService {
     const startTime = Date.now()
 
     try {
+      this.validateWorkerData(data)
+
       // Verify worker belongs to organization
       const existingWorker = await this.getWorkerById(id, organizationId)
       if (!existingWorker) {
@@ -147,13 +217,15 @@ export class WorkerService {
       // Last-write-wins conflict detection (FR-019)
       if (data.updatedAt && existingWorker.updatedAt !== data.updatedAt) {
         logger.warn('Concurrent edit conflict detected', {
-          operation: 'updateWorker',
-          organizationId,
-          workerId: id,
+          operation: 'update_worker',
+          organization_id: organizationId,
+          worker_id: id,
           error_type: 'concurrent_edit',
         })
-        const error = new Error('Worker was updated by another user. Please refresh and try again.')
-        ;(error as any).statusCode = 409
+        const error: WorkerServiceError = new Error(
+          'Worker was updated by another user. Please refresh and try again.'
+        )
+        error.statusCode = 409
         throw error
       }
 
@@ -176,9 +248,9 @@ export class WorkerService {
             'Duplicate phone number detected on update',
             new Error('Phone number already in use'),
             {
-              operation: 'updateWorker',
-              organizationId,
-              workerId: id,
+              operation: 'update_worker',
+              organization_id: organizationId,
+              worker_id: id,
               phone: formattedPhone,
               error_type: 'duplicate_phone',
             }
@@ -204,28 +276,30 @@ export class WorkerService {
       const worker = await this.workerRepo.update(id, updateData)
 
       logger.info('Worker updated successfully', {
-        operation: 'updateWorker',
+        operation: 'update_worker',
         duration_ms: Date.now() - startTime,
         success: true,
-        organizationId,
-        workerId: id,
+        organization_id: organizationId,
+        worker_id: id,
       })
 
       return worker
     } catch (error) {
+      const serviceError = error as WorkerServiceError
+
       logger.error(
         'Failed to update worker',
         error instanceof Error ? error : new Error(String(error)),
         {
-          operation: 'updateWorker',
+          operation: 'update_worker',
           duration_ms: Date.now() - startTime,
           success: false,
-          organizationId,
-          workerId: id,
+          organization_id: organizationId,
+          worker_id: id,
           error_type:
             error instanceof Error && error.message.includes('duplicate')
               ? 'duplicate_phone'
-              : error instanceof Error && (error as any).statusCode === 409
+              : serviceError.statusCode === 409
                 ? 'concurrent_edit'
                 : 'unknown',
         }
@@ -248,23 +322,26 @@ export class WorkerService {
       await this.workerRepo.softDelete(id)
 
       logger.info('Worker soft deleted successfully', {
-        operation: 'deleteWorker',
+        operation: 'delete_worker',
         duration_ms: Date.now() - startTime,
         success: true,
-        organizationId,
-        workerId: id,
+        organization_id: organizationId,
+        worker_id: id,
       })
     } catch (error) {
       logger.error(
         'Failed to delete worker',
         error instanceof Error ? error : new Error(String(error)),
         {
-          operation: 'deleteWorker',
+          operation: 'delete_worker',
           duration_ms: Date.now() - startTime,
           success: false,
-          organizationId,
-          workerId: id,
-          error_type: 'unknown',
+          organization_id: organizationId,
+          worker_id: id,
+          error_type:
+            error instanceof Error && error.message === 'Worker not found'
+              ? 'not_found'
+              : 'unknown',
         }
       )
       throw error
@@ -283,6 +360,86 @@ export class WorkerService {
     return this.workerRepo.searchWorkers(organizationId, query, limit)
   }
 
+  async getWorkersIncludingDeleted(organizationId: string, limit?: number): Promise<Worker[]> {
+    const startTime = Date.now()
+
+    try {
+      const workers = await this.workerRepo.findMany({
+        where: { organizationId },
+        limit,
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      })
+
+      logger.info('Workers retrieved successfully (including deleted)', {
+        operation: 'get_workers_including_deleted',
+        duration_ms: Date.now() - startTime,
+        success: true,
+        organization_id: organizationId,
+        worker_count: workers.length,
+      })
+
+      return workers
+    } catch (error) {
+      logger.error(
+        'Failed to list workers including deleted',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          operation: 'get_workers_including_deleted',
+          duration_ms: Date.now() - startTime,
+          success: false,
+          organization_id: organizationId,
+          error_type: 'unknown',
+        }
+      )
+
+      throw error
+    }
+  }
+
+  async searchWorkersIncludingDeleted(
+    organizationId: string,
+    query: string,
+    limit?: number
+  ): Promise<Worker[]> {
+    const startTime = Date.now()
+
+    try {
+      const workers = await this.workerRepo.findMany({
+        where: { organizationId },
+        search: {
+          fields: ['name', 'email', 'phone'],
+          query,
+        },
+        limit,
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      })
+
+      logger.info('Workers searched successfully (including deleted)', {
+        operation: 'search_workers_including_deleted',
+        duration_ms: Date.now() - startTime,
+        success: true,
+        organization_id: organizationId,
+        worker_count: workers.length,
+      })
+
+      return workers
+    } catch (error) {
+      logger.error(
+        'Failed to search workers including deleted',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          operation: 'search_workers_including_deleted',
+          duration_ms: Date.now() - startTime,
+          success: false,
+          organization_id: organizationId,
+          error_type: 'unknown',
+        }
+      )
+
+      throw error
+    }
+  }
+
   async getActiveWorkers(organizationId: string): Promise<Worker[]> {
     return this.workerRepo.findActiveWorkers(organizationId)
   }
@@ -296,6 +453,10 @@ export class WorkerService {
   private validateWorkerData(data: CreateWorkerRequest | UpdateWorkerRequest): void {
     if ('name' in data && data.name && data.name.trim().length === 0) {
       throw new Error('Worker name cannot be empty')
+    }
+
+    if ('name' in data && data.name && data.name.trim().length > 255) {
+      throw new Error('Name must be 255 characters or less')
     }
 
     if ('phone' in data && data.phone) {

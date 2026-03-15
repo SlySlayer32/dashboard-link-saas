@@ -4,6 +4,7 @@
 
 import {
   formatAustralianPhone as formatPhone,
+  formatPhoneDisplay,
   validateAustralianPhone as validatePhone,
 } from '@dashboard-link/shared'
 

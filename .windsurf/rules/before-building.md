@@ -1,5 +1,5 @@
 ---
-trigger: always
+trigger: always_on
 description: How to orient, examine existing code, and communicate before building anything in Dashboard Link
 ---
 

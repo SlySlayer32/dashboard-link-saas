@@ -1,5 +1,5 @@
 ---
-trigger: always
+trigger: always_on
 description: Security model, multi-tenancy rules, and token handling for Dashboard Link
 ---
 

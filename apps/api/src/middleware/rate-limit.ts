@@ -17,29 +17,28 @@ interface RateLimitOptions {
  * Protects endpoints from abuse
  */
 export const rateLimit = (options: RateLimitOptions) => {
-  const {
-    windowMs,
-    maxRequests,
-    message = 'Too many requests, please try again later.',
-    skipSuccessfulRequests = false,
-  } = options
+  const { windowMs, maxRequests, skipSuccessfulRequests = false } = options
 
   return createMiddleware(async (c, next) => {
-    // Get client identifier (IP address)
+    const organizationId = c.get('organizationId')
     const clientId = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
 
     const now = Date.now()
-    const key = `${clientId}:${c.req.path}`
+    const key = `${organizationId || clientId}:${c.req.path}`
 
     // Get current rate limit data
     const current = rateLimitStore.get(key)
 
     if (!current || now > current.resetTime) {
       // New window or expired window
-      rateLimitStore.set(key, {
+      const nextWindow = {
         count: 1,
         resetTime: now + windowMs,
-      })
+      }
+      rateLimitStore.set(key, nextWindow)
+      c.header('X-RateLimit-Limit', maxRequests.toString())
+      c.header('X-RateLimit-Remaining', (maxRequests - nextWindow.count).toString())
+      c.header('X-RateLimit-Reset', Math.ceil(nextWindow.resetTime / 1000).toString())
       await next()
       return
     }
@@ -49,21 +48,21 @@ export const rateLimit = (options: RateLimitOptions) => {
       const resetTime = Math.ceil((current.resetTime - now) / 1000)
 
       logger.warn('Rate limit exceeded', {
-        clientId,
+        organization_id: organizationId,
+        client_id: clientId,
         path: c.req.path,
         count: current.count,
-        maxRequests,
-        resetTime,
+        max_requests: maxRequests,
+        retry_after: resetTime,
       })
+      c.header('X-RateLimit-Limit', maxRequests.toString())
+      c.header('X-RateLimit-Remaining', '0')
+      c.header('X-RateLimit-Reset', Math.ceil(current.resetTime / 1000).toString())
 
       return c.json(
         {
-          success: false,
-          error: {
-            code: 'RATE_LIMIT_EXCEEDED',
-            message,
-            retryAfter: resetTime,
-          },
+          error: 'Rate limit exceeded',
+          retryAfter: resetTime,
         },
         429
       )

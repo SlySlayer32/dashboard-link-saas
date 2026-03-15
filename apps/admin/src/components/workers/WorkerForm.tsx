@@ -1,8 +1,10 @@
+import type { Worker } from '@dashboard-link/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useWorkerMutations } from '../../hooks/useWorkers'
-import type { Worker } from '@dashboard-link/shared'
+import { formatPhoneForDisplay } from '../../utils/phoneUtils'
 
 // Zod schema for worker form validation
 const workerFormSchema = z.object({
@@ -18,7 +20,7 @@ const workerFormSchema = z.object({
     .string()
     .min(1, 'Phone number is required')
     .regex(
-      /^(04\d{2}\s?\d{3}\s?\d{3}|04\d{8}|\+614\d{8})$/,
+      /^(04\d{2}([\s-]?\d{3}){2}|04\d{8}|\+614\d{8})$/,
       'Invalid Australian mobile number (e.g., 0412 345 678)'
     ),
 })
@@ -44,9 +46,16 @@ export function WorkerForm({ worker, onSuccess, onCancel }: WorkerFormProps) {
     resolver: zodResolver(workerFormSchema),
     defaultValues: {
       name: worker?.name || '',
-      phone: worker?.phone || '',
+      phone: worker?.phone ? formatPhoneForDisplay(worker.phone) : '',
     },
   })
+
+  useEffect(() => {
+    reset({
+      name: worker?.name || '',
+      phone: worker?.phone ? formatPhoneForDisplay(worker.phone) : '',
+    })
+  }, [worker, reset])
 
   const onSubmit = async (data: WorkerFormData) => {
     try {

@@ -97,12 +97,10 @@ A manager needs to remove a worker who is no longer with the company, while pres
 - **Duplicate phone numbers (active workers)**: Manager tries to add a worker with a phone number that already exists for an active worker in their organisation → System prevents creation and shows error "Phone number already in use"
 - **Reusing phone number from soft deleted worker**: Manager adds a new worker with a phone number previously used by a soft deleted worker → System allows creation (creates new worker record, old worker remains soft deleted with historical data intact)
 - **SMS to soft deleted worker**: Manager attempts to send SMS to a worker who has been soft deleted → System prevents SMS sending and shows error "Worker is no longer active"
-- **Phone number format variations**: How does the system handle different input formats like "0412345678", "0412 345 678", "0412-345-678", "+61412345678"?
-- **International numbers**: What happens if a manager accidentally enters a non-AU mobile number? (Block at validation or allow for edge cases?)
 - **Empty worker list**: How does the system handle a manager with zero workers? (Show helpful empty state)
 - **Very long names**: What happens if a manager enters an extremely long name (e.g., 200 characters)?
 - **Special characters in names**: How does the system handle names with apostrophes, hyphens, or unicode characters (e.g., "O'Brien", "José")?
-- **Concurrent edits**: If two managers edit the same worker simultaneously, last-write-wins with timestamp check applies. The losing write receives a 409 Conflict error with message "Worker was updated by another user. Please refresh and try again." and the response body MUST include the current worker data to enable client-side merge. User must reload worker data and reapply their changes. (Acceptable for solo operator MVP with rare concurrent access)
+- **Concurrent edits**: If two managers edit the same worker simultaneously, last-write-wins with timestamp check applies. The losing write receives a 409 Conflict error with message "Worker was updated by another user. Please refresh and try again." and the response body MUST include the current worker data to enable client-side merge. **UX Resolution**: User sees toast notification with current values displayed inline, and can choose to (1) overwrite with their changes, (2) cancel and review differences, or (3) manually merge fields. Form preserves user's unsaved input for comparison. (Acceptable for solo operator MVP with rare concurrent access)
 
 ## Requirements *(mandatory)*
 
@@ -120,7 +118,7 @@ A manager needs to remove a worker who is no longer with the company, while pres
 - **FR-005**: System MUST restrict managers to viewing and managing only workers within their own organisation
 - **FR-006**: System MUST display a list of all active workers for the manager's organisation
 - **FR-007**: System MUST allow managers to edit worker name and phone number
-- **FR-009**: System MUST implement soft delete for workers using `deleted_at` timestamp (NULL for active, timestamp for deleted)
+- **FR-009**: System MUST implement soft delete for workers using `deleted_at` timestamp column (NULL indicates active worker, non-NULL timestamp indicates soft deleted worker)
 - **FR-010**: System MUST preserve all historical data (SMS logs, dashboard access records, dashboard tokens) when a worker is soft deleted
 - **FR-011**: System MUST exclude soft deleted workers from active worker list queries (WHERE deleted_at IS NULL)
 - **FR-012**: System MUST indicate when viewing historical records that reference soft deleted workers
@@ -142,12 +140,12 @@ A manager needs to remove a worker who is no longer with the company, while pres
 ### Non-Functional Requirements
 
 #### Performance
-- **NFR-001**: Each individual worker CRUD API endpoint (GET, POST, PUT, DELETE) MUST respond within 500ms for 95th percentile requests (measured per-endpoint, not aggregate)
+- **NFR-001**: Each individual worker CRUD API endpoint (GET, POST, PUT, DELETE) MUST respond within 500ms for 95th percentile requests (measured per-endpoint, not aggregate). **Monitoring**: Measured via structured log `duration_ms` field aggregated in Railway log viewer. Alert if p95 exceeds 500ms over 1-hour window.
 - **NFR-002**: Worker list queries MUST use database indexes on `organization_id`, `deleted_at`, and `phone_number` to achieve performance targets
 
 #### Observability
 - **NFR-003**: Service layer MUST emit structured JSON logs for all CRUD operations with fields: `operation`, `duration_ms`, `success`, `error_type`, `organization_id`, `worker_id`
-- **NFR-004**: Logs MUST be queryable for debugging, performance analysis, and operational monitoring
+- **NFR-004**: Logs MUST be queryable for debugging, performance analysis, and operational monitoring. **Implementation Note**: Logs output via console.log/console.error for Railway's built-in log viewer (supports JSON parsing and filtering). No separate log aggregation service required for MVP.
 
 #### Data Integrity
 - **NFR-005**: Concurrent edit conflicts MUST be resolved using last-write-wins strategy with `updated_at` timestamp validation

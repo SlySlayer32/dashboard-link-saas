@@ -1,25 +1,42 @@
 import type { Worker } from '@dashboard-link/shared'
-import { useState } from 'react'
-import { WorkerForm } from '../components/WorkerForm'
-import { WorkerList } from '../components/WorkerList'
-import { useDeleteWorker } from '../hooks/useWorkerMutation'
-import { useDebouncedSearch, useWorkers } from '../hooks/useWorkers'
+import { useMemo, useState } from 'react'
+import { WorkerForm } from '../components/workers/WorkerForm'
+import { WorkerList } from '../components/workers/WorkerList'
+import { useDebouncedSearch, useWorkerMutations, useWorkers } from '../hooks/useWorkers'
 
 export function WorkersPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingWorker, setEditingWorker] = useState<Worker | undefined>()
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
-  const [currentPage, setCurrentPage] = useState(1)
 
   const { searchValue, setSearchValue } = useDebouncedSearch(300)
-  const deleteWorker = useDeleteWorker()
+  const { deleteWorker } = useWorkerMutations()
+  const { workers, total, isLoading, error, refetch } = useWorkers()
 
-  const { workers, pagination, isLoading, error, refetch } = useWorkers({
-    search: searchValue,
-    status: statusFilter,
-    page: currentPage,
-    limit: 20,
-  })
+  const filteredWorkers = useMemo(() => {
+    const normalizedSearch = searchValue.trim().toLowerCase()
+
+    return workers.filter((worker) => {
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'active' && worker.deletedAt === null) ||
+        (statusFilter === 'inactive' && worker.deletedAt !== null)
+
+      if (!matchesStatus) {
+        return false
+      }
+
+      if (!normalizedSearch) {
+        return true
+      }
+
+      return (
+        worker.name.toLowerCase().includes(normalizedSearch) ||
+        worker.phone.toLowerCase().includes(normalizedSearch) ||
+        (worker.email?.toLowerCase().includes(normalizedSearch) ?? false)
+      )
+    })
+  }, [workers, searchValue, statusFilter])
 
   const handleEdit = (worker: Worker) => {
     setEditingWorker(worker)
@@ -27,10 +44,8 @@ export function WorkersPage() {
   }
 
   const handleDelete = (worker: Worker) => {
-    deleteWorker.mutate(worker.id, {
-      onSuccess: () => {
-        refetch()
-      },
+    return deleteWorker.mutateAsync(worker.id).then(() => {
+      refetch()
     })
   }
 
@@ -52,37 +67,6 @@ export function WorkersPage() {
 
   const handleStatusFilterChange = (newStatus: 'all' | 'active' | 'inactive') => {
     setStatusFilter(newStatus)
-    setCurrentPage(1) // Reset to first page when filter changes
-  }
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-  }
-
-  if (error) {
-    return (
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-        <div className='bg-red-50 border border-red-200 rounded-md p-4'>
-          <div className='flex'>
-            <div className='flex-shrink-0'>
-              <svg className='h-5 w-5 text-red-400' viewBox='0 0 20 20' fill='currentColor'>
-                <path
-                  fillRule='evenodd'
-                  d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z'
-                  clipRule='evenodd'
-                />
-              </svg>
-            </div>
-            <div className='ml-3'>
-              <h3 className='text-sm font-medium text-red-800'>Error loading workers</h3>
-              <div className='mt-2 text-sm text-red-700'>
-                <p>{error.message}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -157,55 +141,22 @@ export function WorkersPage() {
       {/* Worker Count */}
       <div className='mb-4'>
         <p className='text-sm text-gray-600'>
-          Showing {workers.length} of {pagination?.total || 0} workers
+          Showing {filteredWorkers.length} of {total} workers
         </p>
       </div>
 
       {/* Worker List */}
       <WorkerList
-        workers={workers}
+        workers={filteredWorkers}
         isLoading={isLoading}
-        onEdit={handleEdit}
+        error={error instanceof Error ? error : null}
+        isDeleting={deleteWorker.isPending}
         onDelete={handleDelete}
+        onEdit={handleEdit}
+        onRetry={() => {
+          void refetch()
+        }}
       />
-
-      {/* Pagination */}
-      {pagination && pagination.totalPages > 1 && (
-        <div className='mt-6 flex items-center justify-between'>
-          <div className='text-sm text-gray-700'>
-            Page {pagination.page} of {pagination.totalPages}
-          </div>
-          <div className='flex space-x-2'>
-            <button
-              onClick={() => handlePageChange(pagination.page - 1)}
-              disabled={pagination.page <= 1}
-              className='px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50'
-            >
-              Previous
-            </button>
-            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 text-sm border rounded-md ${
-                  page === pagination.page
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              onClick={() => handlePageChange(pagination.page + 1)}
-              disabled={pagination.page >= pagination.totalPages}
-              className='px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50'
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Worker Form Modal */}
       {isFormOpen && (
@@ -228,9 +179,8 @@ export function WorkersPage() {
             </div>
             <WorkerForm
               worker={editingWorker}
-              onSubmit={handleFormSuccess}
+              onSuccess={handleFormSuccess}
               onCancel={handleFormClose}
-              isLoading={deleteWorker.isPending}
             />
           </div>
         </div>

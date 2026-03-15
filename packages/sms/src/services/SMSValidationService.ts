@@ -284,7 +284,7 @@ export class SMSValidationService {
     // GSM-7 encoding (standard)
 
     const gsmRegex =
-      /^[@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&'()*+,\-./0-9:;<=>?¡A-ZÄÖÑÜ§¿a-zäöñüà^{}[\]~\\|€]*$/
+      /^[@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&'()*+,\-./0-9:;<=>?¡A-ZÄÖÑÜ§¿a-zäöñüà^{}[]~\\|€]*$/
 
     if (gsmRegex.test(message)) {
       // GSM-7 encoding: 160 chars per segment
