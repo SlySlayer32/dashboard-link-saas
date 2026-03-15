@@ -13,3 +13,4 @@
 | 2026-01-07 | Use MobileMessage.com.au for SMS Delivery | 2-3¢/SMS (50-60% cheaper), Australia-first focus, no monthly fees | ADR-003 |
 | 2026-01-07 | No Native App — Web-Only via SMS Link | Zero friction for workers (60% never download apps), works for casual staff Day 1 | ADR-004 |
 | 2026-01-07 | Hard Deletes Over Soft Deletes | Simplifies RLS policies, reduces storage costs, clearer data model for MVP | ADR-002 |
+| 2026-03-15 | Implement Soft Delete for Workers | Changed from hard delete to preserve historical data (SMS logs, access logs, tokens) while excluding from active queries | No ADR (implementation decision) |
