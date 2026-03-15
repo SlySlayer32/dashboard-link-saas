@@ -8,6 +8,7 @@
 import type { DatabaseAdapter as LocalDatabaseAdapter } from '../adapters/DatabaseAdapter.js'
 import { createMockAdapter } from '../adapters/MockAdapter.js'
 import { createSupabaseAdapter } from '../adapters/SupabaseAdapter.js'
+import { AccessLogRepository } from '../repositories/AccessLogRepository.js'
 import { DashboardRepository } from '../repositories/DashboardRepository.js'
 import { OrganizationRepository } from '../repositories/OrganizationRepository.js'
 import { SMSLogRepository } from '../repositories/SMSLogRepository.js'
@@ -18,6 +19,7 @@ export interface RepositoryContainer {
   organization: OrganizationRepository
   dashboard: DashboardRepository
   smsLog: SMSLogRepository
+  accessLog: AccessLogRepository
 }
 
 export interface ContainerConfig {
@@ -71,6 +73,7 @@ export class DIContainer {
       organization: new OrganizationRepository(this.adapter),
       dashboard: new DashboardRepository(this.adapter),
       smsLog: new SMSLogRepository(this.adapter),
+      accessLog: new AccessLogRepository(this.adapter),
     }
   }
 
@@ -91,6 +94,10 @@ export class DIContainer {
     return this.repositories.smsLog
   }
 
+  getAccessLogRepository(): AccessLogRepository {
+    return this.repositories.accessLog
+  }
+
   // Adapter access
   getAdapter(): LocalDatabaseAdapter {
     return this.adapter
@@ -109,6 +116,7 @@ export class DIContainer {
       organization: await this.checkRepository(this.repositories.organization),
       dashboard: await this.checkRepository(this.repositories.dashboard),
       smsLog: await this.checkRepository(this.repositories.smsLog),
+      accessLog: await this.checkRepository(this.repositories.accessLog),
     }
 
     const overall = databaseHealthy && Object.values(repositoryHealth).every((healthy) => healthy)
@@ -188,6 +196,10 @@ export function getDashboardRepository(): DashboardRepository {
 
 export function getSMSLogRepository(): SMSLogRepository {
   return getContainer().getSMSLogRepository()
+}
+
+export function getAccessLogRepository(): AccessLogRepository {
+  return getContainer().getAccessLogRepository()
 }
 
 // Factory for creating container with environment-based configuration

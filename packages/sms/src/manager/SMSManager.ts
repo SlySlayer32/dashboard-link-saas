@@ -10,6 +10,10 @@ import { smsRegistry } from '../registry/SMSRegistry'
 /**
  * SMS Manager Implementation
  * Orchestrates SMS sending across multiple providers with fallback logic
+ *
+ * TODO(sms-config): Add automatic provider registration from environment config
+ * TODO(sms-fallback): Implement intelligent provider selection based on cost and performance
+ * TODO(sms-geo): Add geographic provider selection (AU -> MobileMessage, Intl -> Twilio)
  */
 export class SMSManagerImpl implements ISMSManager {
   private registry = smsRegistry

@@ -1,6 +1,8 @@
 import { Hono } from 'hono'
 import { rateLimit } from '../middleware/rate-limit'
 import { workerAuthMiddleware } from '../middleware/workerAuth'
+import { dataSourceService } from '../services/data-source.service.js'
+import { pluginManager as pluginManagerService } from '../services/plugin-manager.js'
 import { tokenService } from '../services/token.service'
 import type { AppContextVariables } from '../types.js'
 import { logger } from '../utils/logger.js'
@@ -22,7 +24,10 @@ dashboards.use(
  * This is accessed by workers via the SMS link
  * GET /dashboards/:token
  */
-dashboards.get('/:token', workerAuthMiddleware, async (c) => {
+dashboards.get('/:token', accessLoggerMiddleware, workerAuthMiddleware, async (c) => {
+  const ipAddress = c.get('ipAddress')
+  const userAgent = c.get('userAgent')
+
   try {
     // Get worker details from token service (includes validation)
     const validation = await tokenService.validateToken(c.req.param('token'))
@@ -31,6 +36,18 @@ dashboards.get('/:token', workerAuthMiddleware, async (c) => {
       const errorReason = validation.error || 'not_found'
       let errorMessage = 'Invalid or expired link'
       let statusCode = 401
+
+      // Log failed access attempt
+      if (validation.worker) {
+        await logDashboardAccess(
+          validation.worker.organization_id,
+          validation.worker.id,
+          null, // tokenId not available in validation response
+          errorReason as 'expired' | 'invalid' | 'revoked',
+          ipAddress,
+          userAgent
+        )
+      }
 
       // Provide user-friendly error messages based on the error type
       switch (errorReason) {
@@ -60,13 +77,29 @@ dashboards.get('/:token', workerAuthMiddleware, async (c) => {
             reason: errorReason,
           },
         },
-        statusCode as any
+        statusCode as 400 | 401
       )
     }
 
+    // Log successful access
+    await logDashboardAccess(
+      validation.worker.organization_id,
+      validation.worker.id,
+      null, // tokenId not available in validation response
+      'success',
+      ipAddress,
+      userAgent
+    )
+
     // Get dashboard data from all configured plugins
-    // TODO: Implement PluginManagerService.getDashboardData
-    const dashboardData = { schedule: [], tasks: [] } // Placeholder
+    const pluginConfigs = await dataSourceService.getPluginConfigs(
+      validation.worker.organization_id
+    )
+    const dashboardData = await pluginManagerService.getDashboardData(
+      validation.worker.id,
+      validation.worker.organization_id,
+      pluginConfigs
+    )
 
     return c.json({
       success: true,

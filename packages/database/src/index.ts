@@ -58,6 +58,7 @@ export {
 } from './adapters/MockAdapter.js'
 
 // Repositories
+export { AccessLogRepository } from './repositories/AccessLogRepository.js'
 export { DashboardRepository } from './repositories/DashboardRepository.js'
 export { OrganizationRepository } from './repositories/OrganizationRepository.js'
 export { SMSLogRepository } from './repositories/SMSLogRepository.js'
@@ -67,6 +68,7 @@ export { WorkerRepository } from './repositories/WorkerRepository.js'
 export {
   DIContainer,
   createContainerFromEnvironment,
+  getAccessLogRepository,
   getContainer,
   getDashboardRepository,
   getOrganizationRepository,

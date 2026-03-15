@@ -2,12 +2,21 @@ export interface SMSLog {
   id: string
   organization_id: string
   worker_id?: string
-  phone: string
-  message: string
+  phone_number: string // Fixed: was 'phone'
+  message_content: string // Fixed: was 'message'
   status: 'sent' | 'delivered' | 'failed' | 'pending'
-  provider_response?: unknown
-  created_at: string
-  updated_at: string
+  provider_message_id?: string // Added: provider-specific message ID
+  error_reason?: string // Added: error details
+  provider?: string // Added: SMS provider used
+  message_id?: string // Added: normalized message ID
+  error_type?: string // Added: categorized error type
+  cost?: number // Added: actual SMS cost
+  delivery_status?: string // Added: delivery tracking status
+  sent_by?: string // Added: user who sent the SMS
+  sent_at: string // Fixed: was 'created_at'
+  delivered_at?: string // Added: delivery timestamp
+  created_at: string // Added: creation timestamp
+  token_id?: string // Added: related dashboard token
 }
 
 export interface SMSDashboardLinkRequest {

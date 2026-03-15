@@ -13,7 +13,7 @@
 | SMS delivery (one-click send) | 🔄 | Send to one or all workers |
 | Delivery status tracking | 📋 | See sent/delivered/failed status |
 | Read confirmation (access logs) | 📋 | Track when workers open dashboard |
-| Token controls (custom expiry) | 🔄 | 1-24 hour expiry, configurable |
+| Token controls (custom expiry) | ✅ | 1-24 hour expiry, configurable per organization with full token management system |
 | Organization settings | 🔄 | Company name, branding basics |
 | SMS logs (full history) | 📋 | Audit trail of all messages |
 | **Worker Dashboard** | | |
@@ -24,7 +24,7 @@
 | Contact information | 📋 | Emergency contacts, manager info |
 | One-tap refresh | 📋 | See latest updates without SMS resend |
 | Offline-tolerant | 📋 | Loads fast on 4G, screenshot-able |
-| No login required | 🔄 | Token-based access only |
+| No login required | ✅ | Token-based access only with comprehensive validation and error handling |
 | **Plugin System** | | |
 | Google Calendar integration | 📋 | OAuth, sync events as schedule |
 | Airtable integration | 📋 | Pull rows as tasks/schedule |
@@ -32,7 +32,7 @@
 | Manual entry | 📋 | Managers type directly |
 | Plugin health monitoring | 📋 | Track sync status, errors |
 | **Security & Access** | | |
-| Time-limited tokens (1-24hr) | 🔄 | Configurable per organization |
+| Time-limited tokens (1-24hr) | ✅ | Configurable per organization with SHA-256 hashing and auto-cleanup |
 | Single-use protection | 📋 | Optional one-time access |
 | Multi-tenant isolation (RLS) | 🔄 | Database-level org separation |
 | JWT authentication | 🔄 | Supabase Auth for admin users |

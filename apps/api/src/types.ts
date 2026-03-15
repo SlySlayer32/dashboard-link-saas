@@ -14,6 +14,8 @@ export type AppContextVariables = {
   webhookParsedBody?: unknown
   workerId?: string
   supabase?: SupabaseClient
+  ipAddress?: string | null
+  userAgent?: string | null
 }
 
 export type AppContext = Context<{ Variables: AppContextVariables }>

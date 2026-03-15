@@ -27,9 +27,9 @@ The worker management ecosystem is split into **5 focused features** to maintain
 
 ## 001: Worker Management (CRUD Foundation)
 
-**Status**: 🔄 In Progress  
-**Branch**: `001-worker-management`  
-**Estimated Time**: 6-8 hours
+**Status**: ✅ Complete  
+**Branch**: `main` (merged from `001-worker-management`)  
+**Completed**: 2026-03-15
 
 ### Scope
 - Add/edit/delete workers (admin dashboard)
@@ -62,9 +62,9 @@ The worker management ecosystem is split into **5 focused features** to maintain
 
 ## 002: Token System
 
-**Status**: 📋 Planned  
+**Status**: � In Progress  
 **Branch**: `002-token-system`  
-**Estimated Time**: 8-10 hours
+**Started**: 2026-03-15
 
 ### Scope
 - Token generation service (SHA-256 hashing)

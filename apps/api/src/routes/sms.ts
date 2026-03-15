@@ -5,7 +5,12 @@ import { createClient } from '@supabase/supabase-js'
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
 import { smsRateLimitMiddleware } from '../middleware/rateLimit'
-import { SMSService } from '../services/sms.service'
+// TODO(sms-integration): Replace legacy SMSService with new SMS system from packages/sms
+// TODO(sms-integration): Import and use SMSService from @dashboard-link/sms package
+// import { SMSService } from '../services/sms.service'
+
+// TODO(sms-integration): Import new SMS service from packages/sms
+// import { smsService } from '@dashboard-link/sms'
 import type { AppContext } from '../types'
 import type {
   SMSDashboardLinkRequest,
@@ -32,16 +37,26 @@ import { logger } from '../utils/logger.js'
 
 const sms = new Hono<AppContext>()
 
+// TODO(sms-config): Add environment-based SMS provider configuration
+// TODO(sms-config): Load MobileMessage credentials from environment variables
+// TODO(sms-config): Set up provider registration based on ADR-003 decision
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
   process.env.SUPABASE_SERVICE_KEY || ''
 )
 
+// TODO(sms-provider): Register MobileMessage provider as default for Australian numbers
+// TODO(sms-provider): Configure provider fallback order: MobileMessage -> Twilio -> AWS SNS
+// TODO(sms-provider): Add provider health checking and automatic failover
+
 // TODO(sms-logs): sms_logs schema in migrations is missing fields the service layer writes (e.g.
 // `provider`). Keep migrations and inserts in sync so logging doesn't silently fail.
+// TODO(sms-logs): Add migration to update sms_logs table with missing fields (provider, error_type, etc.)
+// TODO(sms-logs): Ensure service layer and database schema are aligned for all SMS-related tables
 
-// All routes require authentication and rate limiting
+// All routes require authentication, tenant context, and rate limiting
 sms.use('*', authMiddleware)
+sms.use('*', tenantContextMiddleware)
 sms.use('*', smsRateLimitMiddleware)
 
 /**
@@ -135,6 +150,9 @@ sms.post('/send-dashboard-link', async (c) => {
       )
     }
 
+    // TODO(tokens): Replace temporary token generation with proper token system integration
+    // TODO(tokens): Use tokenManager.generateWorkerToken() once tokens package is fixed
+    // TODO(tokens): Ensure token expiry matches user selection (1h, 6h, 12h, 24h)
     // Generate token - TODO: Implement proper token generation
     // const tokenData = await tokenManager.generateWorkerToken(workerId, admin.organization_id, {
     //   permissions: ['worker:access', 'sms:receive'],
@@ -158,12 +176,21 @@ sms.post('/send-dashboard-link', async (c) => {
     const message =
       customMessage || `Hi ${worker.name}! Your daily dashboard is ready: ${dashboardUrl}`
 
-    // Send SMS
-    const smsResult = await SMSService.sendSMS({
-      phone: worker.phone,
-      message,
-      organizationId: admin.organization_id,
-      workerId,
+    // TODO(sms-integration): Replace legacy SMSService.sendSMS with new SMS system
+    // TODO(sms-integration): Use smsService.sendMessage() from packages/sms
+    // TODO(sms-integration): Add proper message formatting and validation
+    // Send SMS using new service
+    const smsResult = await smsService.sendMessage({
+      to: worker.phone_number,
+      content: message,
+      // Add organization context for multi-tenant support
+      metadata: {
+        organizationId: admin.organization_id,
+        workerId,
+        sentBy: userId,
+        messageType: 'dashboard_link',
+        tokenId: tokenData.token,
+      },
     })
 
     // Get SMS log ID for response
@@ -172,7 +199,7 @@ sms.post('/send-dashboard-link', async (c) => {
       .select('id')
       .eq('organization_id', admin.organization_id)
       .eq('worker_id', workerId)
-      .eq('phone', worker.phone)
+      .eq('phone_number', worker.phone_number)
       .order('created_at', { ascending: false })
       .limit(1)
       .single()
@@ -293,7 +320,7 @@ sms.get('/logs', async (c) => {
 
     // Add search filter if provided (search in message and worker phone)
     if (search) {
-      query = query.or(`message.ilike.%${search}%,phone.ilike.%${search}%`)
+      query = query.or(`message_content.ilike.%${search}%,phone_number.ilike.%${search}%`)
     }
 
     // Apply pagination
@@ -410,11 +437,15 @@ sms.post('/send', async (c) => {
       )
     }
 
-    const result = await SMSService.sendSMS({
-      phone: worker.phone,
-      message,
-      organizationId: admin.organization_id,
-      workerId,
+    const result = await smsService.sendMessage({
+      to: worker.phone_number,
+      content: message,
+      metadata: {
+        organizationId: admin.organization_id,
+        workerId,
+        sentBy: userId,
+        messageType: 'custom',
+      },
     })
 
     // Get SMS log ID for response
@@ -423,7 +454,7 @@ sms.post('/send', async (c) => {
       .select('id')
       .eq('organization_id', admin.organization_id)
       .eq('worker_id', workerId)
-      .eq('phone', worker.phone)
+      .eq('phone_number', worker.phone_number)
       .order('created_at', { ascending: false })
       .limit(1)
       .single()

@@ -11,6 +11,9 @@ import { validateRuntimeDependencies } from './config/env'
 import { cacheMiddleware, createCacheConfig } from './middleware/cache'
 import { errorHandler } from './middleware/error-handler'
 
+// Initialize SMS system
+// TODO(sms-integration): Replace legacy SMSService with new SMS system from packages/sms
+
 // Import routes
 // import dashboards from './routes/dashboards'
 // import plugins from './routes/plugins'
@@ -21,6 +24,14 @@ dotenv.config()
 
 // Validate critical environment variables
 validateRuntimeDependencies()
+
+// Initialize SMS system with providers
+try {
+  initializeSMSSystem()
+} catch (error) {
+  console.error('Failed to initialize SMS system:', error)
+  // Continue startup - SMS will be unavailable
+}
 
 const app = new Hono<{
   Variables: AppContext['Variables']

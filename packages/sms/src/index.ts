@@ -1,5 +1,10 @@
 // SMS Gateway Package - Zapier-Style Architecture
 // Export all SMS-related components
+//
+// TODO(sms-integration): This package is fully implemented and ready for integration
+// TODO(sms-config): Add environment-based provider initialization in index.ts
+// TODO(sms-setup): Create setup() function to auto-register providers from config
+// TODO(sms-tenant): Add org_id parameter to main service methods
 
 // Core types and interfaces
 export type {
@@ -25,59 +30,62 @@ export type {
 export { BaseSMSProvider } from './base/BaseSMSProvider'
 
 // Provider implementations
-export { MobileMessageProvider } from './providers/MobileMessageProvider'
-export { TwilioProvider } from './providers/TwilioProvider'
 export { AWSSNSProvider } from './providers/AWSSNSProvider'
 export { MessageBirdProvider } from './providers/MessageBirdProvider'
+export { MobileMessageProvider } from './providers/MobileMessageProvider'
+export { TwilioProvider } from './providers/TwilioProvider'
 
 // Registry and Manager
 export { SMSManagerImpl, smsManager } from './manager/SMSManager'
-export { SMSRegistryImpl, smsRegistry } from './registry/SMSRegistry'
 export { createSMSProvider, registerDefaultSMSProviders } from './registry/SMSProviderFactory'
+export { SMSRegistryImpl, smsRegistry } from './registry/SMSRegistry'
 
 // Core Services
+export { SMSAnalyticsService } from './services/SMSAnalyticsService'
+export { SMSQueueService } from './services/SMSQueueService'
 export { SMSService, smsService } from './services/SMSService'
 export { SMSValidationService } from './services/SMSValidationService'
-export { SMSQueueService } from './services/SMSQueueService'
-export { SMSAnalyticsService } from './services/SMSAnalyticsService'
 export {
-  SMSWebhookService,
-  TwilioWebhookHandler,
   AWSSNSWebhookHandler,
   MessageBirdWebhookHandler,
+  SMSWebhookService,
+  TwilioWebhookHandler,
 } from './services/SMSWebhookService'
+
+// Initialization
+export { getSMSManager, getSMSService, initializeSMSSystem, isSMSInitialized } from './initialize'
 
 // Service Types
 export type {
-  ValidationResult,
-  BatchValidationResult,
-  PhoneNumberValidationResult,
-} from './services/SMSValidationService'
-export type { MessagePriority, QueueStats } from './services/SMSQueueService'
-export type {
+  CostOptimizationResult,
   DateRange,
   FailureAnalysisResult,
-  CostOptimizationResult,
-  ProviderPerformanceResult,
   PeakUsageResult,
+  ProviderPerformanceResult,
 } from './services/SMSAnalyticsService'
+export type { MessagePriority, QueueStats } from './services/SMSQueueService'
+export type {
+  BatchValidationResult,
+  PhoneNumberValidationResult,
+  ValidationResult,
+} from './services/SMSValidationService'
 export type { DeliveryReport, WebhookHandler } from './services/SMSWebhookService'
 
 // Middleware
+export { LoggingMiddleware } from './middleware/LoggingMiddleware'
 export {
-  RateLimitMiddleware,
   RateLimitError,
+  RateLimitMiddleware,
   waitForRateLimit,
 } from './middleware/RateLimitMiddleware'
-export { ValidationMiddleware, ValidationError } from './middleware/ValidationMiddleware'
-export { LoggingMiddleware } from './middleware/LoggingMiddleware'
+export { ValidationError, ValidationMiddleware } from './middleware/ValidationMiddleware'
 
 // Middleware Types
-export type { RateLimitConfig, RateLimitStatus } from './middleware/RateLimitMiddleware'
 export type { LoggingOptions } from './middleware/LoggingMiddleware'
+export type { RateLimitConfig, RateLimitStatus } from './middleware/RateLimitMiddleware'
 
 // Utilities
-export * from './utils/phoneUtils'
-export * from './utils/messageUtils'
-export { SMSLogger, smsLogger, measureTime, logSMSOperation, logSMSError } from './utils/logger'
+export { SMSLogger, logSMSError, logSMSOperation, measureTime, smsLogger } from './utils/logger'
 export type { LogLevel, LogMetadata } from './utils/logger'
+export * from './utils/messageUtils'
+export * from './utils/phoneUtils'

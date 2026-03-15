@@ -1,18 +1,18 @@
 import {
-  SMSMessage,
-  SMSResult,
   SMSBatchResult,
-  SMSStatus,
-  SMSDeliveryReport,
-  SMSHealthResult,
-  SMSMessageStats,
   SMSCostStats,
+  SMSDeliveryReport,
   SMSDeliveryStats,
+  SMSHealthResult,
+  SMSMessage,
+  SMSMessageStats,
+  SMSResult,
+  SMSStatus,
 } from '@dashboard-link/shared'
 import { SMSManagerImpl } from '../manager/SMSManager'
+import { DateRange, SMSAnalyticsService } from './SMSAnalyticsService'
+import { MessagePriority, SMSQueueService } from './SMSQueueService'
 import { SMSValidationService } from './SMSValidationService'
-import { SMSQueueService, MessagePriority } from './SMSQueueService'
-import { SMSAnalyticsService, DateRange } from './SMSAnalyticsService'
 import { SMSWebhookService } from './SMSWebhookService'
 
 /**
@@ -25,6 +25,10 @@ import { SMSWebhookService } from './SMSWebhookService'
  * - Queue management
  * - Analytics tracking
  * - Multi-provider support with failover
+ *
+ * TODO(sms-integration): Integrate this service with API routes to replace legacy SMSService
+ * TODO(sms-config): Add environment-based provider initialization
+ * TODO(sms-tenant): Add multi-tenant org_id scoping to all operations
  */
 export class SMSService {
   private manager: SMSManagerImpl
