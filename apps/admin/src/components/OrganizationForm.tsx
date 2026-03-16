@@ -50,7 +50,7 @@ export function OrganizationForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+    <div className='space-y-6'>
       <div>
         <label htmlFor='name' className='block text-sm font-medium text-gray-700 mb-2'>
           Organization Name <span className='text-red-500'>*</span>
@@ -119,7 +119,8 @@ export function OrganizationForm({
           Cancel
         </button>
         <button
-          type='submit'
+          type='button'
+          onClick={handleSubmit(onSubmit)}
           disabled={isLoading}
           className='flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50'
         >
@@ -127,6 +128,6 @@ export function OrganizationForm({
           {isLoading ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
-    </form>
+    </div>
   )
 }

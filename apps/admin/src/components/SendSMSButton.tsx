@@ -1,8 +1,8 @@
 import type { Worker } from '@dashboard-link/shared'
+import { Button } from '@dashboard-link/ui'
 import React, { useState } from 'react'
 import { useSendDashboardLink } from '../hooks/useSMS'
 import { SMSPreview } from './SMSPreview'
-import { Button } from './ui/Button'
 
 interface SendSMSButtonProps {
   worker: Worker

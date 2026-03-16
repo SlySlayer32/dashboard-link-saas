@@ -1,3 +1,4 @@
+import { logger } from '@dashboard-link/shared'
 import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import { TokenTable } from '../components/TokenTable'
@@ -53,7 +54,7 @@ export function TokensPage() {
         refetch()
       },
       onError: (error: Error) => {
-        console.error('Failed to revoke token:', error)
+        logger.error('Failed to revoke token', error)
       },
     })
   }
@@ -71,7 +72,7 @@ export function TokensPage() {
           }
         },
         onError: (error: Error) => {
-          console.error('Failed to regenerate token:', error)
+          logger.error('Failed to regenerate token', error)
         },
       }
     )

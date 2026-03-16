@@ -28,7 +28,11 @@ export class WebhookService {
   async verifySignature(provider: string, body: string, signature: string): Promise<boolean> {
     const secret = this.webhookSecrets[provider]
     if (!secret) {
-      console.error(`No webhook secret configured for provider: ${provider}`)
+      logger.error(
+        `No webhook secret configured for provider: ${provider}`,
+        new Error('Missing webhook secret'),
+        { provider }
+      )
       return false
     }
 
@@ -45,7 +49,11 @@ export class WebhookService {
           return this.verifyGenericSignature(body, signature, secret)
       }
     } catch (error) {
-      console.error('Signature verification error:', error)
+      logger.error(
+        'Signature verification error',
+        error instanceof Error ? error : new Error(String(error)),
+        { provider }
+      )
       return false
     }
   }
@@ -98,7 +106,11 @@ export class WebhookService {
 
       return result
     } catch (error) {
-      console.error('Webhook processing error:', error)
+      logger.error(
+        'Webhook processing error',
+        error instanceof Error ? error : new Error(String(error)),
+        { provider }
+      )
       return {
         processed: false,
       }

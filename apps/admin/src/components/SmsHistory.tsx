@@ -78,7 +78,7 @@ export function SmsHistory({ workerId: _workerId, isLoading }: SmsHistoryProps) 
 
         {/* Filters */}
         <div className='flex flex-col sm:flex-row gap-4'>
-          <form onSubmit={handleSearch} className='flex-1'>
+          <div className='flex-1'>
             <div className='relative'>
               <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
               <input
@@ -86,10 +86,15 @@ export function SmsHistory({ workerId: _workerId, isLoading }: SmsHistoryProps) 
                 placeholder='Search messages...'
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch(e as unknown as React.FormEvent)
+                  }
+                }}
                 className='pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
               />
             </div>
-          </form>
+          </div>
 
           <select
             value={statusFilter}

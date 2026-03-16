@@ -1,8 +1,8 @@
+import { Button } from '@dashboard-link/ui'
 import { zodResolver } from '@hookform/resolvers/zod'
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { Button } from './ui/Button'
 import { Select } from './ui/Select'
 import { Textarea } from './ui/Textarea'
 
@@ -79,7 +79,7 @@ export const SMSModal: React.FC<SMSModalProps> = ({
         <span className='hidden sm:inline-block sm:align-middle sm:h-screen'>&#8203;</span>
 
         <div className='inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full'>
-          <form onSubmit={handleSubmit(handleFormSubmit)}>
+          <div>
             <div className='bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4'>
               <div className='mb-4'>
                 <h3 className='text-lg leading-6 font-medium text-gray-900'>
@@ -154,7 +154,8 @@ export const SMSModal: React.FC<SMSModalProps> = ({
 
             <div className='bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse'>
               <Button
-                type='submit'
+                type='button'
+                onClick={handleSubmit(handleFormSubmit)}
                 disabled={!isDirty || isLoading || messageLength > 1600}
                 loading={isLoading}
                 className='w-full sm:ml-3 sm:w-auto'
@@ -171,7 +172,7 @@ export const SMSModal: React.FC<SMSModalProps> = ({
                 Cancel
               </Button>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>

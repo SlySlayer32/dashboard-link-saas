@@ -16,6 +16,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { env } from '../config/env'
 import { authMiddleware, type AuthContext } from '../middleware/auth'
+import { logger } from '../utils/logger.js'
 
 // Initialize container if not already done
 if (!process.env.DB_INITIALIZED) {
@@ -33,7 +34,10 @@ if (!process.env.DB_INITIALIZED) {
       process.env.DB_INITIALIZED = 'true'
     })
     .catch((err) => {
-      console.error('Failed to initialize database container:', err)
+      logger.error(
+        'Failed to initialize database container',
+        err instanceof Error ? err : new Error(String(err))
+      )
     })
 }
 

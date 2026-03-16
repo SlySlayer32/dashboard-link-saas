@@ -1,3 +1,4 @@
+import { logger } from '@dashboard-link/shared'
 import { MagicLinkAuth } from '@dashboard-link/ui'
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
@@ -53,7 +54,7 @@ export function LoginPage() {
 
     try {
       // TODO: Implement magic link API call
-      console.log('Magic link requested for:', data.email)
+      logger.info('Magic link requested', { email: data.email })
       // For now, just simulate success
       await new Promise((resolve) => setTimeout(resolve, 1000))
     } finally {
@@ -72,7 +73,7 @@ export function LoginPage() {
 
     try {
       // TODO: Implement signup API call
-      console.log('Signup requested for:', data)
+      logger.info('Signup requested', { email: data.email })
       // For now, just simulate success
       await new Promise((resolve) => setTimeout(resolve, 1000))
     } finally {

@@ -1,6 +1,8 @@
 // SMS Gateway Standard Contracts - Zapier-Style Architecture
 // This is the "insulation layer" that protects your core system from provider changes
 
+// Phase 2/3 - Advanced SMS architecture (not used in MVP)
+
 export interface SMSProvider {
   readonly id: string
   readonly name: string

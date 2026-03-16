@@ -1,5 +1,6 @@
+import { logger } from '@dashboard-link/shared'
 import { useState } from 'react'
-import { Navigate, useNavigate, Link } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth, useAuthError, useAuthIsAuthenticated, useAuthIsLoading } from '../store/auth'
 
 export function RegisterPage() {
@@ -73,7 +74,7 @@ export function RegisterPage() {
       navigate('/', { replace: true })
     } catch (err) {
       // Error will be set in auth store
-      console.error('Registration failed:', err)
+      logger.error('Registration failed', err instanceof Error ? err : new Error(String(err)))
     } finally {
       setIsSubmitting(false)
     }
@@ -133,7 +134,7 @@ export function RegisterPage() {
         {/* Registration Form */}
         <div className='sm:mx-auto sm:w-full sm:max-w-md'>
           <div className='bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10'>
-            <form className='space-y-6' onSubmit={handleSubmit}>
+            <div className='space-y-6'>
               {/* Organization Name */}
               <div>
                 <label
@@ -281,7 +282,8 @@ export function RegisterPage() {
               {/* Submit Button */}
               <div>
                 <button
-                  type='submit'
+                  type='button'
+                  onClick={handleSubmit}
                   disabled={isSubmitting}
                   className='w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
                 >
@@ -323,7 +325,7 @@ export function RegisterPage() {
                   </Link>
                 </p>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </div>

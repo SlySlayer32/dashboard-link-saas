@@ -4,7 +4,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth'
-import { smsRateLimitMiddleware } from '../middleware/rateLimit'
+import { smsRateLimitMiddleware } from '../middleware/rate-limit'
 // TODO(sms-integration): Replace legacy SMSService with new SMS system from packages/sms
 // TODO(sms-integration): Import and use SMSService from @dashboard-link/sms package
 // import { SMSService } from '../services/sms.service'

@@ -64,7 +64,11 @@ workerDashboardRoutes.get('/d/:token', dashboardTokenMiddleware, async (c) => {
         config: source.config_json,
       })
     } catch (error) {
-      console.error(`Failed to fetch data from adapter ${source.adapter_id}:`, error)
+      logger.error(
+        `Failed to fetch data from adapter ${source.adapter_id}`,
+        error instanceof Error ? error : new Error(String(error)),
+        { adapterId: source.adapter_id }
+      )
     }
   }
 

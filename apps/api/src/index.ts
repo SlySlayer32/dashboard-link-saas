@@ -10,9 +10,10 @@ import v1 from './v1' // Import versioned API
 import { validateRuntimeDependencies } from './config/env'
 import { cacheMiddleware, createCacheConfig } from './middleware/cache'
 import { errorHandler } from './middleware/error-handler'
+import { logger } from './utils/logger.js'
 
 // Initialize SMS system
-// TODO(sms-integration): Replace legacy SMSService with new SMS system from packages/sms
+import { initializeSMSSystem } from '@dashboard-link/sms'
 
 // Import routes
 // import dashboards from './routes/dashboards'
@@ -29,7 +30,10 @@ validateRuntimeDependencies()
 try {
   initializeSMSSystem()
 } catch (error) {
-  console.error('Failed to initialize SMS system:', error)
+  logger.error(
+    'Failed to initialize SMS system',
+    error instanceof Error ? error : new Error(String(error))
+  )
   // Continue startup - SMS will be unavailable
 }
 

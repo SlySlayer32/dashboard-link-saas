@@ -32,6 +32,8 @@ export interface TokenValidation {
   metadata?: Record<string, unknown>
 }
 
+// Phase 2/3 - Advanced token architecture (not used in MVP)
+
 export interface TokenProvider {
   /**
    * Generate a new token with the given payload

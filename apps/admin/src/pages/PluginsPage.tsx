@@ -1,9 +1,8 @@
 import { PluginInfo, PluginTestResult } from '@dashboard-link/shared'
+import { Button, LoadingSpinner } from '@dashboard-link/ui'
 import { useEffect, useState } from 'react'
 import { PluginCard } from '../components/PluginCard'
 import { PluginConfigForm } from '../components/PluginConfigForm'
-import { Button } from '../components/ui/Button'
-import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 
 interface PluginWithConfig extends PluginInfo {
   enabled: boolean

@@ -1,3 +1,4 @@
+import { Button } from '@dashboard-link/ui'
 import {
   ArrowRightOnRectangleIcon,
   ChatBubbleLeftRightIcon,
@@ -14,7 +15,6 @@ import {
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
-import { Button } from './ui/Button'
 
 interface NavigationProps {
   isCollapsed?: boolean

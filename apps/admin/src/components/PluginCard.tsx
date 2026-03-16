@@ -1,7 +1,14 @@
 import type { PluginTestResult, PluginWithConfig } from '@dashboard-link/shared'
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@dashboard-link/ui'
 import { useState } from 'react'
-import { Button } from './ui/Button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/Card'
 
 interface PluginCardProps {
   plugin: PluginWithConfig

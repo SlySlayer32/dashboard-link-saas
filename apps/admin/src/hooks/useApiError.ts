@@ -1,4 +1,4 @@
-import { AppError } from '@dashboard-link/shared'
+import { AppError, logger } from '@dashboard-link/shared'
 import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../components/ui/Toast/ToastProvider'
@@ -9,7 +9,7 @@ export const useApiError = () => {
 
   const handleError = useCallback(
     (error: unknown) => {
-      console.error('API Error:', error)
+      logger.error('API Error', error instanceof Error ? error : new Error(String(error)))
 
       if (error instanceof AppError) {
         // Handle specific error types

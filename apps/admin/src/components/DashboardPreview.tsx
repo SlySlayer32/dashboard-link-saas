@@ -1,8 +1,8 @@
 import type { ScheduleItem, TaskItem } from '@dashboard-link/shared'
+import { Alert, AlertDescription, AlertTitle } from '@dashboard-link/ui'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { AlertCircle, Calendar as CalendarIcon, Clock, Info } from 'lucide-react'
-import { Alert, AlertDescription, AlertTitle } from '../../packages/ui/components/ui/alert'
 import { Skeleton } from '../../packages/ui/components/ui/skeleton'
 import { api } from '../lib/api'
 

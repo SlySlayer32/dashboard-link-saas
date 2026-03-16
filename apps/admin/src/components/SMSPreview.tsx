@@ -1,7 +1,7 @@
 import type { Worker } from '@dashboard-link/shared'
+import { Button } from '@dashboard-link/ui'
 import { useState } from 'react'
 import { formatPhoneForDisplay } from '../utils/phoneUtils'
-import { Button } from './ui/Button'
 
 interface SMSPreviewProps {
   worker: Worker

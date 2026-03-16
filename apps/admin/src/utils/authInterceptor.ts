@@ -162,21 +162,27 @@ export const authApi = {
 export const apiClient = createApiClient()
 
 // Error handling utility
-export const handleApiError = (error: any): string => {
-  if (error.response?.data?.error) {
-    return error.response.data.error
-  }
-  if (error.response?.data?.message) {
-    return error.response.data.message
-  }
-  if (error.message) {
-    return error.message
+export const handleApiError = (error: unknown): string => {
+  if (typeof error === 'object' && error !== null) {
+    const err = error as {
+      response?: { data?: { error?: string; message?: string } }
+      message?: string
+    }
+    if (err.response?.data?.error) {
+      return err.response.data.error
+    }
+    if (err.response?.data?.message) {
+      return err.response.data.message
+    }
+    if (err.message) {
+      return err.message
+    }
   }
   return 'An unexpected error occurred'
 }
 
 // Response type utility
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T> {
   success: boolean
   data?: T
   error?: string

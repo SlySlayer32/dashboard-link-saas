@@ -1,7 +1,7 @@
 import { Edit, MessageSquare, Power, PowerOff, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useSendDashboardLink } from '../hooks/useSMS'
-import { useDeleteWorker, useUpdateWorker } from '../hooks/useWorkerMutation'
+import { useWorkerMutations } from '../hooks/useWorkers'
 import { SMSModal } from './SMSModal'
 
 interface WorkerData {
@@ -21,8 +21,7 @@ export function WorkerActions({ worker }: WorkerActionsProps) {
   const [showEditModal, setShowEditModal] = useState(false)
   const [showSMSModal, setShowSMSModal] = useState(false)
 
-  const updateMutation = useUpdateWorker(worker.id)
-  const deleteMutation = useDeleteWorker()
+  const { updateWorker: updateMutation, deleteWorker: deleteMutation } = useWorkerMutations()
   const sendDashboardLinkMutation = useSendDashboardLink()
 
   const handleSendSMS = async (data: {
@@ -44,7 +43,7 @@ export function WorkerActions({ worker }: WorkerActionsProps) {
 
   const handleEdit = async (data: unknown) => {
     try {
-      await updateMutation.mutateAsync(data as any)
+      await updateMutation.mutateAsync({ id: worker.id, data: data as any })
       setShowEditModal(false)
     } catch {
       // Error is handled by the mutation
@@ -52,7 +51,7 @@ export function WorkerActions({ worker }: WorkerActionsProps) {
   }
 
   const handleToggleStatus = () => {
-    updateMutation.mutate({ active: !worker.active })
+    updateMutation.mutate({ id: worker.id, data: { active: !worker.active } })
   }
 
   const handleDelete = () => {

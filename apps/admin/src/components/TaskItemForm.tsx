@@ -89,7 +89,7 @@ export function TaskItemForm({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onFormSubmit)} className='p-6 space-y-6'>
+        <div className='p-6 space-y-6'>
           <div>
             <label htmlFor='title' className='block text-sm font-medium text-gray-700 mb-2'>
               Title <span className='text-red-500'>*</span>
@@ -200,14 +200,15 @@ export function TaskItemForm({
               Cancel
             </button>
             <button
-              type='submit'
+              type='button'
+              onClick={handleSubmit(onFormSubmit)}
               disabled={isLoading}
               className='flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50'
             >
               {isLoading ? 'Saving...' : initialData ? 'Update' : 'Create'}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   )

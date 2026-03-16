@@ -1,6 +1,5 @@
+import { Alert, AlertDescription, AlertTitle, Button } from '@dashboard-link/ui'
 import { Component, ErrorInfo, ReactNode } from 'react'
-import { Alert, AlertDescription, AlertTitle } from './ui/Alert'
-import { Button } from './ui/Button'
 
 interface ErrorBoundaryProps {
   children: ReactNode

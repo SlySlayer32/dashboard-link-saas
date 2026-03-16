@@ -1,5 +1,5 @@
+import { Button } from '@dashboard-link/ui'
 import { useEffect, useState } from 'react'
-import { Button } from './ui/Button'
 import { FormField } from './ui/Form'
 
 interface GoogleCalendarConfigProps {

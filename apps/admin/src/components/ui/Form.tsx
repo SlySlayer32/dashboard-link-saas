@@ -260,6 +260,7 @@ interface FormActionsProps {
   cancelText?: string
   submitDisabled?: boolean
   className?: string
+  onSubmit?: () => void | Promise<void>
 }
 
 export function FormActions({
@@ -269,6 +270,7 @@ export function FormActions({
   cancelText = 'Cancel',
   submitDisabled = false,
   className = '',
+  onSubmit,
 }: FormActionsProps) {
   return (
     <div className={`flex justify-end space-x-3 pt-4 border-t ${className}`}>
@@ -276,7 +278,8 @@ export function FormActions({
         {cancelText}
       </Button>
       <Button
-        type='submit'
+        type='button'
+        onClick={onSubmit}
         loading={isSubmitting}
         disabled={submitDisabled}
         loadingText='Saving...'

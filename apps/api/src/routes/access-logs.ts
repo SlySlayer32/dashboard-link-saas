@@ -5,12 +5,12 @@
  * Admin-only endpoints for tracking worker dashboard access
  */
 
+import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { zValidator } from '@hono/zod-validator'
-import { authMiddleware } from '../middleware/auth.middleware'
-import { logger } from '../utils/logger.js'
+import { authMiddleware } from '../middleware/auth'
 import type { AppContextVariables } from '../types.js'
+import { logger } from '../utils/logger.js'
 
 const accessLogs = new Hono<{ Variables: AppContextVariables }>()
 

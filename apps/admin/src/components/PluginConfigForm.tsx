@@ -82,7 +82,7 @@ export function PluginConfigForm({ plugin, config, onSave, onCancel }: PluginCon
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <div>
       <div className='space-y-6'>
         {renderConfigForm()}
 
@@ -143,7 +143,12 @@ export function PluginConfigForm({ plugin, config, onSave, onCancel }: PluginCon
         )}
       </div>
 
-      <FormActions onCancel={onCancel} isSubmitting={isLoading} submitText='Save Configuration' />
-    </form>
+      <FormActions
+        onCancel={onCancel}
+        isSubmitting={isLoading}
+        submitText='Save Configuration'
+        onSubmit={handleSubmit(onSubmit)}
+      />
+    </div>
   )
 }
