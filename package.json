@@ -25,6 +25,11 @@
     "validate": "pnpm run typecheck && pnpm run lint && pnpm run format:check",
     "dev:check": "bash scripts/dev-check.sh",
     "lint:report": "bash scripts/lint-report.sh",
+    "copy:paste:detect": "jscpd",
+    "copy:paste:report": "jscpd --reporters json,html,console --output reports",
+    "pmd:setup": "curl -L -o pmd-bin.zip https://github.com/pmd/pmd/releases/download/pmd_releases%2F7.7.0/pmd-dist-7.7.0-bin.zip && unzip -q pmd-bin.zip -d . && mv pmd-dist-7.7.0 pmd && rm pmd-bin.zip",
+    "pmd:run": "set JAVA_OPTS=-Xmx4g && pmd-bin-7.7.0\\bin\\pmd.bat cpd --minimum-tokens 50 --format xml --language ecmascript --exclude node_modules --exclude dist --exclude build --no-fail-on-error --dir apps/admin/src --dir apps/api/src --dir apps/worker/src --dir packages/auth/src --dir packages/database/src --dir packages/plugins/src --dir packages/shared/src --dir packages/sms/src --dir packages/tokens/src --dir packages/ui/src > reports/pmd-report.xml",
+    "quality:check": "pnpm run copy:paste:detect && pnpm run pmd:run",
     "pre-commit": "lint-staged"
   },
   "lint-staged": {
@@ -40,13 +45,11 @@
     "@eslint/js": "^9.39.2",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@typescript-eslint/parser": "^8.50.0",
-    "@typescript-eslint/utils": "^8.50.0",
     "eslint": "^9.39.2",
-    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.26",
+    "jscpd": "^4.0.8",
+    "knip": "^5.87.0",
     "lint-staged": "^16.2.7",
-    "msw": "^2.12.10",
     "prettier": "^3.7.4",
     "rollup-plugin-visualizer": "^6.0.5",
     "simple-git-hooks": "^2.11.0",
@@ -57,12 +60,5 @@
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=9.0.0"
-  },
-  "dependencies": {
-    "@tanstack/react-virtual": "^3.13.13",
-    "@types/node": "^20.10.6",
-    "@types/uuid": "^11.0.0",
-    "class-variance-authority": "^0.7.1",
-    "uuid": "^13.0.0"
   }
 }

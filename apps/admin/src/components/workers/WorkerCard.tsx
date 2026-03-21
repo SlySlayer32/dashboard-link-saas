@@ -1,6 +1,6 @@
 import type { Worker } from '@dashboard-link/shared'
+import { formatPhoneDisplay } from '@dashboard-link/shared'
 import { Edit, Trash2 } from 'lucide-react'
-import { formatPhoneDisplay } from '../../lib/utils/phone'
 
 interface WorkerCardProps {
   worker: Worker

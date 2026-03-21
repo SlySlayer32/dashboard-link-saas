@@ -20,8 +20,7 @@
   "dependencies": {
     "@dashboard-link/shared": "workspace:*",
     "@supabase/supabase-js": "^2.39.0",
-    "supabase": "^2.67.3",
-    "zod": "^3.22.4"
+    "zod": "^3.22.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",

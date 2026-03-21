@@ -1,0 +1,31 @@
+﻿{
+    "file_absolute_paths":  [
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\ui\\ConfirmDialog.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\ui\\Form.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\ui\\Select.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\ui\\Textarea.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\workers\\WorkerCard.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\workers\\WorkerForm.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\workers\\WorkerList.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\AirtableConfig.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\DangerZone.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\DashboardPreview.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\DashboardStats.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\DeleteWorkerDialog.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\DevLoginButton.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\GoogleCalendarConfig.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\components\\ManualDataList.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\App.tsx",
+                                "E:\\CleanConnect\\apps\\admin\\src\\main.tsx",
+                                "E:\\CleanConnect\\apps\\api\\src\\index.ts",
+                                "E:\\CleanConnect\\apps\\api\\src\\v1.ts",
+                                "E:\\CleanConnect\\apps\\api\\src\\types.ts",
+                                "E:\\CleanConnect\\packages\\database\\src\\index.ts",
+                                "E:\\CleanConnect\\packages\\auth\\src\\index.ts",
+                                "E:\\CleanConnect\\packages\\shared\\src\\index.ts",
+                                "E:\\CleanConnect\\packages\\sms\\src\\index.ts",
+                                "E:\\CleanConnect\\packages\\tokens\\src\\TokenManager.ts",
+                                "E:\\CleanConnect\\packages\\plugins\\src\\index.ts",
+                                "E:\\CleanConnect\\packages\\ui\\src\\index.ts"
+                            ]
+}

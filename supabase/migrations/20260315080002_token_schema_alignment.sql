@@ -19,7 +19,7 @@ CREATE INDEX IF NOT EXISTS idx_dashboard_tokens_revoked ON dashboard_tokens(revo
 CREATE INDEX IF NOT EXISTS idx_dashboard_tokens_revoked_by ON dashboard_tokens(revoked_by);
 
 -- Add comments for clarity
-COMMENT ON COLUMN dashboard_tokens.user_id IS 'User ID from auth system (maps to auth_user_id in users table)';
+COMMENT ON COLUMN dashboard_tokens.user_id IS 'User ID from users table (maps to id in users table)';
 COMMENT ON COLUMN dashboard_tokens.session_id IS 'Optional session identifier for multi-session support';
 COMMENT ON COLUMN dashboard_tokens.payload IS 'Token payload data (JSON) - required by tokens package';
 COMMENT ON COLUMN dashboard_tokens.last_used_at IS 'Timestamp when token was last used/validated';
@@ -34,7 +34,7 @@ RETURNS TRIGGER AS $$
 BEGIN
   -- If user_id is not set but worker_id is, try to find the associated user
   IF NEW.user_id IS NULL AND NEW.worker_id IS NOT NULL THEN
-    SELECT u.auth_user_id 
+    SELECT u.id 
     INTO NEW.user_id
     FROM workers w
     JOIN users u ON u.organization_id = w.organization_id
@@ -55,9 +55,9 @@ CREATE TRIGGER populate_dashboard_token_user_id
 -- Update existing records to have sensible defaults
 UPDATE dashboard_tokens 
 SET 
-  user_id = (SELECT u.auth_user_id FROM users u WHERE u.organization_id = dashboard_tokens.organization_id LIMIT 1),
+  user_id = (SELECT u.id FROM users u WHERE u.organization_id = dashboard_tokens.organization_id LIMIT 1),
   payload = jsonb_build_object(
-    'userId', COALESCE((SELECT u.auth_user_id FROM users u WHERE u.organization_id = dashboard_tokens.organization_id LIMIT 1), worker_id::text),
+    'userId', COALESCE((SELECT u.id::text FROM users u WHERE u.organization_id = dashboard_tokens.organization_id LIMIT 1), worker_id::text),
     'organizationId', organization_id,
     'workerId', worker_id,
     'permissions', jsonb_build_array('worker:access', 'sms:receive'),
@@ -93,19 +93,7 @@ FROM dashboard_tokens;
 GRANT SELECT, INSERT, UPDATE, DELETE ON tokens TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON tokens TO service_role;
 
--- Add RLS policies for the tokens view
-ALTER TABLE tokens ENABLE ROW LEVEL SECURITY;
-
--- Policy for token access (only within same organization)
-CREATE POLICY "Users can manage their organization tokens" ON tokens
-FOR ALL USING (
-  organization_id = current_setting('app.tenant_id', true)::uuid
-);
-
--- Policy for service role (full access)
-CREATE POLICY "Service role full access to tokens" ON tokens
-FOR ALL USING (
-  current_user = 'service_role'
-);
+-- Note: RLS is handled by the underlying dashboard_tokens table
+-- The tokens view inherits security from the base table
 
 COMMENT ON VIEW tokens IS 'Compatibility view for tokens package - maps dashboard_tokens to expected schema';

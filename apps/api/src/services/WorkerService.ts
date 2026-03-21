@@ -36,7 +36,7 @@ export interface WorkerStats {
 }
 
 export class WorkerService {
-  constructor(private workerRepo: WorkerRepository) {}
+  constructor(private workerRepo: WorkerRepository) { }
 
   async getWorkers(organizationId: string): Promise<Worker[]> {
     const startTime = Date.now()
@@ -442,6 +442,13 @@ export class WorkerService {
 
   async getActiveWorkers(organizationId: string): Promise<Worker[]> {
     return this.workerRepo.findActiveWorkers(organizationId)
+  }
+
+  async getWorkersByActiveStatus(organizationId: string, active?: boolean): Promise<Worker[]> {
+    if (active === undefined) {
+      return this.getWorkers(organizationId)
+    }
+    return this.workerRepo.findByActiveStatus(organizationId, active)
   }
 
   async findWorkerByPhone(phone: string, organizationId: string): Promise<Worker | null> {

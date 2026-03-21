@@ -6,7 +6,7 @@
  */
 
 import { getWorkerRepository } from '@dashboard-link/database'
-import { createWorkerSchema, updateWorkerSchema } from '@dashboard-link/shared'
+import { createWorkerSchema, updateWorkerSchema, type Worker } from '@dashboard-link/shared'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import { z } from 'zod'
@@ -25,6 +25,7 @@ const workerService = new WorkerService(workerRepository)
 
 const listWorkersQuerySchema = z.object({
   include_deleted: z.coerce.boolean().optional().default(false),
+  active: z.coerce.boolean().optional(),
   search: z.string().trim().optional(),
   limit: z.coerce.number().min(1).max(1000).optional().default(100),
 })
@@ -67,17 +68,36 @@ workers.get(
     }
 
     try {
-      const workerList = query.search
-        ? query.include_deleted
+      let workerList: Worker[]
+
+      if (query.search) {
+        workerList = query.include_deleted
           ? await workerService.searchWorkersIncludingDeleted(
-              organizationId,
-              query.search,
-              query.limit
-            )
+            organizationId,
+            query.search,
+            query.limit
+          )
           : await workerService.searchWorkers(organizationId, query.search, query.limit)
-        : query.include_deleted
-          ? await workerService.getWorkersIncludingDeleted(organizationId, query.limit)
-          : (await workerService.getWorkers(organizationId)).slice(0, query.limit)
+      } else if (query.active !== undefined) {
+        // Handle active filtering
+        workerList = query.include_deleted
+          ? await workerService.searchWorkersIncludingDeleted(organizationId, '', query.limit)
+          : await workerService.getWorkersByActiveStatus(organizationId, query.active)
+        // Filter by active status if not including deleted
+        if (!query.include_deleted) {
+          workerList = workerList.filter(worker => worker.active === query.active)
+        }
+      } else if (query.include_deleted) {
+        workerList = await workerService.getWorkersIncludingDeleted(organizationId, query.limit)
+      } else {
+        workerList = await workerService.getWorkers(organizationId)
+      }
+
+      // Apply limit
+      if (query.limit && workerList.length > query.limit) {
+        workerList = workerList.slice(0, query.limit)
+      }
+
       return c.json({ workers: workerList, total: workerList.length })
     } catch (error) {
       logger.error(
@@ -390,4 +410,30 @@ workers.post('/:id/deactivate', async (c) => {
   }
 })
 
+// Restore worker (undelete)
+workers.post('/:id/restore', async (c) => {
+  const id = c.req.param('id')
+  const organizationId = c.get('organizationId')
+
+  if (!organizationId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  try {
+    const worker = await workerService.updateWorker(id, { deletedAt: null }, organizationId)
+    return c.json({ worker, message: 'Worker restored successfully' })
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Worker not found') {
+      return c.json({ error: 'Worker not found' }, 404)
+    }
+
+    logger.error(
+      'Failed to restore worker',
+      error instanceof Error ? error : new Error(String(error))
+    )
+    return c.json({ error: 'Failed to restore worker' }, 500)
+  }
+})
+
 export { workers }
+

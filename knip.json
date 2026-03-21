@@ -1,0 +1,27 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    "apps/admin": {
+      "entry": ["src/**/*.ts", "src/**/*.tsx"]
+    },
+    "apps/api": {
+      "entry": ["src/**/*.ts"]
+    },
+    "apps/worker": {
+      "entry": ["src/**/*.ts", "src/**/*.tsx"]
+    },
+    "packages/ui": {
+      "ignore": ["vitest.config.ts"]
+    },
+    "packages/database": {
+      "ignoreBinaries": ["rd"]
+    }
+  },
+  "ignoreExportsUsedInFile": true,
+  "ignoreDependencies": [],
+  "rules": {
+    "exports": "warn",
+    "types": "warn",
+    "duplicates": "off"
+  }
+}
