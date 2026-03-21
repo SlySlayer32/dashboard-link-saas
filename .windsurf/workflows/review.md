@@ -10,7 +10,7 @@ $ARGUMENTS
 
 ## Goal
 
-Perform a spec-driven code review. The primary job is not to find bugs — it is to verify that what was built matches what was agreed. Constitution and spec are the source of truth. Code that does not conform to them is wrong. Documents that do not reflect the code are outdated. Both are reported. Both are actionable.
+Enforce constitution compliance and eliminate code duplication. The primary job is to verify code follows constitution rules and find doubled-up implementations. Constitution is the single source of truth for architecture, patterns, and file placement.
 
 ---
 
@@ -38,34 +38,18 @@ Review all files changed on this branch. State which scope was used at the top o
 
 ---
 
-### 2. Load All Governing Documents
+### 2. Load Governing Documents
 
-Read these in strict authority order before looking at any code:
+Load these two documents only:
 
 1. `.specify/memory/constitution.md` — highest authority, non-negotiable
-2. Active `spec.md` for the feature being reviewed (from `.specify/specs/[feature]/spec.md`)
-3. Active `plan.md` for the feature (from `.specify/specs/[feature]/plan.md`)
-4. Active `tasks.md` for the feature (from `.specify/specs/[feature]/tasks.md`)
-5. `.windsurf/rules/projectrules.md` — project map and locked constraints
-6. `docs/CONTEXT.md` — current project state
+2. `.windsurf/rules/essential-rules.md` — project map and tech stack
 
-If no active feature spec exists (e.g. reviewing a config change or infrastructure work), use only the constitution and projectrules as authority. Note this at the top of the report.
+These define all architectural rules, file placement patterns, and coding standards. No other documents needed.
 
 ---
 
-### 3. Run Pre-Review Consistency Check
-
-Before reviewing code, check if the governing documents are internally consistent.
-
-Read `.windsurf/skills/review/SKILL.md` for the consistency check rules.
-
-If the spec, plan, and tasks contradict each other — flag this as a `PRE-REVIEW BLOCK` and report it before any code findings. The user must resolve the document conflict before the review can be meaningful.
-
-If the documents are consistent — proceed.
-
----
-
-### 4. Load the Changed Code
+### 3. Load the Changed Code
 
 Read every changed file identified in Step 1.
 
@@ -78,102 +62,79 @@ Do not load the entire codebase — load only what is needed to trace the call p
 
 ---
 
-### 5. Run the Five Review Passes
+### 4. Run the Three Review Passes
 
 Work through each pass in order. Record every finding using the finding format in `.windsurf/skills/review/SKILL.md`.
 
 #### Pass 1 — Constitution Conformance
 
 For every changed file:
-- Check naming conventions (files, variables, functions, types, enums) against Section I
-- Check file placement against the File Structure Rules (adapters in adapters, business logic in services, etc.)
-- Check import order against the Import Order rules
+- Check naming conventions (files, variables, functions, types, enums) against Constitution Section I
+- Check file placement against File Structure Rules (vendor SDKs in adapters, business logic in services, etc.)
+- Check import order and cross-package boundaries (see `.windsurf/skills/review/import-validation.md`)
 - Check TypeScript rules (no `any`, no ignored errors, strict mode)
-- Check that established patterns are followed (Repository Pattern, Service Layer, Middleware Order, Error Handling, Component Structure)
+- Check established patterns (Repository Pattern, Service Layer, Middleware Order, Error Handling)
 
 Any violation of the constitution is automatically `CRITICAL`.
 
-#### Pass 2 — Spec / Plan / Tasks Conformance
+#### Pass 2 — Duplicates and Conflicting Paths
 
-For every changed file, ask:
-- Does the behaviour implemented match the functional requirements in spec.md?
-- Does the architecture and structure match plan.md?
-- Is this change covered by a task in tasks.md? If not, it is orphan behaviour.
-- Is there a spec requirement that this change was supposed to address but doesn't? That is a coverage gap.
-- Does the implementation introduce behaviour that is explicitly out of scope in the constitution Section VIII or spec.md?
+Scan the changed files and their related files for duplicates (see `.windsurf/skills/review/deduplication-patterns.md`):
 
-If the code is correct but the spec/plan/tasks are outdated — state precisely which document section needs to be updated. Do not penalise the code for a stale document.
+- **Functional duplication**: Two or more functions doing the same thing
+- **Type duplication**: Same data structure defined in multiple files
+- **Component duplication**: UI components rendering the same thing
+- **Validation duplication**: Same validation rules in multiple places
+- **Data transformation duplication**: Same mapping logic in multiple layers
 
-#### Pass 3 — Duplicates and Conflicting Paths
-
-Scan the changed files and their related files for:
-- Two or more functions, services, routes, or components that do the same thing
-- Two different patterns solving the same problem (e.g. two ways of handling token validation)
-- Competing flows where it is unclear which path is canonical
-- Data transformations happening in multiple layers when they should happen in one
-
-For each duplicate or conflict:
-- Identify which version is canonical (default to whatever matches spec/plan)
+For each duplicate:
+- Identify canonical version using the decision matrix (repositories > services > shared > adapters > app-specific)
 - State explicitly what should be deleted or merged
-- State if the spec/plan/tasks need to be updated to reflect the resolution
+- List all import sites that need updating
 
-#### Pass 4 — Coverage and Orphans
+#### Pass 3 — Code Quality
 
-Cross-reference the changed files against spec.md and tasks.md:
-
-**Coverage gaps** — requirements or tasks that are related to this change but have no implementation
-- List the spec requirement or task ID
-- State what is missing
-
-**Orphan behaviour** — code that exists in the changed files but has no corresponding requirement or task
-- List the file and function/route/component
-- Recommend: delete it, or add it to the spec
-
-#### Pass 5 — Code Quality
-
-Now — and only now — check the code itself for:
+Check the code for:
 - Logic errors and incorrect behaviour
 - Unhandled edge cases (null, undefined, empty arrays, zero values)
 - Missing error handling or fallback paths
 - Security issues (SQL injection risk, unvalidated input, exposed secrets, RLS bypass potential)
 - Race conditions or async/await misuse
 - Resource leaks (unclosed connections, uncleared timers)
-- API contract violations (response shapes that don't match what callers expect)
-- Incorrect caching (stale data, wrong cache keys, missing invalidation)
-- TypeScript strict mode violations not caught in Pass 1
+- Import/reference errors (missing exports, circular dependencies, wrong signatures)
 
 Reference the constitution section number for any finding that relates to a specific rule.
 
 ---
 
-### 6. Build the Report
+### 5. Build the Report
 
 Output one structured report using the report format in `.windsurf/skills/review/SKILL.md`.
 
 The report has three sections:
 
-**Section A — Pre-Review Status**
-Document consistency check result. Scope used. Governing documents loaded.
+**Section A — Review Status**
+Scope used. Governing documents loaded (constitution + essential rules).
 
 **Section B — Findings Table**
 One row per finding. See format in skill.
 
-**Section C — Canonical Path Recommendation**
+**Section C — Canonical Path Recommendations**
 The most important section. Do not just list issues — resolve them.
 
-For every duplicate, conflict, or architectural issue found: write a single clear recommendation:
+For every duplicate or conflict found, write a clear recommendation:
 
 ```
-Canonical path: [what to keep]
+Canonical path: [what to keep] — matches constitution §[section]
 Remove: [what to delete, exact file/function/route]
-Update docs: [which spec/plan/tasks section needs to change, and how]
+Update imports: [list all files that need import changes]
 ```
 
 If there are no conflicts — state that explicitly.
 
 ---
 
-### 7. Produce Fix Tasks
+### 6. Produce Fix Tasks
 
 For every `CRITICAL` or `HIGH` finding, generate a task in standard tasks.md format:
 
@@ -200,24 +161,7 @@ MEDIUM and LOW findings are always saved as tasks, never auto-applied.
 
 ---
 
-### 8. Write Devlog Entry
-
-After the fix decision is resolved, open `docs/devlog/` and write an entry to the current month file using the standard entry format from `.windsurf/skills/devlog/SKILL.md`.
-
-Entry fields:
-- `ACTION`: `REVIEW`
-- `SUMMARY`: One sentence — what was reviewed, how many findings, what was done
-- `FILES_AFFECTED`: All changed files that were reviewed
-- `FEATURE`: Feature name from spec if applicable
-- `STATUS`: completed
-- `NOTES`: Count of findings by severity, canonical path recommendation summary
-- `CONSTITUTION_FLAGS`: Any CRITICAL constitution violations found
-
-Update `docs/devlog/INDEX.md`.
-
----
-
-### 9. Confirm
+### 7. Confirm
 
 Print:
 
@@ -226,12 +170,8 @@ Print:
 
 Scope:       [files reviewed]
 Findings:    [N critical] | [N high] | [N medium] | [N low]
-Docs issues: [N pre-review blocks or conformance issues]
+Duplicates:  [N found and resolved]
 Action:      [fixes applied / tasks saved / mixed]
-Devlog:      Entry #[N] written to docs/devlog/[YYYY-MM].md
-
-Suggested git commit:
-[commit message]
 ```
 
 ---
@@ -240,8 +180,7 @@ Suggested git commit:
 
 - Constitution violations are always CRITICAL — no exceptions
 - Never apply MEDIUM or LOW fixes automatically — always save as tasks
-- Never skip the governing documents pass — code review without spec conformance is incomplete
-- If documents contradict each other, block the review and report the conflict first
-- Always produce a canonical path recommendation — not just a list of problems
-- Always write a devlog entry — no review session is undocumented
-- Never guess at intent — if a behaviour has no spec backing, call it an orphan
+- Always produce a canonical path recommendation for duplicates — not just a list of problems
+- Use the deduplication decision matrix (repositories > services > shared > adapters > app-specific)
+- Validate all imports against monorepo boundaries (no cross-app imports, vendor SDKs only in adapters)
+- Focus on finding doubled-up code — that's the primary goal

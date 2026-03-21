@@ -11,8 +11,8 @@ import tokens from './routes/tokens'
 import { workers } from './routes/workers'
 
 // Import services
-import { SMSService } from './services/sms-service'
-import { TokenService } from './services/token-service'
+import { SMSService } from './services/SMSService'
+import { TokenService } from './services/TokenService'
 import { WebhookService } from './services/webhook-service'
 
 // Create v1 API with tenant isolation
@@ -55,7 +55,7 @@ v1.post(
   zValidator(
     'json',
     z.object({
-      token: z.string().min(1, 'Token is required'),
+      token: z.string().min(1, { message: 'Token is required' }),
     })
   ),
   async (c) => {
@@ -86,6 +86,16 @@ v1.post(
           },
           410
         )
+      }
+
+      if (error instanceof Error && error.message.includes('not implemented')) {
+        return c.json({
+          success: false,
+          error: {
+            code: 'NOT_IMPLEMENTED',
+            message: 'Token service not yet available',
+          },
+        }, 501)
       }
 
       return c.json(
@@ -211,108 +221,7 @@ v1.get('/organizations', async (c) => {
   }
 })
 
-// Workers CRUD with validation
-v1.get(
-  '/workers',
-  zValidator(
-    'query',
-    z.object({
-      limit: z.coerce.number().min(1).max(100).optional().default(50),
-      offset: z.coerce.number().min(0).optional().default(0),
-      status: z.enum(['active', 'inactive', 'suspended']).optional(),
-    })
-  ),
-  async (c) => {
-    const tenant = c.get('tenant')
-    const query = c.req.valid('query')
-    const workerRepo = getWorkerRepository()
-
-    try {
-      const options = {
-        where: {
-          organizationId: tenant.orgId,
-          ...(query.status && { active: query.status === 'active' }),
-        },
-        limit: query.limit,
-        offset: query.offset,
-      }
-
-      // Get paginated results
-      const page = Math.floor(query.offset / query.limit) + 1
-      const result = await workerRepo.findWithPagination(options, page, query.limit)
-
-      return c.json({
-        success: true,
-        data: result.data,
-        meta: {
-          pagination: {
-            limit: query.limit,
-            offset: query.offset,
-            total: result.total,
-            hasMore: query.offset + result.data.length < result.total,
-          },
-          requestId: crypto.randomUUID(),
-          version: '2024-01-01',
-        },
-      })
-    } catch (error) {
-      return c.json(
-        {
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        },
-        500
-      )
-    }
-  }
-)
-
-// Create worker
-v1.post(
-  '/workers',
-  zValidator(
-    'json',
-    z.object({
-      name: z.string().min(1, 'Name is required'),
-      phone_e164: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number'),
-      status: z.enum(['active', 'inactive', 'suspended']).optional().default('active'),
-    })
-  ),
-  async (c) => {
-    const tenant = c.get('tenant')
-    const workerData = c.req.valid('json')
-    const workerRepo = getWorkerRepository()
-
-    try {
-      const newWorker = await workerRepo.create({
-        organizationId: tenant.orgId,
-        name: workerData.name,
-        phone: workerData.phone_e164,
-        active: workerData.status === 'active',
-      })
-
-      return c.json(
-        {
-          success: true,
-          data: newWorker,
-          meta: {
-            requestId: crypto.randomUUID(),
-            version: '2024-01-01',
-          },
-        },
-        201
-      )
-    } catch (error) {
-      return c.json(
-        {
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        },
-        500
-      )
-    }
-  }
-)
+// Workers CRUD with validation - REMOVED - now using mounted route from ./routes/workers.ts
 
 // Create dashboard
 v1.post(
@@ -320,8 +229,8 @@ v1.post(
   zValidator(
     'json',
     z.object({
-      worker_id: z.string().uuid('Invalid worker ID'),
-      name: z.string().min(1, 'Dashboard name is required'),
+      worker_id: z.uuid({ message: 'Invalid worker ID' }),
+      name: z.string().min(1, { message: 'Dashboard name is required' }),
       config: z
         .object({
           widgets: z
@@ -329,7 +238,7 @@ v1.post(
               z.object({
                 type: z.string(),
                 source: z.string(),
-                config: z.record(z.any()).optional(),
+                config: z.record(z.string(), z.any()).optional(),
               })
             )
             .optional(),
@@ -346,7 +255,7 @@ v1.post(
       const workerRepo = getWorkerRepository()
       const worker = await workerRepo.findById(dashboardData.worker_id)
 
-      if (!worker || worker.organizationId !== tenant.orgId) {
+      if (!worker?.organizationId || worker.organizationId !== tenant.orgId) {
         return c.json(
           {
             success: false,
@@ -456,7 +365,11 @@ v1.post(
         )
       }
 
-      const dashboard = results[0] as any
+      const dashboard = results[0] as unknown as {
+        id: string;
+        worker_id: string;
+        workers: { worker_name: string; worker_phone: string }
+      }
 
       // Create secure token
       const tokenService = new TokenService()
@@ -470,7 +383,7 @@ v1.post(
       // Enqueue SMS job
       const smsService = new SMSService()
       const smsJob = await smsService.enqueueSMS({
-        to: dashboard.worker_phone,
+        to: dashboard.workers.worker_phone,
         message:
           message ||
           `Your dashboard is ready: ${process.env.APP_URL || 'http://localhost:5173'}/dashboard/${token}`,
@@ -494,6 +407,16 @@ v1.post(
         201
       )
     } catch (error) {
+      if (error instanceof Error && error.message.includes('not implemented')) {
+        return c.json({
+          success: false,
+          error: {
+            code: 'NOT_IMPLEMENTED',
+            message: 'Service not yet available',
+          },
+        }, 501)
+      }
+
       return c.json(
         {
           success: false,
@@ -511,8 +434,8 @@ v1.post(
   zValidator(
     'json',
     z.object({
-      adapter_type: z.string().min(1, 'Adapter type is required'),
-      config: z.record(z.any()),
+      adapter_type: z.string().min(1, { message: 'Adapter type is required' }),
+      config: z.record(z.string(), z.any()),
       enabled: z.boolean().optional().default(true),
     })
   ),

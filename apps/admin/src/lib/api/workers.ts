@@ -5,12 +5,20 @@
  */
 
 import type {
-  CreateWorkerDTO,
-  UpdateWorkerDTO,
+  CreateWorkerInput as CreateWorkerDTO,
+  UpdateWorkerInput as UpdateWorkerDTO,
   Worker,
-  WorkerListResponse,
-  WorkerResponse,
-} from '@dashboard-link/shared/src/types/worker'
+} from '@dashboard-link/shared'
+
+// Local response types since they're not exported from shared
+export interface WorkerListResponse {
+  workers: Worker[]
+  total: number
+}
+
+export interface WorkerResponse {
+  worker: Worker
+}
 
 const API_BASE = '/api/v1'
 

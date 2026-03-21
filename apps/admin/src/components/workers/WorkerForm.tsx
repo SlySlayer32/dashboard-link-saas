@@ -1,10 +1,10 @@
 import type { Worker } from '@dashboard-link/shared'
+import { formatPhoneDisplay, validateAustralianPhone } from '@dashboard-link/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useWorkerMutations } from '../../hooks/useWorkers'
-import { formatPhoneForDisplay } from '../../utils/phoneUtils'
 
 // Zod schema for worker form validation
 const workerFormSchema = z.object({
@@ -19,10 +19,9 @@ const workerFormSchema = z.object({
   phone: z
     .string()
     .min(1, 'Phone number is required')
-    .regex(
-      /^(04\d{2}([\s-]?\d{3}){2}|04\d{8}|\+614\d{8})$/,
-      'Invalid Australian mobile number (e.g., 0412 345 678)'
-    ),
+    .refine((phone) => validateAustralianPhone(phone), {
+      message: 'Invalid Australian mobile number (e.g., 0412 345 678)',
+    }),
 })
 
 export type WorkerFormData = z.infer<typeof workerFormSchema>
@@ -46,14 +45,14 @@ export function WorkerForm({ worker, onSuccess, onCancel }: WorkerFormProps) {
     resolver: zodResolver(workerFormSchema),
     defaultValues: {
       name: worker?.name || '',
-      phone: worker?.phone ? formatPhoneForDisplay(worker.phone) : '',
+      phone: worker?.phone ? formatPhoneDisplay(worker.phone) : '',
     },
   })
 
   useEffect(() => {
     reset({
       name: worker?.name || '',
-      phone: worker?.phone ? formatPhoneForDisplay(worker.phone) : '',
+      phone: worker?.phone ? formatPhoneDisplay(worker.phone) : '',
     })
   }, [worker, reset])
 
@@ -82,6 +81,8 @@ export function WorkerForm({ worker, onSuccess, onCancel }: WorkerFormProps) {
     }
   }
 
+  const buttonText = isSubmitting ? 'Saving...' : isEditMode ? 'Update Worker' : 'Add Worker'
+
   return (
     <div className='space-y-4'>
       {/* Name input field */}
@@ -93,9 +94,8 @@ export function WorkerForm({ worker, onSuccess, onCancel }: WorkerFormProps) {
           id='name'
           type='text'
           {...register('name')}
-          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.name ? 'border-red-500' : 'border-gray-300'
-          }`}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.name ? 'border-red-500' : 'border-gray-300'
+            }`}
           placeholder='John Smith'
           disabled={isSubmitting}
         />
@@ -111,9 +111,8 @@ export function WorkerForm({ worker, onSuccess, onCancel }: WorkerFormProps) {
           id='phone'
           type='tel'
           {...register('phone')}
-          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.phone ? 'border-red-500' : 'border-gray-300'
-          }`}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.phone ? 'border-red-500' : 'border-gray-300'
+            }`}
           placeholder='0412 345 678'
           disabled={isSubmitting}
         />
@@ -128,7 +127,7 @@ export function WorkerForm({ worker, onSuccess, onCancel }: WorkerFormProps) {
           disabled={isSubmitting}
           className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
         >
-          {isSubmitting ? 'Saving...' : isEditMode ? 'Update Worker' : 'Add Worker'}
+          {buttonText}
         </button>
         {onCancel && (
           <button

@@ -143,6 +143,17 @@ export class WorkerRepository extends BaseRepository<Worker> {
     })
   }
 
+  async findByActiveStatus(organizationId: string, active: boolean): Promise<Worker[]> {
+    return this.findMany({
+      where: {
+        organizationId,
+        active,
+        deletedAt: null,
+      },
+      orderBy: [{ field: 'name', direction: 'asc' }],
+    })
+  }
+
   async getWorkerStats(_workerId: string): Promise<{
     totalSms: number
     sentSms: number

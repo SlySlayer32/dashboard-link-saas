@@ -21,10 +21,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@dashboard-link/shared": "workspace:*",
-    "hono": "^4.0.0",
-    "jsonwebtoken": "^9.0.2",
-    "zod": "^3.22.4"
+    "@dashboard-link/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.5",

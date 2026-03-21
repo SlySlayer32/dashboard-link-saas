@@ -1,5 +1,5 @@
+import { Button } from '@dashboard-link/ui'
 import React from 'react'
-import { Button } from './Button'
 
 interface ConfirmDialogProps {
   isOpen: boolean
@@ -9,7 +9,7 @@ interface ConfirmDialogProps {
   message: string
   confirmText?: string
   cancelText?: string
-  variant?: 'primary' | 'danger'
+  variant?: 'primary' | 'destructive'
   isLoading?: boolean
 }
 
@@ -58,7 +58,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
               type='button'
               variant={variant}
               onClick={handleConfirm}
-              isLoading={isLoading}
+              loading={isLoading}
               disabled={isLoading}
               className='w-full sm:ml-3 sm:w-auto'
             >

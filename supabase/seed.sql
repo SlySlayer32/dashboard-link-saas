@@ -13,7 +13,7 @@ VALUES ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-0000000
 ON CONFLICT (id) DO NOTHING;
 
 -- Insert test workers
-INSERT INTO workers (id, organization_id, name, phone, calendar_email)
+INSERT INTO workers (id, organization_id, name, phone, email)
 VALUES 
     ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'John Doe', '+61412345678', 'john@acme.com'),
     ('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'Jane Smith', '+61423456789', 'jane@acme.com'),

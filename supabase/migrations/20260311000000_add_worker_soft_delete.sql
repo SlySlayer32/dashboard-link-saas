@@ -1,9 +1,11 @@
--- Migration: Add soft delete and update worker schema
+-- Migration: Add soft delete and complete worker schema alignment
 -- Aligns with specs/001-worker-management/spec.md requirements
+-- Completes full schema alignment: column renames, new columns, indexes
 
 -- Rename columns to match spec naming
 ALTER TABLE workers RENAME COLUMN full_name TO name;
 ALTER TABLE workers RENAME COLUMN phone_number TO phone;
+ALTER TABLE workers RENAME COLUMN calendar_email TO email;
 
 -- Update name length constraint to 255 characters (FR-018)
 ALTER TABLE workers DROP CONSTRAINT workers_full_name_check;
@@ -30,9 +32,12 @@ CREATE UNIQUE INDEX idx_workers_phone_org_active ON workers(phone, organization_
 -- Add index for phone lookups
 CREATE INDEX idx_workers_phone ON workers(phone) WHERE deleted_at IS NULL;
 
--- Update calendar_email index to filter deleted workers
+-- Update email index to filter deleted workers (renamed from calendar_email)
 DROP INDEX IF EXISTS idx_workers_calendar_email;
-CREATE INDEX idx_workers_calendar_email ON workers(calendar_email) WHERE calendar_email IS NOT NULL AND deleted_at IS NULL;
+CREATE INDEX idx_workers_email ON workers(email) WHERE email IS NOT NULL AND deleted_at IS NULL;
+
+-- Add index for deleted_at filtering (performance optimization)
+CREATE INDEX idx_workers_deleted_at ON workers(deleted_at) WHERE deleted_at IS NULL;
 
 -- Add E.164 phone format constraint (FR-015)
 ALTER TABLE workers ADD CONSTRAINT check_phone_e164 CHECK (phone ~ '^\+[1-9]\d{1,14}$');

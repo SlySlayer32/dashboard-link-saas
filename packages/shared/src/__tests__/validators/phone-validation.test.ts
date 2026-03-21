@@ -10,8 +10,8 @@
  * - International numbers rejected
  */
 
-import { describe, it, expect } from 'vitest'
-import { formatAustralianPhone } from '../../validators/phone'
+import { describe, expect, it } from 'vitest'
+import { formatAustralianPhone } from '../../utils/phone'
 
 describe('Phone Validation Security Tests (T085)', () => {
   describe('E.164 format validation', () => {

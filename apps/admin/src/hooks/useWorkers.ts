@@ -1,4 +1,7 @@
-import type { CreateWorkerDTO, UpdateWorkerDTO } from '@dashboard-link/shared/src/types/worker'
+import type {
+  CreateWorkerInput as CreateWorkerDTO,
+  UpdateWorkerInput as UpdateWorkerDTO
+} from '@dashboard-link/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-hot-toast'

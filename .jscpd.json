@@ -1,0 +1,21 @@
+{
+  "path": ["apps", "packages"],
+  "ignore": [
+    "node_modules",
+    "dist",
+    "build",
+    ".turbo",
+    "coverage",
+    "*.test.ts",
+    "*.test.tsx",
+    "*.spec.ts",
+    "*.spec.tsx"
+  ],
+  "ext": ["ts", "tsx", "js", "jsx"],
+  "threshold": 5,
+  "reporters": ["html", "console", "json"],
+  "output": "reports",
+  "format": "json",
+  "gitignore": true,
+  "exitCode": 0
+}

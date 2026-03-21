@@ -3,6 +3,8 @@
  *
  * Core interfaces and types for the token abstraction layer
  * Provides Zapier-style token provider interface for flexible token management
+ * 
+ * Phase 2/3 - Advanced token architecture (not used in MVP)
  */
 
 export interface TokenPayload {
@@ -223,11 +225,11 @@ export interface WorkerTokenValidation extends TokenValidation {
 // Token errors
 export interface TokenError {
   code:
-    | 'GENERATION_FAILED'
-    | 'VALIDATION_FAILED'
-    | 'REFRESH_FAILED'
-    | 'REVOCATION_FAILED'
-    | 'CLEANUP_FAILED'
+  | 'GENERATION_FAILED'
+  | 'VALIDATION_FAILED'
+  | 'REFRESH_FAILED'
+  | 'REVOCATION_FAILED'
+  | 'CLEANUP_FAILED'
   message: string
   details?: Record<string, unknown>
 }
