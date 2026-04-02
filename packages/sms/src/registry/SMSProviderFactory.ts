@@ -29,7 +29,7 @@ const smsProviderFactories: Record<string, SMSProviderFactory> = {
     }),
   'message-bird': () =>
     new MessageBirdProvider({
-      apiKey: process.env.MESSAGE_BIRD_API_KEY || '',
+      accessKey: process.env.MESSAGE_BIRD_API_KEY || '',
       defaultOriginator: process.env.MESSAGE_BIRD_ORIGINATOR || 'DashLink',
     }),
 }

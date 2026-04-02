@@ -133,7 +133,7 @@ function DashboardPreview({
             <h2 className='text-lg font-semibold text-gray-900'>Today's Schedule</h2>
           </div>
 
-          {data?.schedule.length > 0 ? (
+          {(data?.schedule?.length ?? 0) > 0 ? (
             <div className='divide-y divide-gray-200'>
               {data?.schedule.map((item) => (
                 <div key={item.id} className='px-6 py-4 hover:bg-gray-50'>
@@ -144,14 +144,14 @@ function DashboardPreview({
                     <div className='ml-4 flex-1 min-w-0'>
                       <div className='flex justify-between items-start'>
                         <h3 className='text-base font-medium text-gray-900'>{item.title}</h3>
-                        {item.metadata?.source && (
+                        {item.metadata?.source != null && (
                           <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
-                            {item.metadata.source}
+                            {String(item.metadata.source)}
                           </span>
                         )}
                       </div>
                       <p className='mt-1 text-sm text-gray-600'>
-                        {formatTime(item.startTime)} - {formatTime(item.endTime)}
+                        {formatTime(item.startTime)} - {formatTime(item.endTime ?? '')}
                         {item.location && ` • ${item.location}`}
                       </p>
                       {item.description && (
@@ -199,9 +199,9 @@ function DashboardPreview({
                               {task.priority}
                             </span>
                           )}
-                          {task.metadata?.source && (
+                          {task.metadata?.source != null && (
                             <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800'>
-                              {task.metadata.source}
+                              {String(task.metadata.source)}
                             </span>
                           )}
                         </div>

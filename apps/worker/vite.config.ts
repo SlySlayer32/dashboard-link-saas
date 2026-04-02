@@ -9,7 +9,7 @@ export default defineConfig({
     react(),
     visualizer({
       filename: 'dist/stats.html',
-      open: true,
+      open: false,
       gzipSize: true,
     }),
     VitePWA({
@@ -56,6 +56,12 @@ export default defineConfig({
       }
     }),
   ],
+  build: {
+    rollupOptions: {
+      // Externalize Node.js built-ins pulled in by server-only code in @dashboard-link/shared
+      external: [/^node:/],
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

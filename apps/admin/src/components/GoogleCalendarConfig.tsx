@@ -93,7 +93,6 @@ export function GoogleCalendarConfig({ config, onChange }: GoogleCalendarConfigP
           name='clientId'
           placeholder='Enter Google OAuth Client ID'
           value={(config.clientId as string) || ''}
-          registration={() => ({})}
           onChange={(e) => updateConfig('clientId', e.target.value)}
           helperText='Found in Google Cloud Console under APIs & Services > Credentials'
         />
@@ -104,7 +103,6 @@ export function GoogleCalendarConfig({ config, onChange }: GoogleCalendarConfigP
           type='password'
           placeholder='Enter Google OAuth Client Secret'
           value={(config.clientSecret as string) || ''}
-          registration={() => ({})}
           onChange={(e) => updateConfig('clientSecret', e.target.value)}
           helperText='Keep this secret and never expose it in client-side code'
         />
@@ -114,14 +112,13 @@ export function GoogleCalendarConfig({ config, onChange }: GoogleCalendarConfigP
           name='calendarId'
           placeholder='primary'
           value={(config.calendarId as string) || 'primary'}
-          registration={() => ({})}
           onChange={(e) => updateConfig('calendarId', e.target.value || 'primary')}
           helperText="Use 'primary' for the main calendar or enter a specific calendar ID"
         />
       </div>
 
       {/* OAuth Status */}
-      {(config.accessToken || config.refreshToken) && (
+      {!!(config.accessToken || config.refreshToken) && (
         <div className='bg-green-50 border border-green-200 rounded-md p-4'>
           <div className='flex'>
             <div className='flex-shrink-0'>

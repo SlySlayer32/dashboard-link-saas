@@ -257,6 +257,68 @@ export class MockQueryBuilder implements QueryBuilder {
     const count = await this.count()
     return count > 0
   }
+
+  insert(data: Record<string, unknown>): QueryBuilder {
+    // Add the data to the mock data array
+    const id = crypto.randomUUID()
+    const timestamp = new Date().toISOString()
+    const newRow = {
+      id,
+      ...data,
+      created_at: data.created_at || timestamp,
+      updated_at: data.updated_at || timestamp,
+    }
+    this.data.push(newRow)
+    return this
+  }
+
+  update(data: Record<string, unknown>): QueryBuilder {
+    // Update matching rows in the mock data
+    this.data = this.data.map((row) => {
+      const matches = this.conditions.every((condition) => condition(row))
+      if (matches) {
+        return {
+          ...(row as Record<string, unknown>),
+          ...data,
+          updated_at: new Date().toISOString(),
+        }
+      }
+      return row
+    })
+    return this
+  }
+
+  delete(): QueryBuilder {
+    // Remove matching rows from the mock data
+    this.data = this.data.filter((row) => {
+      const matches = this.conditions.every((condition) => condition(row))
+      return !matches
+    })
+    return this
+  }
+
+  leftJoin(_table: string, _leftKey: string, _rightKey: string): QueryBuilder {
+    // Mock implementation - just return this for chaining
+    // In a real implementation, you'd fetch data from the other table
+    console.warn('leftJoin is simplified in MockAdapter')
+    return this
+  }
+
+  groupBy(..._fields: string[]): QueryBuilder {
+    // Mock implementation - just return this for chaining
+    console.warn('groupBy is simplified in MockAdapter')
+    return this
+  }
+
+  returning(_fields: string): QueryBuilder {
+    // Mock adapter always returns data, so this is a no-op
+    return this
+  }
+
+  raw(_sql: string): unknown {
+    // Mock adapter doesn't support raw SQL
+    return {}
+  }
 }
 
 export class MockTransaction implements Transaction {

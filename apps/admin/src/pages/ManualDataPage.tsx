@@ -5,14 +5,18 @@ import { Link } from 'react-router-dom'
 import { ManualDataList } from '../components/ManualDataList'
 import { ScheduleItemForm } from '../components/ScheduleItemForm'
 import { TaskItemForm } from '../components/TaskItemForm'
-import type { ScheduleItem } from '../hooks/useScheduleItems'
+import type {
+  CreateScheduleItemRequest,
+  ScheduleItem,
+  UpdateScheduleItemRequest,
+} from '../hooks/useScheduleItems'
 import {
   useCreateScheduleItem,
   useDeleteScheduleItem,
   useScheduleItems,
   useUpdateScheduleItem,
 } from '../hooks/useScheduleItems'
-import type { TaskItem } from '../hooks/useTaskItems'
+import type { CreateTaskItemRequest, TaskItem, UpdateTaskItemRequest } from '../hooks/useTaskItems'
 import {
   useCreateTaskItem,
   useDeleteTaskItem,
@@ -34,7 +38,7 @@ export function ManualDataPage() {
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingItem, setEditingItem] = useState<ScheduleItem | TaskItem | null>(null)
 
-  const { data: workersData } = useWorkers()
+  const workersData = useWorkers()
 
   const getDateRange = () => {
     const now = new Date()
@@ -86,15 +90,22 @@ export function ManualDataPage() {
   const updateTaskMutation = useUpdateTaskItem()
   const deleteTaskMutation = useDeleteTaskItem()
 
-  const handleCreateSchedule = async (data: Record<string, unknown>) => {
-    await createScheduleMutation.mutateAsync(data)
+  const handleCreateSchedule = async (
+    data: CreateScheduleItemRequest | UpdateScheduleItemRequest
+  ) => {
+    await createScheduleMutation.mutateAsync(data as CreateScheduleItemRequest)
     setShowScheduleForm(false)
     refetchSchedule()
   }
 
-  const handleUpdateSchedule = async (data: Record<string, unknown>) => {
+  const handleUpdateSchedule = async (
+    data: CreateScheduleItemRequest | UpdateScheduleItemRequest
+  ) => {
     if (!editingItem) return
-    await updateScheduleMutation.mutateAsync({ itemId: editingItem.id, data })
+    await updateScheduleMutation.mutateAsync({
+      itemId: editingItem.id,
+      data: data as UpdateScheduleItemRequest,
+    })
     setEditingItem(null)
     refetchSchedule()
   }
@@ -106,15 +117,18 @@ export function ManualDataPage() {
     }
   }
 
-  const handleCreateTask = async (data: Record<string, unknown>) => {
-    await createTaskMutation.mutateAsync(data)
+  const handleCreateTask = async (data: CreateTaskItemRequest | UpdateTaskItemRequest) => {
+    await createTaskMutation.mutateAsync(data as CreateTaskItemRequest)
     setShowTaskForm(false)
     refetchTasks()
   }
 
-  const handleUpdateTask = async (data: Record<string, unknown>) => {
+  const handleUpdateTask = async (data: CreateTaskItemRequest | UpdateTaskItemRequest) => {
     if (!editingItem) return
-    await updateTaskMutation.mutateAsync({ itemId: editingItem.id, data })
+    await updateTaskMutation.mutateAsync({
+      itemId: editingItem.id,
+      data: data as UpdateTaskItemRequest,
+    })
     setEditingItem(null)
     refetchTasks()
   }
@@ -168,7 +182,7 @@ export function ManualDataPage() {
               className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
             >
               <option value=''>Select a worker</option>
-              {workersData?.workers?.map((worker) => (
+              {workersData.workers.map((worker) => (
                 <option key={worker.id} value={worker.id}>
                   {worker.name}
                 </option>
@@ -262,7 +276,11 @@ export function ManualDataPage() {
             items={currentItems}
             isLoading={isLoading}
             onEdit={handleEditItem}
-            onDelete={activeTab === 'schedule' ? handleDeleteSchedule : handleDeleteTask}
+            onDelete={(item) =>
+              activeTab === 'schedule'
+                ? handleDeleteSchedule(item as ScheduleItem)
+                : handleDeleteTask(item as TaskItem)
+            }
           />
         </div>
       ) : (

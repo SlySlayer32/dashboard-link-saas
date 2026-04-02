@@ -59,6 +59,7 @@ export class WorkerRepository extends BaseRepository<Worker> {
         .query(this.tableName)
         .insert(insertTransformed)
         .returning('*')
+        .build()
 
       return this.transformFromDB(created)
     } catch (error) {
@@ -79,6 +80,7 @@ export class WorkerRepository extends BaseRepository<Worker> {
         .update(transformedData)
         .where({ id })
         .returning('*')
+        .build()
 
       return this.transformFromDB(updated)
     } catch (error) {
@@ -209,8 +211,8 @@ export class WorkerRepository extends BaseRepository<Worker> {
     }
   }
 
-  protected transformToDB(worker: Partial<Worker>): any {
-    const result: any = {}
+  protected transformToDB(worker: Partial<Worker>): Record<string, unknown> {
+    const result: Record<string, unknown> = {}
 
     if (worker.name !== undefined) result.name = worker.name
     if (worker.phone !== undefined) result.phone = worker.phone

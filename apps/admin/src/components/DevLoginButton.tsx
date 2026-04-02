@@ -3,7 +3,7 @@ import { useAuthIsAuthenticated, useDevLogin } from '../store/auth'
 
 export const DevLoginButton: React.FC = () => {
   const isAuthenticated = useAuthIsAuthenticated()
-  const devLogin = useDevLogin()
+  const { devLogin } = useDevLogin()
 
   // Only show in development mode
   if (import.meta.env.MODE !== 'development') {

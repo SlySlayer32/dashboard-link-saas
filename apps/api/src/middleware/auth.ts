@@ -18,6 +18,7 @@ export type AuthContext = {
 
 // Initialize auth service
 const authService = createAuthService('supabase', {
+  provider: 'supabase',
   providerConfig: {
     supabaseUrl: process.env.SUPABASE_URL || '',
     supabaseKey: process.env.SUPABASE_SERVICE_KEY || '',

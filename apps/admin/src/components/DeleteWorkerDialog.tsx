@@ -29,7 +29,7 @@ export function DeleteWorkerDialog({
       }
       confirmText='Delete Worker'
       cancelText='Cancel'
-      variant='danger'
+      variant='destructive'
       isLoading={isLoading}
     />
   )

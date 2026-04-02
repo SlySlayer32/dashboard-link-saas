@@ -1,4 +1,4 @@
-import { Edit, MessageSquare, Power, PowerOff, Trash2 } from 'lucide-react'
+import { MessageSquare, Power, PowerOff, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useSendDashboardLink } from '../hooks/useSMS'
 import { useWorkerMutations } from '../hooks/useWorkers'
@@ -18,7 +18,6 @@ interface WorkerActionsProps {
 
 export function WorkerActions({ worker }: WorkerActionsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
   const [showSMSModal, setShowSMSModal] = useState(false)
 
   const { updateWorker: updateMutation, deleteWorker: deleteMutation } = useWorkerMutations()
@@ -36,15 +35,6 @@ export function WorkerActions({ worker }: WorkerActionsProps) {
         customMessage: data.customMessage || undefined,
       })
       setShowSMSModal(false)
-    } catch {
-      // Error is handled by the mutation
-    }
-  }
-
-  const handleEdit = async (data: unknown) => {
-    try {
-      await updateMutation.mutateAsync({ id: worker.id, data: data as any })
-      setShowEditModal(false)
     } catch {
       // Error is handled by the mutation
     }
@@ -73,14 +63,6 @@ export function WorkerActions({ worker }: WorkerActionsProps) {
           </button>
 
           <div className='grid grid-cols-2 gap-3'>
-            <button
-              onClick={() => setShowEditModal(true)}
-              className='flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors'
-            >
-              <Edit className='h-4 w-4 mr-2' />
-              Edit
-            </button>
-
             <button
               onClick={handleToggleStatus}
               className={`flex items-center justify-center px-4 py-2 rounded-lg transition-colors ${

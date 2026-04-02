@@ -8,9 +8,15 @@ import { useSMSLogs } from '../hooks/useSMSLogs'
 
 export function SMSLogsPage() {
   const [currentPage, setCurrentPage] = useState(1)
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    workerId: string
+    status: SMSLog['status'] | undefined
+    dateFrom: string
+    dateTo: string
+    search: string
+  }>({
     workerId: '',
-    status: '' as SMSLog['status'] | '',
+    status: undefined,
     dateFrom: '',
     dateTo: '',
     search: '',
@@ -25,7 +31,14 @@ export function SMSLogsPage() {
   const sendSMS = useSendSMS()
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }))
+    if (key === 'status') {
+      setFilters((prev) => ({
+        ...prev,
+        status: value === '' ? undefined : (value as SMSLog['status']),
+      }))
+    } else {
+      setFilters((prev) => ({ ...prev, [key]: value }))
+    }
     setCurrentPage(1)
   }
 
@@ -34,14 +47,14 @@ export function SMSLogsPage() {
   const handleResend = async (log: SMSLog) => {
     setResendError(null)
 
-    if (!log.worker_id) {
+    if (!log.workerId) {
       setResendError('Cannot resend message: worker not found')
       return
     }
 
     if (window.confirm('Are you sure you want to resend this message?')) {
       sendSMS.mutate(
-        { workerId: log.worker_id, message: log.message },
+        { workerId: log.workerId, message: log.body },
         {
           onSuccess: () => {
             refetch()
@@ -57,7 +70,7 @@ export function SMSLogsPage() {
   const handleClearFilters = () => {
     setFilters({
       workerId: '',
-      status: '',
+      status: undefined,
       dateFrom: '',
       dateTo: '',
       search: '',
@@ -136,7 +149,7 @@ export function SMSLogsPage() {
             <select
               id='status'
               className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500'
-              value={filters.status}
+              value={filters.status ?? ''}
               onChange={(e) => handleFilterChange('status', e.target.value)}
             >
               <option value=''>All Statuses</option>

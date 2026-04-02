@@ -133,7 +133,7 @@ export function ManualDataList({
                     <div className='flex items-center text-sm text-gray-600'>
                       <Clock className='h-4 w-4 mr-2' />
                       {formatDateTime((item as ScheduleItem).startTime)} -{' '}
-                      {formatDateTime((item as ScheduleItem).endTime)}
+                      {formatDateTime((item as ScheduleItem).endTime ?? '')}
                     </div>
                     {(item as ScheduleItem).location && (
                       <div className='flex items-center text-sm text-gray-600'>

@@ -400,11 +400,11 @@ describe('WorkerService', () => {
         expect(logger.info).toHaveBeenCalledWith(
           'Worker updated successfully',
           expect.objectContaining({
-            operation: 'updateWorker',
+            operation: 'update_worker',
             duration_ms: expect.any(Number),
             success: true,
-            organizationId: mockOrgId,
-            workerId: mockWorkerId,
+            organization_id: mockOrgId,
+            worker_id: mockWorkerId,
           })
         )
       })
@@ -426,7 +426,7 @@ describe('WorkerService', () => {
           'Failed to update worker',
           expect.any(Error),
           expect.objectContaining({
-            operation: 'updateWorker',
+            operation: 'update_worker',
             error_type: 'concurrent_edit',
           })
         )
@@ -591,7 +591,7 @@ describe('WorkerService', () => {
         expect(logger.info).toHaveBeenCalledWith(
           'Workers retrieved successfully',
           expect.objectContaining({
-            operation: 'list_workers',
+            operation: 'get_workers',
             duration_ms: expect.any(Number),
             success: true,
             organization_id: mockOrgId,
@@ -610,7 +610,7 @@ describe('WorkerService', () => {
           'Failed to list workers',
           expect.any(Error),
           expect.objectContaining({
-            operation: 'list_workers',
+            operation: 'get_workers',
             success: false,
             error_type: 'unknown',
           })

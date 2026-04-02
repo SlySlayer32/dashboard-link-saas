@@ -65,21 +65,24 @@ export const errorHandler = (error: unknown, c: Context) => {
     return c.json(errorResponse, status)
   }
 
+  // Normalize to Error for downstream checks
+  const err = error instanceof Error ? error : new Error(String(error))
+
   // Handle validation errors (Zod)
-  if (error.name === 'ZodError') {
-    logger.warn('Validation error', { error, ...errorContext })
+  if (err.name === 'ZodError') {
+    logger.warn('Validation error', errorContext)
 
     const errorResponse = {
       success: false,
       error: {
         code: 'VALIDATION_ERROR',
         message: 'Invalid input data',
-        details: (error as { issues?: unknown[] }).issues?.map(
-          (issue: { path?: unknown[]; message: string }) => ({
-            field: issue.path?.join('.'),
-            message: issue.message,
-          })
-        ),
+        details: (
+          err as unknown as { issues?: Array<{ path?: unknown[]; message: string }> }
+        ).issues?.map((issue) => ({
+          field: issue.path?.join('.'),
+          message: issue.message,
+        })),
         requestId,
       },
     }
@@ -88,8 +91,8 @@ export const errorHandler = (error: unknown, c: Context) => {
   }
 
   // Handle JWT errors
-  if (error.name === 'JwtError' || error.message.includes('jwt')) {
-    logger.warn('JWT error', { error, ...errorContext })
+  if (err.name === 'JwtError' || err.message.includes('jwt')) {
+    logger.warn('JWT error', errorContext)
 
     const errorResponse = {
       success: false,
@@ -104,8 +107,8 @@ export const errorHandler = (error: unknown, c: Context) => {
   }
 
   // Handle database errors
-  if (error.message.includes('duplicate key') || error.message.includes('unique constraint')) {
-    logger.warn('Duplicate entry error', { error, ...errorContext })
+  if (err.message.includes('duplicate key') || err.message.includes('unique constraint')) {
+    logger.warn('Duplicate entry error', errorContext)
 
     const errorResponse = {
       success: false,
@@ -120,8 +123,8 @@ export const errorHandler = (error: unknown, c: Context) => {
   }
 
   // Handle rate limiting errors
-  if (error.message.includes('rate limit')) {
-    logger.warn('Rate limit exceeded', { error, ...errorContext })
+  if (err.message.includes('rate limit')) {
+    logger.warn('Rate limit exceeded', errorContext)
 
     const errorResponse = {
       success: false,
@@ -136,16 +139,14 @@ export const errorHandler = (error: unknown, c: Context) => {
   }
 
   // Handle all other errors
-  logger.error('Unhandled error', error as Error, errorContext)
+  logger.error('Unhandled error', err, errorContext)
 
   const errorResponse = {
     success: false,
     error: {
       code: 'INTERNAL_ERROR',
       message:
-        process.env.NODE_ENV === 'production'
-          ? 'An internal server error occurred'
-          : (error as Error).message,
+        process.env.NODE_ENV === 'production' ? 'An internal server error occurred' : err.message,
       requestId,
     },
   }

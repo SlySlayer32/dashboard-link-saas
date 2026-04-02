@@ -55,7 +55,11 @@ export class OrganizationRepository extends BaseRepository<Organization> {
       const insertData = this.setCreateTimestamps(data)
       const transformedData = this.transformToDB(insertData)
 
-      const created = await this.adapter.query(this.tableName).where(transformedData).first()
+      const created = await this.adapter
+        .query(this.tableName)
+        .insert(transformedData)
+        .returning('*')
+        .first()
 
       return this.transformFromDB(created)
     } catch (error) {
@@ -73,7 +77,9 @@ export class OrganizationRepository extends BaseRepository<Organization> {
 
       const result = await this.adapter
         .query(this.tableName)
-        .where({ id, ...transformedData })
+        .update(transformedData)
+        .where({ id })
+        .returning('*')
         .first()
 
       return this.transformFromDB(result)
@@ -86,7 +92,7 @@ export class OrganizationRepository extends BaseRepository<Organization> {
     this.validateId(id)
 
     try {
-      await this.adapter.query(this.tableName).where({ id }).first()
+      await this.adapter.query(this.tableName).delete().where({ id })
     } catch (error) {
       throw this.handleError(error, 'delete')
     }

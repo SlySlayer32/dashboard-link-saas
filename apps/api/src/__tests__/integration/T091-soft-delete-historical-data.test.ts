@@ -8,7 +8,7 @@
  * unlike other tests that use mocks, because we need to verify database constraints work correctly
  */
 
-import { WorkerRepository } from '@dashboard-link/database'
+import { DIContainer, WorkerRepository } from '@dashboard-link/database'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { supabase } from '../../lib/db'
 import { WorkerService } from '../../services/WorkerService'
@@ -47,8 +47,8 @@ describe('T091: Soft Delete Preserves Historical Data', () => {
     orgId = orgResult.data.id
 
     // Set tenant context for all subsequent queries using Supabase RPC
-    const { error: tenantError } = await supabase.rpc('set_tenant_id', {
-      tenant_id_value: orgId,
+    const { error: tenantError } = await supabase.rpc('set_tenant_context', {
+      tenant_id: orgId,
     })
     if (tenantError) throw tenantError
 
@@ -113,7 +113,7 @@ describe('T091: Soft Delete Preserves Historical Data', () => {
 
   afterEach(async () => {
     // Clear tenant context
-    await supabase.rpc('set_tenant_id', { tenant_id_value: '' })
+    await supabase.rpc('set_tenant_context', { tenant_id: '00000000-0000-0000-0000-000000000000' })
 
     // Cleanup test data in correct order due to foreign key constraints
     await supabase.from('access_logs').delete().eq('organization_id', orgId)

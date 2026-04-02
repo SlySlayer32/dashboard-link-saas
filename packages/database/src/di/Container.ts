@@ -52,7 +52,10 @@ export class DIContainer {
     switch (database.type) {
       case 'supabase': {
         // Type assertion for Supabase client
-        return createSupabaseAdapter(database.connection as any, database.config || {})
+        return createSupabaseAdapter(
+          database.connection as Parameters<typeof createSupabaseAdapter>[0],
+          database.config || {}
+        )
       }
 
       case 'postgresql':
@@ -227,5 +230,5 @@ export async function createContainerFromEnvironment(): Promise<DIContainer> {
     )
   }
 
-  return new DIContainer(config)
+  return initializeContainer(config)
 }

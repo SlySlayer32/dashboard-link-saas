@@ -1,6 +1,37 @@
 // Standard data contracts for the CleanConnect plugin system
 // These interfaces define the stable contract between the core system and plugins
 
+export interface PluginInfo {
+  id: string
+  name: string
+  description: string
+  version: string
+  category: string
+  features: string[]
+  webhookSupported?: boolean
+  documentationUrl?: string
+}
+
+export interface PluginTestResult {
+  success: boolean
+  message: string
+  timestamp: string
+}
+
+export interface PluginWithConfig extends PluginInfo {
+  enabled: boolean
+  configured: boolean
+  config: Record<string, unknown>
+  status?: {
+    id: string
+    enabled: boolean
+    configured: boolean
+    connected: boolean
+    lastTested?: string
+    error?: string
+  }
+}
+
 export interface PluginResponse<T> {
   success: boolean
   data: T[]

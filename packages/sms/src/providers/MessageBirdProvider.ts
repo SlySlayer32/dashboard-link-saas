@@ -96,7 +96,7 @@ export class MessageBirdProvider extends BaseSMSProvider {
 
       const result = (await response.json()) as MessageBirdMessageResponse
 
-      return this.createSuccessResult(result.id, result, this.calculateCost(result))
+      return this.createSuccessResult(result.id ?? '', result, this.calculateCost(result))
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       return this.createErrorResult(errorMessage, 'temporary')
@@ -117,11 +117,11 @@ export class MessageBirdProvider extends BaseSMSProvider {
       let status: SMSStatus['status'] = 'unknown'
       const recipients = this.getRecipientItems(data.recipients)
       if (recipients[0]) {
-        status = this.mapMessageBirdStatus(recipients[0].status)
+        status = this.mapMessageBirdStatus(recipients[0].status ?? 'unknown')
       }
 
       return this.createStatus(
-        messageId,
+        messageId ?? '',
         status,
         recipients[0]?.statusDatetime,
         recipients[0]?.statusReason,

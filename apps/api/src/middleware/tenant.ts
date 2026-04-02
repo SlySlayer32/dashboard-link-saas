@@ -31,9 +31,8 @@ export const tenantContextMiddleware = createMiddleware(async (c, next) => {
     })
 
     if (error) {
-      logger.error('Failed to set tenant context', {
+      logger.error('Failed to set tenant context', new Error(error.message), {
         organizationId,
-        error: error.message,
         details: error,
       })
       throw new Error(`Failed to set tenant context: ${error.message}`)
@@ -48,26 +47,5 @@ export const tenantContextMiddleware = createMiddleware(async (c, next) => {
   }
 })
 
-/**
- * Create tenant context function
- * This SQL function should be added to the database via migration
- */
-const tenantContextSQL = `
--- Function to set tenant context for RLS policies
-CREATE OR REPLACE FUNCTION set_tenant_context(tenant_id UUID)
-RETURNS VOID AS $$
-BEGIN
-  -- Set the tenant context that RLS policies can access
-  PERFORM set_config('app.tenant_id', tenant_id::text, true);
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Grant execute permission to authenticated users
-GRANT EXECUTE ON FUNCTION set_tenant_context(UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION set_tenant_context(UUID) TO service_role;
-`
-
-/**
- * Migration helper - add this to a new migration file
- */
-export const tenantContextMigration = tenantContextSQL
+// The set_tenant_context(UUID) SQL function is managed via supabase/migrations.
+// Only service_role can call it — see 20260402000000_fix_tenant_context_permissions.sql

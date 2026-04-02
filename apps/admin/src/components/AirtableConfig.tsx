@@ -69,7 +69,6 @@ export function AirtableConfig({ config, onChange }: AirtableConfigProps) {
           type='password'
           placeholder='Enter Airtable API Key'
           value={(config.apiKey as string) || ''}
-          registration={() => ({})}
           onChange={(e) => updateConfig('apiKey', e.target.value)}
           helperText='Found in Airtable Account settings > Developer hub > Personal access tokens'
         />
@@ -79,7 +78,6 @@ export function AirtableConfig({ config, onChange }: AirtableConfigProps) {
           name='baseId'
           placeholder='Enter Airtable Base ID'
           value={(config.baseId as string) || ''}
-          registration={() => ({})}
           onChange={(e) => updateConfig('baseId', e.target.value)}
           helperText='Found in the API documentation page of your base'
         />
@@ -89,7 +87,6 @@ export function AirtableConfig({ config, onChange }: AirtableConfigProps) {
           name='tableName'
           placeholder='Enter table name'
           value={(config.tableName as string) || ''}
-          registration={() => ({})}
           onChange={(e) => updateConfig('tableName', e.target.value)}
           helperText='Leave empty to sync all tables in the base'
         />

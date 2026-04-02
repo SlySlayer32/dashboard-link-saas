@@ -24,7 +24,7 @@ interface FormFieldProps {
   required?: boolean
   disabled?: boolean
   error?: FieldError
-  registration: UseFormRegister<FormFieldValues>
+  registration?: UseFormRegister<FormFieldValues>
   validation?: RegisterOptions
   className?: string
   helperText?: string
@@ -63,7 +63,7 @@ export function FormField({
             ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500'
             : 'border-gray-300'
         } ${disabled ? 'bg-gray-50 text-gray-500' : ''}`}
-        {...registration(name, validation)}
+        {...(registration ? registration(name, validation) : {})}
         onChange={onChange}
         value={value}
       />
@@ -84,7 +84,7 @@ interface FormTextareaProps {
   required?: boolean
   disabled?: boolean
   error?: FieldError
-  registration: UseFormRegister<FormFieldValues>
+  registration?: UseFormRegister<FormFieldValues>
   validation?: RegisterOptions
   className?: string
   helperText?: string
@@ -120,7 +120,7 @@ export function FormTextarea({
             ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500'
             : 'border-gray-300'
         } ${disabled ? 'bg-gray-50 text-gray-500' : ''}`}
-        {...registration(name, validation)}
+        {...(registration ? registration(name, validation) : {})}
       />
       {error && (
         <p className='mt-1 text-sm text-red-600' id={`${name}-error`}>
@@ -140,7 +140,7 @@ interface FormSelectProps {
   required?: boolean
   disabled?: boolean
   error?: FieldError
-  registration: UseFormRegister<FormFieldValues>
+  registration?: UseFormRegister<FormFieldValues>
   validation?: RegisterOptions
   className?: string
   helperText?: string
@@ -173,7 +173,7 @@ export function FormSelect({
             ? 'border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500'
             : 'border-gray-300'
         } ${disabled ? 'bg-gray-50 text-gray-500' : ''}`}
-        {...registration(name, validation)}
+        {...(registration ? registration(name, validation) : {})}
       >
         {placeholder && (
           <option value='' disabled>
@@ -202,7 +202,7 @@ interface FormCheckboxProps {
   required?: boolean
   disabled?: boolean
   error?: FieldError
-  registration: UseFormRegister<FormFieldValues>
+  registration?: UseFormRegister<FormFieldValues>
   validation?: RegisterOptions
   className?: string
   helperText?: string
@@ -232,7 +232,7 @@ export function FormCheckbox({
             className={`focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded ${
               error ? 'border-red-300' : ''
             } ${disabled ? 'bg-gray-50' : ''}`}
-            {...registration(name, validation)}
+            {...(registration ? registration(name, validation) : {})}
           />
         </div>
         <div className='ml-3 text-sm'>

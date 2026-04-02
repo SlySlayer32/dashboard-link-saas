@@ -3,7 +3,7 @@ import { MagicLinkAuth } from '@dashboard-link/ui'
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import {
-  useAuth,
+  useAuthActions,
   useAuthError,
   useAuthIsAuthenticated,
   useAuthIsLoading,
@@ -14,7 +14,7 @@ export function LoginPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { login, clearError } = useAuth()
+  const { login, clearError } = useAuthActions()
   const isAuthenticated = useAuthIsAuthenticated()
   const isLoading = useAuthIsLoading()
   const error = useAuthError()

@@ -47,6 +47,19 @@ export interface QueryBuilder {
   first(): Promise<unknown>
   count(): Promise<number>
   exists(): Promise<boolean>
+
+  // CRUD operations
+  insert(data: Record<string, unknown>): QueryBuilder
+  update(data: Record<string, unknown>): QueryBuilder
+  delete(): QueryBuilder
+
+  // Advanced query methods
+  leftJoin(table: string, leftKey: string, rightKey: string): QueryBuilder
+  groupBy(...fields: string[]): QueryBuilder
+  returning(fields: string): QueryBuilder
+
+  // Raw SQL support (use sparingly)
+  raw(sql: string): unknown
 }
 
 export interface DatabaseAdapter {
@@ -153,6 +166,17 @@ export interface SMSLog extends BaseEntity {
   provider: string
   providerMessageId?: string
   cost?: number
+  metadata?: Record<string, unknown>
+}
+
+export interface TaskItem extends BaseEntity {
+  workerId: string
+  organizationId: string
+  title: string
+  description?: string
+  dueDate?: string
+  priority: 'low' | 'medium' | 'high'
+  status: 'pending' | 'in_progress' | 'completed'
   metadata?: Record<string, unknown>
 }
 

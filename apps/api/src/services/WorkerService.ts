@@ -36,9 +36,13 @@ export interface WorkerStats {
 }
 
 export class WorkerService {
-  constructor(private workerRepo: WorkerRepository) { }
+  constructor(private workerRepo: WorkerRepository) {}
 
   async getWorkers(organizationId: string): Promise<Worker[]> {
+    if (!organizationId) {
+      throw new Error('Organization ID is required')
+    }
+
     const startTime = Date.now()
 
     try {
@@ -189,7 +193,8 @@ export class WorkerService {
           success: false,
           organization_id: organizationId,
           error_type:
-            error instanceof Error && error.message.includes('duplicate')
+            error instanceof Error &&
+            (error.message.includes('duplicate') || error.message.includes('already in use'))
               ? 'duplicate_phone'
               : 'unknown',
         }
@@ -297,7 +302,8 @@ export class WorkerService {
           organization_id: organizationId,
           worker_id: id,
           error_type:
-            error instanceof Error && error.message.includes('duplicate')
+            error instanceof Error &&
+            (error.message.includes('duplicate') || error.message.includes('already in use'))
               ? 'duplicate_phone'
               : serviceError.statusCode === 409
                 ? 'concurrent_edit'
@@ -520,6 +526,10 @@ export class WorkerService {
         try {
           return await this.updateWorker(id, { active }, organizationId)
         } catch (error) {
+          console.error(
+            `[bulkUpdateStatus] Failed to update worker ${id}:`,
+            error instanceof Error ? error.message : error
+          )
           return null
         }
       })

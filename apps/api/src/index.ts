@@ -1,30 +1,39 @@
+import { createContainerFromEnvironment } from '@dashboard-link/database'
 import { serve } from '@hono/node-server'
 import dotenv from 'dotenv'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
-import type { AppContext } from './types'
-import v1 from './v1' // Import versioned API
 
 // Import middleware and config
 import { validateRuntimeDependencies } from './config/env'
-import { cacheMiddleware, createCacheConfig } from './middleware/cache'
 import { errorHandler } from './middleware/error-handler'
+import type { AppContextVariables } from './types'
 import { logger } from './utils/logger.js'
 
 // Initialize SMS system
 import { initializeSMSSystem } from '@dashboard-link/sms'
-
-// Import routes
-// import dashboards from './routes/dashboards'
-// import plugins from './routes/plugins'
-// import tokens from './routes/tokens' // Temporarily disabled
 
 // Load environment variables
 dotenv.config()
 
 // Validate critical environment variables
 validateRuntimeDependencies()
+
+// R02: Initialize DI container BEFORE importing routes (workers.ts calls getWorkerRepository at module level)
+try {
+  await createContainerFromEnvironment()
+  logger.info('DI container initialized')
+} catch (error) {
+  logger.error(
+    'Failed to initialize DI container',
+    error instanceof Error ? error : new Error(String(error))
+  )
+  process.exit(1)
+}
+
+// Import routes AFTER container is initialized
+const { default: v1 } = await import('./v1.js')
 
 // Initialize SMS system with providers
 try {
@@ -37,34 +46,35 @@ try {
   // Continue startup - SMS will be unavailable
 }
 
+const APP_VERSION = '0.1.0'
+
 const app = new Hono<{
-  Variables: AppContext['Variables']
+  Variables: AppContextVariables
 }>()
 
 // Middleware
 app.use('*', honoLogger())
+
+// R18: Only include localhost origins in development
+const corsOrigins = [process.env.APP_URL || 'http://localhost:5173']
+if (process.env.NODE_ENV !== 'production') {
+  corsOrigins.push('http://localhost:5173', 'http://localhost:5174')
+}
 app.use(
   '*',
   cors({
-    origin: [
-      process.env.APP_URL || 'http://localhost:5173',
-      'http://localhost:5173', // Admin
-      'http://localhost:5174', // Worker
-    ],
+    origin: corsOrigins,
     credentials: true,
   })
 )
 
-// Apply cache middleware to routes under /api/v1/
-app.use('/api/v1/workers', cacheMiddleware(createCacheConfig('workers')))
-app.use('/api/v1/dashboard', cacheMiddleware(createCacheConfig('dashboard')))
-app.use('/api/v1/dashboards/*', cacheMiddleware(createCacheConfig('dashboard')))
+// Cache middleware is now applied inside v1.ts AFTER auth+tenant middleware (R07)
 
 // Health check
 app.get('/', (c) => {
   return c.json({
     service: 'Dashboard Link SaaS API',
-    version: '0.1.0',
+    version: APP_VERSION,
     status: 'ok',
   })
 })
@@ -73,7 +83,7 @@ app.get('/health', (c) => {
   return c.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '1.0.0',
+    version: APP_VERSION,
   })
 })
 

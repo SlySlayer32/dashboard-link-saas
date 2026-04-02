@@ -71,7 +71,6 @@ export function NotionConfig({ config, onChange }: NotionConfigProps) {
           type='password'
           placeholder='Enter Notion Integration Secret'
           value={(config.integrationSecret as string) || ''}
-          registration={() => ({})}
           onChange={(e) => updateConfig('integrationSecret', e.target.value)}
           helperText='Found in Notion under Settings > My connections > Develop your own integrations'
         />
@@ -81,7 +80,6 @@ export function NotionConfig({ config, onChange }: NotionConfigProps) {
           name='databaseId'
           placeholder='Enter Notion Database ID'
           value={(config.databaseId as string) || ''}
-          registration={() => ({})}
           onChange={(e) => updateConfig('databaseId', e.target.value)}
           helperText='Found in the URL of your Notion database (the long string after /?v= and before &)'
         />

@@ -1,22 +1,8 @@
-import { PluginInfo, PluginTestResult } from '@dashboard-link/shared'
+import { PluginTestResult, PluginWithConfig } from '@dashboard-link/shared'
 import { Button, LoadingSpinner } from '@dashboard-link/ui'
 import { useEffect, useState } from 'react'
 import { PluginCard } from '../components/PluginCard'
 import { PluginConfigForm } from '../components/PluginConfigForm'
-
-interface PluginWithConfig extends PluginInfo {
-  enabled: boolean
-  configured: boolean
-  config: Record<string, unknown>
-  status?: {
-    id: string
-    enabled: boolean
-    configured: boolean
-    connected: boolean
-    lastTested?: string
-    error?: string
-  }
-}
 
 export function PluginsPage() {
   const [plugins, setPlugins] = useState<PluginWithConfig[]>([])
@@ -166,7 +152,9 @@ export function PluginsPage() {
               ? {
                   ...p,
                   status: {
-                    ...p.status,
+                    id: p.status?.id ?? pluginId,
+                    enabled: p.status?.enabled ?? p.enabled,
+                    configured: p.status?.configured ?? p.configured,
                     connected: data.data.success,
                     lastTested: data.data.timestamp,
                     error: data.data.success ? undefined : 'Connection test failed',
@@ -187,7 +175,9 @@ export function PluginsPage() {
             ? {
                 ...p,
                 status: {
-                  ...p.status,
+                  id: p.status?.id ?? pluginId,
+                  enabled: p.status?.enabled ?? p.enabled,
+                  configured: p.status?.configured ?? p.configured,
                   connected: false,
                   error,
                 },

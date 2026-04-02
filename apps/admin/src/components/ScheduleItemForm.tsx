@@ -51,7 +51,6 @@ function formatDateTimeForInput(dateString?: string): string {
 }
 
 export function ScheduleItemForm({
-  _workerId,
   initialData,
   onSubmit,
   onCancel,

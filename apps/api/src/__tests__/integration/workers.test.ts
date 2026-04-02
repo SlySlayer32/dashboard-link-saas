@@ -9,11 +9,11 @@
  * - T083: DELETE /api/v1/workers/:id (soft delete, not found, tenant isolation, verify deletedAt)
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { Hono } from 'hono'
-import type { Worker } from '@dashboard-link/shared'
-import { WorkerService } from '../../services/WorkerService'
 import type { WorkerRepository } from '@dashboard-link/database'
+import type { Worker } from '@dashboard-link/shared'
+import { Hono } from 'hono'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { WorkerService } from '../../services/WorkerService'
 
 // Mock dependencies
 vi.mock('../../utils/logger.js', () => ({
@@ -38,7 +38,7 @@ vi.mock('@dashboard-link/shared', async () => {
 })
 
 describe('Worker API Integration Tests', () => {
-  let app: Hono
+  let app: Hono<{ Variables: { userId: string; organizationId: string } }>
   let mockRepo: WorkerRepository
   let service: WorkerService
 
@@ -61,7 +61,15 @@ describe('Worker API Integration Tests', () => {
     ...overrides,
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Reset formatAustralianPhone to default mock (prevents leak from phone validation tests)
+    const { formatAustralianPhone } = await import('@dashboard-link/shared')
+    vi.mocked(formatAustralianPhone).mockImplementation((phone: string) => {
+      if (phone.startsWith('+61')) return phone
+      if (phone.startsWith('04')) return `+614${phone.slice(2).replace(/[\s-]/g, '')}`
+      throw new Error('Invalid Australian phone number')
+    })
+
     // Create mock repository
     mockRepo = {
       findByOrganizationId: vi.fn(),

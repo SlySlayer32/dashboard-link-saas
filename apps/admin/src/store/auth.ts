@@ -6,6 +6,8 @@ interface User {
   id: string
   email: string
   name: string
+  organization_id?: string
+  role?: 'admin' | 'owner'
 }
 
 // Auth state interface
@@ -13,6 +15,7 @@ interface AuthState {
   user: User | null
   token: string | null
   refreshToken: string | null
+  expiresAt: string | null
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
@@ -31,6 +34,8 @@ interface AuthState {
   logout: () => void
   clearError: () => void
   checkAuth: () => Promise<void>
+  refreshAuthToken: () => Promise<void>
+  setLoading: (loading: boolean) => void
 }
 
 // Mock auth service for now (since we don't have the full auth service implemented)
@@ -71,6 +76,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       refreshToken: null,
+      expiresAt: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
@@ -175,7 +181,36 @@ export const useAuthStore = create<AuthState>()(
       },
 
       clearError: () => {
-        set({ error: null })
+        set({ error: null, isLoading: false })
+      },
+
+      refreshAuthToken: async () => {
+        const { refreshToken } = get()
+        if (!refreshToken) throw new Error('No refresh token available')
+
+        const response = await fetch('/api/v1/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        })
+
+        const data = await response.json()
+        if (!response.ok) {
+          set({
+            user: null,
+            token: null,
+            refreshToken: null,
+            expiresAt: null,
+            isAuthenticated: false,
+          })
+          throw new Error(data.message || 'Token refresh failed')
+        }
+
+        set({ token: data.token })
+      },
+
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading })
       },
 
       checkAuth: async () => {

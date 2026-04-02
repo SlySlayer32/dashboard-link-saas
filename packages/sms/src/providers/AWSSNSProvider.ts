@@ -23,9 +23,12 @@ export class AWSSNSProvider extends BaseSMSProvider {
   readonly version = '1.0.0'
   readonly description = 'Amazon Simple Notification Service SMS provider'
 
-  private accessKeyId: string
-  private secretAccessKey: string
-  private region: string
+  // @ts-expect-error - Stored for future AWS SDK implementation
+  private _accessKeyId: string
+  // @ts-expect-error - Stored for future AWS SDK implementation
+  private _secretAccessKey: string
+  // @ts-expect-error - Stored for future AWS SDK implementation
+  private _region: string
   private defaultSenderId?: string
 
   constructor(config: {
@@ -35,9 +38,9 @@ export class AWSSNSProvider extends BaseSMSProvider {
     defaultSenderId?: string
   }) {
     super()
-    this.accessKeyId = config.accessKeyId
-    this.secretAccessKey = config.secretAccessKey
-    this.region = config.region
+    this._accessKeyId = config.accessKeyId
+    this._secretAccessKey = config.secretAccessKey
+    this._region = config.region
     this.defaultSenderId = config.defaultSenderId
   }
 
@@ -230,11 +233,12 @@ export class AWSSNSProvider extends BaseSMSProvider {
     // - this.secretAccessKey (for AWS authentication)
     // - this.region (for AWS endpoint)
 
-    const _credentials = {
-      accessKeyId: this.accessKeyId,
-      secretAccessKey: this.secretAccessKey,
-      region: this.region,
-    }
+    // Credentials would be used here if AWS SDK was installed
+    // const credentials = {
+    //   accessKeyId: this.accessKeyId,
+    //   secretAccessKey: this.secretAccessKey,
+    //   region: this.region,
+    // }
 
     throw new Error(
       'AWS SNS provider requires AWS SDK for JavaScript (@aws-sdk/client-sns). ' +
@@ -255,8 +259,8 @@ export class AWSSNSProvider extends BaseSMSProvider {
     for (const [key, value] of Object.entries(params)) {
       const fullKey = prefix ? `${prefix}.${key}` : key
 
-      if (typeof value === 'object' && !Array.isArray(value)) {
-        Object.assign(flattened, this.flattenParams(value, fullKey))
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        Object.assign(flattened, this.flattenParams(value as Record<string, unknown>, fullKey))
       } else if (Array.isArray(value)) {
         value.forEach((item, index) => {
           if (typeof item === 'object') {

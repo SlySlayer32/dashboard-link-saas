@@ -11,7 +11,8 @@
     "dev": "tsc --watch",
     "lint": "eslint --config ../../eslint.config.js src",
     "test": "vitest",
-    "clean": "rm -rf dist"
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
   },
   "dependencies": {
     "@dashboard-link/shared": "workspace:*",

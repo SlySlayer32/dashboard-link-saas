@@ -137,7 +137,7 @@ function validateEnv() {
         return `${path}: ${err.message}`
       })
 
-      logger.error('Invalid environment variables:', { errors: errorMessages })
+      logger.error('Invalid environment variables:', undefined, { errors: errorMessages })
 
       // In production, fail fast
       if (process.env.NODE_ENV === 'production') {
@@ -153,7 +153,7 @@ function validateEnv() {
       logger.warn('\nSome features may not work correctly.')
     }
 
-    // Return partial env for development
+    // Return partial env for development — cast to Env so downstream config access compiles
     return {
       NODE_ENV: process.env.NODE_ENV || 'development',
       PORT: parseInt(process.env.PORT || '3000'),
@@ -162,13 +162,31 @@ function validateEnv() {
       SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
       SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY || '',
       JWT_SECRET: process.env.JWT_SECRET || 'development-secret-key-that-is-not-secure',
+      JWT_ALGORITHM: 'HS256',
       APP_URL: process.env.APP_URL || 'http://localhost:5173',
       API_URL: process.env.API_URL || 'http://localhost:3000',
       LOG_LEVEL: (process.env.LOG_LEVEL as 'debug' | 'info' | 'warn' | 'error') || 'info',
       DATABASE_URL: process.env.DATABASE_URL,
       DB_TYPE: process.env.DB_TYPE || 'supabase',
-      // Add other variables with defaults
-    }
+      TOKEN_PROVIDER: 'database',
+      TOKEN_TABLE_NAME: 'tokens',
+      TOKEN_DEFAULT_EXPIRY: 3600,
+      TOKEN_REFRESH_EXPIRY: 2592000,
+      TOKEN_CLEANUP_INTERVAL: 3600,
+      TOKEN_HASH: true,
+      TOKEN_CLEANUP: true,
+      DEFAULT_SMS_PROVIDER: 'mobile-message',
+      MOBILE_MESSAGE_SENDER_ID: 'DashLink',
+      TWILIO_DEFAULT_FROM: 'DashLink',
+      RATE_LIMIT_WINDOW_MS: 900000,
+      RATE_LIMIT_MAX_REQUESTS: 100,
+      EXTERNAL_API_TIMEOUT: 30000,
+      ENABLE_ANALYTICS: false,
+      ENABLE_CACHE: true,
+      CACHE_TTL: 300,
+      DB_CACHE_ENABLED: true,
+      DB_CACHE_TTL: 300,
+    } as Env
   }
 }
 
@@ -192,16 +210,8 @@ export function getDatabaseUrl(): string {
 
 // Helper function to get SMTP config if available
 export function getSmtpConfig() {
-  if (!env.SMTP_HOST || !env.SMTP_PORT) {
-    return null
-  }
-
-  return {
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASS,
-  }
+  // SMTP not yet in env schema — return null until configured
+  return null
 }
 
 // Validate critical runtime dependencies
@@ -210,7 +220,7 @@ export function validateRuntimeDependencies() {
   const missing = criticalVars.filter((varName) => !process.env[varName])
 
   if (missing.length > 0) {
-    logger.error('Missing critical environment variables', { missing })
+    logger.error('Missing critical environment variables', undefined, { missing })
 
     if (env.NODE_ENV === 'production') {
       logger.error('\n❌ Missing critical environment variables:')

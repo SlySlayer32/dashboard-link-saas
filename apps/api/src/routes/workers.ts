@@ -12,7 +12,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { authMiddleware } from '../middleware/auth'
 import { rateLimit } from '../middleware/rate-limit'
-import { tenantMiddleware } from '../middleware/tenant'
+import { tenantContextMiddleware as tenantMiddleware } from '../middleware/tenant'
 import { WorkerService } from '../services/WorkerService'
 import type { AppContextVariables } from '../types'
 import { logger } from '../utils/logger.js'
@@ -73,20 +73,17 @@ workers.get(
       if (query.search) {
         workerList = query.include_deleted
           ? await workerService.searchWorkersIncludingDeleted(
-            organizationId,
-            query.search,
-            query.limit
-          )
+              organizationId,
+              query.search,
+              query.limit
+            )
           : await workerService.searchWorkers(organizationId, query.search, query.limit)
       } else if (query.active !== undefined) {
         // Handle active filtering
         workerList = query.include_deleted
           ? await workerService.searchWorkersIncludingDeleted(organizationId, '', query.limit)
           : await workerService.getWorkersByActiveStatus(organizationId, query.active)
-        // Filter by active status if not including deleted
-        if (!query.include_deleted) {
-          workerList = workerList.filter(worker => worker.active === query.active)
-        }
+        // getWorkersByActiveStatus already filters by active status — no redundant filter needed
       } else if (query.include_deleted) {
         workerList = await workerService.getWorkersIncludingDeleted(organizationId, query.limit)
       } else {
@@ -114,6 +111,48 @@ workers.get(
     }
   }
 )
+
+// Search workers (must be before /:id to avoid Hono matching "search" as :id)
+workers.get('/search/:query', async (c) => {
+  const query = c.req.param('query')
+  const organizationId = c.get('organizationId')
+  const limit = parseInt(c.req.query('limit') || '10')
+
+  if (!organizationId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  try {
+    const workers = await workerService.searchWorkers(organizationId, query, limit)
+    return c.json(workers)
+  } catch (error) {
+    logger.error(
+      'Failed to search workers',
+      error instanceof Error ? error : new Error(String(error))
+    )
+    return c.json({ error: 'Failed to search workers' }, 500)
+  }
+})
+
+// Get active workers (must be before /:id to avoid Hono matching "active" as :id)
+workers.get('/active/list', async (c) => {
+  const organizationId = c.get('organizationId')
+
+  if (!organizationId) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  try {
+    const workers = await workerService.getActiveWorkers(organizationId)
+    return c.json(workers)
+  } catch (error) {
+    logger.error(
+      'Failed to retrieve active workers',
+      error instanceof Error ? error : new Error(String(error))
+    )
+    return c.json({ error: 'Failed to retrieve active workers' }, 500)
+  }
+})
 
 // Get worker by ID with SMS statistics
 workers.get('/:id/stats', async (c) => {
@@ -324,50 +363,6 @@ workers.delete('/:id', async (c) => {
   }
 })
 
-// Additional endpoints for enhanced functionality
-
-// Search workers
-workers.get('/search/:query', async (c) => {
-  const query = c.req.param('query')
-  const organizationId = c.get('organizationId')
-  const limit = parseInt(c.req.query('limit') || '10')
-
-  if (!organizationId) {
-    return c.json({ error: 'Unauthorized' }, 401)
-  }
-
-  try {
-    const workers = await workerService.searchWorkers(organizationId, query, limit)
-    return c.json(workers)
-  } catch (error) {
-    logger.error(
-      'Failed to search workers',
-      error instanceof Error ? error : new Error(String(error))
-    )
-    return c.json({ error: 'Failed to search workers' }, 500)
-  }
-})
-
-// Get active workers
-workers.get('/active/list', async (c) => {
-  const organizationId = c.get('organizationId')
-
-  if (!organizationId) {
-    return c.json({ error: 'Unauthorized' }, 401)
-  }
-
-  try {
-    const workers = await workerService.getActiveWorkers(organizationId)
-    return c.json(workers)
-  } catch (error) {
-    logger.error(
-      'Failed to retrieve active workers',
-      error instanceof Error ? error : new Error(String(error))
-    )
-    return c.json({ error: 'Failed to retrieve active workers' }, 500)
-  }
-})
-
 // Activate worker
 workers.post('/:id/activate', async (c) => {
   const id = c.req.param('id')
@@ -420,7 +415,11 @@ workers.post('/:id/restore', async (c) => {
   }
 
   try {
-    const worker = await workerService.updateWorker(id, { deletedAt: null }, organizationId)
+    const worker = await workerService.updateWorker(
+      id,
+      { active: true } as Parameters<typeof workerService.updateWorker>[1],
+      organizationId
+    )
     return c.json({ worker, message: 'Worker restored successfully' })
   } catch (error) {
     if (error instanceof Error && error.message === 'Worker not found') {
@@ -436,4 +435,3 @@ workers.post('/:id/restore', async (c) => {
 })
 
 export { workers }
-

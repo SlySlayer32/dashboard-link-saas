@@ -1,24 +1,23 @@
-import type { TenantContext } from '@dashboard-link/shared'
 import { zValidator } from '@hono/zod-validator'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { Hono } from 'hono'
 import { z } from 'zod'
+import type { AppContextVariables } from '../types'
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_KEY || ''
-)
+// Lazy-initialized Supabase admin client (service key, bypasses RLS intentionally
+// because we enforce tenant scoping via explicit .eq('organization_id', ...) filters)
+let _supabaseAdmin: SupabaseClient | null = null
+function getSupabaseAdmin(): SupabaseClient {
+  _supabaseAdmin ??= createClient(
+    process.env.SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_KEY || ''
+  )
+  return _supabaseAdmin
+}
 
-// Create tokens router with tenant context
+// Create tokens router — auth + tenant middleware applied by v1.ts
 const tokens = new Hono<{
-  Variables: TenantContext & {
-    tenant: TenantContext
-    requestId: string
-    tenantId: string
-    userId: string
-    userRole: string
-  }
+  Variables: AppContextVariables
 }>()
 
 // Zod validation schemas
@@ -45,10 +44,18 @@ const listTokensSchema = z.object({
  * List tokens with pagination and filters
  */
 tokens.get('/', zValidator('query', listTokensSchema), async (c) => {
-  const tenant = c.get('tenant')
+  const organizationId = c.get('organizationId')
   const query = c.req.valid('query')
 
+  if (!organizationId) {
+    return c.json(
+      { success: false, error: { code: 'UNAUTHORIZED', message: 'Missing organization context' } },
+      401
+    )
+  }
+
   try {
+    const supabase = getSupabaseAdmin()
     // Build base query
     let dbQuery = supabase
       .from('dashboard_tokens')
@@ -63,7 +70,7 @@ tokens.get('/', zValidator('query', listTokensSchema), async (c) => {
       `,
         { count: 'exact' }
       )
-      .eq('organization_id', tenant.orgId)
+      .eq('organization_id', organizationId)
       .order('created_at', { ascending: false })
 
     // Apply filters
@@ -138,16 +145,24 @@ tokens.get('/', zValidator('query', listTokensSchema), async (c) => {
  * Get token statistics for the organization
  */
 tokens.get('/stats', async (c) => {
-  const tenant = c.get('tenant')
+  const organizationId = c.get('organizationId')
+
+  if (!organizationId) {
+    return c.json(
+      { success: false, error: { code: 'UNAUTHORIZED', message: 'Missing organization context' } },
+      401
+    )
+  }
 
   try {
+    const supabase = getSupabaseAdmin()
     const now = new Date().toISOString()
 
     // Get token counts by status
     const { data: activeTokens, error: activeError } = await supabase
       .from('dashboard_tokens')
       .select('id', { count: 'exact' })
-      .eq('organization_id', tenant.orgId)
+      .eq('organization_id', organizationId)
       .is('revoked_at', null)
       .gt('expires_at', now)
 
@@ -156,7 +171,7 @@ tokens.get('/stats', async (c) => {
     const { data: expiredTokens, error: expiredError } = await supabase
       .from('dashboard_tokens')
       .select('id', { count: 'exact' })
-      .eq('organization_id', tenant.orgId)
+      .eq('organization_id', organizationId)
       .lt('expires_at', now)
       .is('revoked_at', null)
 
@@ -165,7 +180,7 @@ tokens.get('/stats', async (c) => {
     const { data: revokedTokens, error: revokedError } = await supabase
       .from('dashboard_tokens')
       .select('id', { count: 'exact' })
-      .eq('organization_id', tenant.orgId)
+      .eq('organization_id', organizationId)
       .not('revoked_at', 'is', null)
 
     if (revokedError) throw revokedError
@@ -173,7 +188,7 @@ tokens.get('/stats', async (c) => {
     const { data: totalTokens, error: totalError } = await supabase
       .from('dashboard_tokens')
       .select('id', { count: 'exact' })
-      .eq('organization_id', tenant.orgId)
+      .eq('organization_id', organizationId)
 
     if (totalError) throw totalError
 
@@ -182,7 +197,7 @@ tokens.get('/stats', async (c) => {
     const { data: recentTokens, error: recentError } = await supabase
       .from('dashboard_tokens')
       .select('id', { count: 'exact' })
-      .eq('organization_id', tenant.orgId)
+      .eq('organization_id', organizationId)
       .gte('created_at', sevenDaysAgo)
 
     if (recentError) throw recentError
@@ -220,16 +235,24 @@ tokens.get('/stats', async (c) => {
  * Generate new token for worker
  */
 tokens.post('/regenerate', zValidator('json', regenerateTokenSchema), async (c) => {
-  const tenant = c.get('tenant')
+  const organizationId = c.get('organizationId')
   const { workerId, expiresInHours } = c.req.valid('json')
 
+  if (!organizationId) {
+    return c.json(
+      { success: false, error: { code: 'UNAUTHORIZED', message: 'Missing organization context' } },
+      401
+    )
+  }
+
   try {
+    const supabase = getSupabaseAdmin()
     // Verify worker belongs to organization
     const { data: worker, error: workerError } = await supabase
       .from('workers')
       .select('id, full_name, phone_number')
       .eq('id', workerId)
-      .eq('organization_id', tenant.orgId)
+      .eq('organization_id', organizationId)
       .single()
 
     if (workerError || !worker) {
@@ -246,9 +269,9 @@ tokens.post('/regenerate', zValidator('json', regenerateTokenSchema), async (c) 
     }
 
     // Generate secure token
-    const crypto = await import('node:crypto')
-    const token = crypto.randomBytes(32).toString('hex')
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+    const nodeCrypto = await import('node:crypto')
+    const token = nodeCrypto.randomBytes(32).toString('hex')
+    const tokenHash = nodeCrypto.createHash('sha256').update(token).digest('hex')
 
     // Calculate expiry time
     const expiresAt = new Date(Date.now() + expiresInHours * 60 * 60 * 1000).toISOString()
@@ -259,7 +282,7 @@ tokens.post('/regenerate', zValidator('json', regenerateTokenSchema), async (c) 
       .insert({
         token_hash: tokenHash,
         worker_id: workerId,
-        organization_id: tenant.orgId,
+        organization_id: organizationId,
         expires_at: expiresAt,
       })
       .select(
@@ -316,16 +339,24 @@ tokens.post('/regenerate', zValidator('json', regenerateTokenSchema), async (c) 
  * Revoke a specific token
  */
 tokens.post('/revoke', zValidator('json', revokeTokenSchema), async (c) => {
-  const tenant = c.get('tenant')
+  const organizationId = c.get('organizationId')
   const { tokenId } = c.req.valid('json')
 
+  if (!organizationId) {
+    return c.json(
+      { success: false, error: { code: 'UNAUTHORIZED', message: 'Missing organization context' } },
+      401
+    )
+  }
+
   try {
+    const supabase = getSupabaseAdmin()
     // Update token to mark as revoked
     const { data: token, error } = await supabase
       .from('dashboard_tokens')
       .update({ revoked_at: new Date().toISOString() })
       .eq('id', tokenId)
-      .eq('organization_id', tenant.orgId)
+      .eq('organization_id', organizationId)
       .select(
         `
         id,
@@ -387,16 +418,24 @@ tokens.post('/revoke', zValidator('json', revokeTokenSchema), async (c) => {
  * Bulk revoke all expired tokens for the organization
  */
 tokens.post('/bulk-revoke-expired', async (c) => {
-  const tenant = c.get('tenant')
+  const organizationId = c.get('organizationId')
+
+  if (!organizationId) {
+    return c.json(
+      { success: false, error: { code: 'UNAUTHORIZED', message: 'Missing organization context' } },
+      401
+    )
+  }
 
   try {
+    const supabase = getSupabaseAdmin()
     const now = new Date().toISOString()
 
     // Bulk update expired tokens
     const { data: revokedTokens, error } = await supabase
       .from('dashboard_tokens')
       .update({ revoked_at: now })
-      .eq('organization_id', tenant.orgId)
+      .eq('organization_id', organizationId)
       .lt('expires_at', now)
       .is('revoked_at', null)
       .select('id, worker_id')

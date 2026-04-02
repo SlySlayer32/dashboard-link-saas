@@ -21,6 +21,9 @@ export interface SupabaseClient {
 // Supabase query interface
 export interface SupabaseQuery {
   select: (fields?: string | { count?: string; head?: boolean }) => SupabaseQuery
+  insert: (data: Record<string, unknown> | Record<string, unknown>[]) => SupabaseQuery
+  update: (data: Record<string, unknown>) => SupabaseQuery
+  delete: () => SupabaseQuery
   eq: (field: string, value: unknown) => SupabaseQuery
   neq: (field: string, value: unknown) => SupabaseQuery
   is: (field: string, value: unknown) => SupabaseQuery
@@ -191,6 +194,50 @@ export class SupabaseQueryBuilder implements QueryBuilder {
     const searchConditions = fields.map((field) => `${field}.ilike.%${query}%`).join(',')
     this.query = this.query.or(searchConditions)
     return this
+  }
+
+  insert(data: Record<string, unknown>): QueryBuilder {
+    // Supabase uses .insert() directly on the query
+    this.query = this.client.from(this.table).insert(data)
+    return this
+  }
+
+  update(data: Record<string, unknown>): QueryBuilder {
+    // Supabase uses .update() directly on the query
+    this.query = this.client.from(this.table).update(data)
+    return this
+  }
+
+  delete(): QueryBuilder {
+    // Supabase uses .delete() directly on the query
+    this.query = this.client.from(this.table).delete()
+    return this
+  }
+
+  leftJoin(_table: string, _leftKey: string, _rightKey: string): QueryBuilder {
+    // Supabase doesn't have direct join support in this way
+    // This is a simplified implementation - in production you'd use RPC or views
+    console.warn('leftJoin is not fully supported in Supabase adapter - consider using RPC')
+    return this
+  }
+
+  groupBy(..._fields: string[]): QueryBuilder {
+    // Supabase doesn't expose groupBy directly in the query builder
+    // This would typically be done via RPC functions
+    console.warn('groupBy is not fully supported in Supabase adapter - consider using RPC')
+    return this
+  }
+
+  returning(_fields: string): QueryBuilder {
+    // Supabase automatically returns data after insert/update
+    // This is a no-op for compatibility
+    return this
+  }
+
+  raw(_sql: string): unknown {
+    // Raw SQL is not supported in Supabase client-side queries
+    // Use RPC functions for complex queries
+    throw new Error('Raw SQL not supported in Supabase adapter - use RPC functions instead')
   }
 
   async build(): Promise<unknown[]> {

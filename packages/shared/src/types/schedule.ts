@@ -2,12 +2,12 @@ export interface ScheduleItem {
   id: string
   title: string
   description?: string
-  start_time: string
-  end_time?: string
+  startTime: string
+  endTime?: string
   location?: string
-  source_type: 'google-calendar' | 'airtable' | 'notion' | 'manual'
-  source_id: string
-  raw_data?: Record<string, unknown>
+  sourceType?: 'google-calendar' | 'airtable' | 'notion' | 'manual'
+  sourceId?: string
+  metadata?: Record<string, unknown>
 }
 
 export interface ScheduleRequest {

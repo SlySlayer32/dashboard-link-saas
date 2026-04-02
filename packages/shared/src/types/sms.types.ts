@@ -152,6 +152,17 @@ export interface SMSDeliveryStats {
   peakHours: { hour: number; messages: number }[]
 }
 
+export interface SMSDashboardLinkRequest {
+  workerId: string
+  expiresIn: string
+  customMessage?: string
+}
+
+export interface SMSDashboardLinkResponse {
+  success: boolean
+  message?: string
+}
+
 // Error types for better error handling
 export interface SMSError {
   code: string

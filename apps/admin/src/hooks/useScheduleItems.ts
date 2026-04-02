@@ -161,7 +161,7 @@ export function useUpdateScheduleItem() {
   return useMutation({
     mutationFn: ({ itemId, data }: { itemId: string; data: UpdateScheduleItemRequest }) =>
       updateScheduleItem(token || '', itemId, data),
-    onSuccess: (_, { _itemId }) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['schedule-items'],
       })

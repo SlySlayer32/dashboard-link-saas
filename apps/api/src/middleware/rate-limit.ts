@@ -61,8 +61,12 @@ export const rateLimit = (options: RateLimitOptions) => {
 
       return c.json(
         {
-          error: 'Rate limit exceeded',
-          retryAfter: resetTime,
+          success: false,
+          error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: 'Rate limit exceeded',
+            retryAfter: resetTime,
+          },
         },
         429
       )

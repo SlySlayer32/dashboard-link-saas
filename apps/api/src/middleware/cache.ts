@@ -7,7 +7,7 @@ interface CacheEntry {
 }
 
 class MemoryCache {
-  private cache = new Map<string, CacheEntry>()
+  private cache = new Map<string, CacheEntry & { ttl: number }>()
   private maxSize: number
   private defaultTTL: number
 
@@ -20,7 +20,7 @@ class MemoryCache {
     const entry = this.cache.get(key)
     if (!entry) return undefined
 
-    if (Date.now() - entry.timestamp > this.defaultTTL) {
+    if (Date.now() - entry.timestamp > entry.ttl) {
       this.cache.delete(key)
       return undefined
     }
@@ -28,17 +28,18 @@ class MemoryCache {
     return entry
   }
 
-  set(key: string, data: unknown, _ttl?: number): void {
+  set(key: string, data: unknown, ttl?: number): void {
     // Remove oldest entries if cache is full
     if (this.cache.size >= this.maxSize) {
       const firstKey = this.cache.keys().next().value
-      this.cache.delete(firstKey)
+      if (firstKey !== undefined) this.cache.delete(firstKey)
     }
 
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
       etag: this.generateETag(data),
+      ttl: ttl ?? this.defaultTTL,
     })
   }
 
@@ -99,9 +100,10 @@ export const cacheMiddleware = (options: CacheOptions = {}) => {
       return
     }
 
-    // Generate cache key including vary parameters
+    // Generate cache key including tenant scope and vary parameters
+    const organizationId = c.get('organizationId') || 'anonymous'
     const varyParams = varyOn.map((param) => c.req.query(param) || '').join('|')
-    const cacheKey = `${keyGenerator(c)}|${varyParams}`
+    const cacheKey = `${organizationId}|${keyGenerator(c)}|${varyParams}`
 
     // Check cache
     const cached = cache.get(cacheKey)

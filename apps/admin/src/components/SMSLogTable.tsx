@@ -39,11 +39,11 @@ export function SMSLogTable({ logs, isLoading, onResend }: SMSLogTableProps) {
     const csvContent = [
       headers.join(','),
       ...logs.map((log) => [
-        format(new Date(log.created_at), 'yyyy-MM-dd HH:mm:ss'),
-        log.worker_id || 'N/A',
-        log.phone,
+        format(new Date(log.createdAt), 'yyyy-MM-dd HH:mm:ss'),
+        log.workerId || 'N/A',
+        log.to,
         log.status,
-        `"${log.message.replace(/"/g, '""')}"`,
+        `"${log.body.replace(/"/g, '""')}"`,
       ]),
     ]
       .map((row) => (Array.isArray(row) ? row.join(',') : row))
@@ -122,17 +122,17 @@ export function SMSLogTable({ logs, isLoading, onResend }: SMSLogTableProps) {
             {logs.map((log) => (
               <tr key={log.id} className='hover:bg-gray-50'>
                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-                  {format(new Date(log.created_at), 'MMM dd, yyyy HH:mm')}
+                  {format(new Date(log.createdAt), 'MMM dd, yyyy HH:mm')}
                 </td>
                 <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-                  {log.worker_id || 'N/A'}
+                  {log.workerId || 'N/A'}
                 </td>
-                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>{log.phone}</td>
+                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>{log.to}</td>
                 <td className='px-6 py-4 whitespace-nowrap'>
                   <SMSStatusBadge status={log.status} />
                 </td>
                 <td className='px-6 py-4 text-sm text-gray-900 max-w-xs truncate'>
-                  <span title={log.message}>{log.message}</span>
+                  <span title={log.body}>{log.body}</span>
                 </td>
                 <td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
                   {log.status === 'failed' && onResend && (
@@ -145,17 +145,11 @@ export function SMSLogTable({ logs, isLoading, onResend }: SMSLogTableProps) {
                       Resend
                     </button>
                   )}
-                  {log.status === 'failed' && log.provider_response && (
+                  {log.status === 'failed' && log.metadata && (
                     <button
                       type='button'
                       className='ml-4 text-gray-600 hover:text-gray-900'
-                      title={
-                        typeof log.provider_response === 'string'
-                          ? log.provider_response
-                          : typeof log.provider_response === 'object'
-                            ? JSON.stringify(log.provider_response)
-                            : 'Error details available'
-                      }
+                      title={JSON.stringify(log.metadata)}
                     >
                       View Error
                     </button>

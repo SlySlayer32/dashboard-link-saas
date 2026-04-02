@@ -8,11 +8,11 @@
     "fetch": {
       "args": ["mcp-server-fetch"],
       "command": "uvx",
-      "disabled": false,
+      "disabled": true,
       "env": {}
     },
     "filesystem": {
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", ""],
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "e:\\CleanConnect"],
       "command": "npx",
       "disabled": false,
       "env": {}
@@ -27,7 +27,7 @@
         "ghcr.io/github/github-mcp-server"
       ],
       "command": "docker",
-      "disabled": false,
+      "disabled": true,
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "your_token_here"
       }
@@ -37,7 +37,7 @@
         "-y",
         "@supabase/mcp-server-supabase@latest",
         "--access-token",
-        "sbp_1b618ec8310394f1096b71ee165dac1b734d5e76"
+        "${env:SUPABASE_ACCESS_TOKEN}"
       ],
       "command": "npx",
       "disabled": false,

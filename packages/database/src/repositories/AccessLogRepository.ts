@@ -98,6 +98,7 @@ export class AccessLogRepository extends BaseRepository<AccessLog> {
         .query(this.tableName)
         .insert(insertTransformed)
         .returning('*')
+        .build()
 
       return this.transformFromDB(created)
     } catch (error) {
@@ -154,10 +155,10 @@ export class AccessLogRepository extends BaseRepository<AccessLog> {
     try {
       const results = await this.adapter
         .query(this.tableName)
-        .where('organization_id', organizationId)
-        .where('accessed_at', '>=', startDate.toISOString())
-        .where('accessed_at', '<=', endDate.toISOString())
+        .where({ organization_id: organizationId })
+        .whereBetween('accessed_at', [startDate.toISOString(), endDate.toISOString()])
         .orderBy('accessed_at', 'desc')
+        .build()
 
       return results.map((row) => this.transformFromDB(row))
     } catch (error) {
@@ -184,41 +185,32 @@ export class AccessLogRepository extends BaseRepository<AccessLog> {
     endDate?: Date
   ): Promise<AccessLogStats> {
     try {
-      let query = this.adapter.query(this.tableName).where('organization_id', organizationId)
-
-      if (startDate) {
-        query = query.where('accessed_at', '>=', startDate.toISOString())
-      }
-      if (endDate) {
-        query = query.where('accessed_at', '<=', endDate.toISOString())
+      // Build filter for date range
+      const filter: RepositoryFilter = {
+        where: { organizationId },
       }
 
-      const results = await query.select(
-        this.adapter.raw('COUNT(*) as total_accesses'),
-        this.adapter.raw(
-          "COUNT(*) FILTER (WHERE validation_status = 'success') as successful_accesses"
-        ),
-        this.adapter.raw(
-          "COUNT(*) FILTER (WHERE validation_status != 'success') as failed_accesses"
-        ),
-        this.adapter.raw('COUNT(DISTINCT worker_id) as unique_workers')
-      )
+      if (startDate && endDate) {
+        filter.whereBetween = {
+          accessedAt: [startDate.toISOString(), endDate.toISOString()],
+        }
+      }
 
-      const stats = results[0]
-      const totalAccesses = Number(stats.total_accesses) || 0
-      const successfulAccesses = Number(stats.successful_accesses) || 0
-      const failedAccesses = Number(stats.failed_accesses) || 0
-      const uniqueWorkers = Number(stats.unique_workers) || 0
+      // Get all records and calculate stats in memory (simpler than raw SQL)
+      const allRecords = await this.findMany(filter)
+      const totalAccesses = allRecords.length
+      const successfulAccesses = allRecords.filter((r) => r.validationStatus === 'success').length
+      const failedAccesses = allRecords.filter((r) => r.validationStatus !== 'success').length
+      const uniqueWorkers = new Set(allRecords.map((r) => r.workerId)).size
 
       // Calculate open rate (successful accesses / total workers in org)
-      const workersQuery = await this.adapter
+      const totalWorkers = await this.adapter
         .query('workers')
-        .where('organization_id', organizationId)
+        .where({ organization_id: organizationId })
         .whereNull('deleted_at')
-        .count('* as count')
+        .count()
 
-      const totalWorkers = Number(workersQuery[0].count) || 1
-      const openRate = uniqueWorkers / totalWorkers
+      const openRate = totalWorkers > 0 ? uniqueWorkers / totalWorkers : 0
 
       return {
         totalAccesses,
@@ -237,30 +229,42 @@ export class AccessLogRepository extends BaseRepository<AccessLog> {
    */
   async getWorkerAccessStats(organizationId: string): Promise<WorkerAccessStats[]> {
     try {
-      const results = await this.adapter
-        .query(this.tableName)
-        .select(
-          'workers.id as worker_id',
-          'workers.name as worker_name',
-          this.adapter.raw('MAX(access_logs.accessed_at) as last_accessed_at'),
-          this.adapter.raw('COUNT(access_logs.id) as total_accesses'),
-          this.adapter.raw(
-            "COUNT(access_logs.id) FILTER (WHERE access_logs.validation_status = 'success') as successful_accesses"
-          )
-        )
-        .leftJoin('workers', 'access_logs.worker_id', 'workers.id')
-        .where('access_logs.organization_id', organizationId)
-        .whereNull('workers.deleted_at')
-        .groupBy('workers.id', 'workers.name')
-        .orderBy('last_accessed_at', 'desc')
+      // Get all access logs for the organization
+      const accessLogs = await this.findByOrganizationId(organizationId, 10000, 0)
 
-      return results.map((row) => ({
-        workerId: row.worker_id,
-        workerName: row.worker_name,
-        lastAccessedAt: row.last_accessed_at,
-        totalAccesses: Number(row.total_accesses) || 0,
-        successfulAccesses: Number(row.successful_accesses) || 0,
-      }))
+      // Get all workers for the organization
+      const workers = await this.adapter
+        .query('workers')
+        .where({ organization_id: organizationId })
+        .whereNull('deleted_at')
+        .build()
+
+      // Aggregate in memory
+      const workerStats = new Map<string, WorkerAccessStats>()
+
+      workers.forEach((worker: any) => {
+        const workerLogs = accessLogs.filter((log) => log.workerId === worker.id)
+        const lastAccess =
+          workerLogs.length > 0
+            ? workerLogs.reduce((latest, log) =>
+                new Date(log.accessedAt) > new Date(latest.accessedAt) ? log : latest
+              ).accessedAt
+            : null
+
+        workerStats.set(worker.id, {
+          workerId: worker.id,
+          workerName: worker.name,
+          lastAccessedAt: lastAccess,
+          totalAccesses: workerLogs.length,
+          successfulAccesses: workerLogs.filter((log) => log.validationStatus === 'success').length,
+        })
+      })
+
+      return Array.from(workerStats.values()).sort((a, b) => {
+        if (!a.lastAccessedAt) return 1
+        if (!b.lastAccessedAt) return -1
+        return new Date(b.lastAccessedAt).getTime() - new Date(a.lastAccessedAt).getTime()
+      })
     } catch (error) {
       throw this.handleError(error, 'getWorkerAccessStats')
     }
@@ -285,12 +289,7 @@ export class AccessLogRepository extends BaseRepository<AccessLog> {
    */
   async countByTokenId(tokenId: string): Promise<number> {
     try {
-      const result = await this.adapter
-        .query(this.tableName)
-        .where('token_id', tokenId)
-        .count('* as count')
-
-      return Number(result[0].count) || 0
+      return await this.adapter.query(this.tableName).where({ token_id: tokenId }).count()
     } catch (error) {
       throw this.handleError(error, 'countByTokenId')
     }
@@ -313,6 +312,7 @@ export class AccessLogRepository extends BaseRepository<AccessLog> {
       userAgent: (data.user_agent as string) || null,
       validationStatus: data.validation_status as 'success' | 'expired' | 'invalid' | 'revoked',
       createdAt: data.created_at as string,
+      updatedAt: data.updated_at as string,
     }
   }
 

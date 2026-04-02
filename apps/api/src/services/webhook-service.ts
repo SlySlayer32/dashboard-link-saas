@@ -1,4 +1,5 @@
 import { createHash, createHmac } from 'node:crypto'
+import { logger } from '../utils/logger.js'
 
 interface WebhookProcessingResult {
   processed: boolean

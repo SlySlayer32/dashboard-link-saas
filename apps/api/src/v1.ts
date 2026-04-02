@@ -1,8 +1,10 @@
-import { getOrganizationRepository, getWorkerRepository } from '@dashboard-link/database'
-import { TenantContext, tenantMiddleware } from '@dashboard-link/shared'
+import {
+  getDashboardRepository,
+  getOrganizationRepository,
+  getWorkerRepository,
+} from '@dashboard-link/database'
+import type { TenantContext } from '@dashboard-link/shared'
 import { zValidator } from '@hono/zod-validator'
-import type { SupabaseClient } from '@supabase/supabase-js'
-import { createClient } from '@supabase/supabase-js'
 import { Hono } from 'hono'
 import { z } from 'zod'
 
@@ -10,35 +12,58 @@ import { z } from 'zod'
 import tokens from './routes/tokens'
 import { workers } from './routes/workers'
 
+// Import canonical middleware
+import { authMiddleware } from './middleware/auth'
+import { cacheMiddleware, createCacheConfig } from './middleware/cache'
+import { tenantContextMiddleware } from './middleware/tenant'
+
 // Import services
 import { SMSService } from './services/SMSService'
 import { TokenService } from './services/TokenService'
 import { WebhookService } from './services/webhook-service'
 
+import type { AppContextVariables } from './types'
+
 // Create v1 API with tenant isolation
 const v1 = new Hono<{
-  Variables: TenantContext & {
+  Variables: AppContextVariables & {
     tenant: TenantContext
     requestId: string
     tenantId: string
-    userId: string
-    userRole: string
-    supabase: SupabaseClient
   }
 }>()
 
-// Initialize Supabase client
-const supabase = createClient(process.env.SUPABASE_URL || '', process.env.SUPABASE_ANON_KEY || '')
-
-// Apply tenant middleware to all v1 routes except auth and webhooks
+// Apply auth + tenant middleware to all v1 routes except auth and webhooks
 v1.use('*', async (c, next) => {
-  // Skip tenant middleware for auth and webhook endpoints
-  if (c.req.path.startsWith('/auth/') || c.req.path.startsWith('/webhooks/')) {
+  // Skip auth middleware for public endpoints
+  if (
+    c.req.path.startsWith('/auth/') ||
+    c.req.path.startsWith('/webhooks/') ||
+    c.req.path === '/dashboard/redeem'
+  ) {
     await next()
     return
   }
-  await tenantMiddleware(c, next)
+  await authMiddleware(c, next)
 })
+
+v1.use('*', async (c, next) => {
+  // Skip tenant context for public endpoints
+  if (
+    c.req.path.startsWith('/auth/') ||
+    c.req.path.startsWith('/webhooks/') ||
+    c.req.path === '/dashboard/redeem'
+  ) {
+    await next()
+    return
+  }
+  await tenantContextMiddleware(c, next)
+})
+
+// Apply cache middleware AFTER auth+tenant (R07: correct middleware order)
+v1.use('/workers', cacheMiddleware(createCacheConfig('workers')))
+v1.use('/dashboard', cacheMiddleware(createCacheConfig('dashboard')))
+v1.use('/dashboards/*', cacheMiddleware(createCacheConfig('dashboard')))
 
 // Auth endpoints (public - no tenant middleware needed)
 v1.post('/auth/login', async (c) => {
@@ -89,13 +114,16 @@ v1.post(
       }
 
       if (error instanceof Error && error.message.includes('not implemented')) {
-        return c.json({
-          success: false,
-          error: {
-            code: 'NOT_IMPLEMENTED',
-            message: 'Token service not yet available',
+        return c.json(
+          {
+            success: false,
+            error: {
+              code: 'NOT_IMPLEMENTED',
+              message: 'Token service not yet available',
+            },
           },
-        }, 501)
+          501
+        )
       }
 
       return c.json(
@@ -175,15 +203,17 @@ v1.post('/webhooks/:provider', async (c) => {
 
 // Protected endpoints
 v1.get('/me', async (c) => {
-  const tenant = c.get('tenant')
+  const userId = c.get('userId')
+  const organizationId = c.get('organizationId')
+  const userRole = c.get('userRole')
 
   return c.json({
     success: true,
     data: {
       user: {
-        id: tenant.userId,
-        orgId: tenant.orgId,
-        role: tenant.role,
+        id: userId,
+        orgId: organizationId,
+        role: userRole,
       },
       timestamp: new Date().toISOString(),
     },
@@ -196,11 +226,17 @@ v1.get('/me', async (c) => {
 
 // Organizations CRUD
 v1.get('/organizations', async (c) => {
-  const tenant = c.get('tenant')
+  const organizationId = c.get('organizationId')
+  if (!organizationId) {
+    return c.json(
+      { success: false, error: { code: 'UNAUTHORIZED', message: 'Missing organization context' } },
+      401
+    )
+  }
   const orgRepo = getOrganizationRepository()
 
   try {
-    const org = await orgRepo.findById(tenant.orgId)
+    const org = await orgRepo.findById(organizationId)
 
     return c.json({
       success: true,
@@ -229,7 +265,7 @@ v1.post(
   zValidator(
     'json',
     z.object({
-      worker_id: z.uuid({ message: 'Invalid worker ID' }),
+      worker_id: z.string().uuid('Invalid worker ID'),
       name: z.string().min(1, { message: 'Dashboard name is required' }),
       config: z
         .object({
@@ -238,7 +274,7 @@ v1.post(
               z.object({
                 type: z.string(),
                 source: z.string(),
-                config: z.record(z.string(), z.any()).optional(),
+                config: z.record(z.string(), z.unknown()).optional(),
               })
             )
             .optional(),
@@ -247,7 +283,7 @@ v1.post(
     })
   ),
   async (c) => {
-    const tenant = c.get('tenant')
+    const organizationId = c.get('organizationId')
     const dashboardData = c.req.valid('json')
 
     try {
@@ -255,7 +291,7 @@ v1.post(
       const workerRepo = getWorkerRepository()
       const worker = await workerRepo.findById(dashboardData.worker_id)
 
-      if (!worker?.organizationId || worker.organizationId !== tenant.orgId) {
+      if (!worker?.organizationId || worker.organizationId !== organizationId) {
         return c.json(
           {
             success: false,
@@ -268,31 +304,14 @@ v1.post(
         )
       }
 
-      // Create dashboard configuration
-      const dashboard = {
-        id: crypto.randomUUID(),
-        worker_id: dashboardData.worker_id,
-        organization_id: tenant.orgId,
+      // Create dashboard configuration using repository
+      const dashboardRepo = getDashboardRepository()
+      const dashboard = await dashboardRepo.create({
+        workerId: dashboardData.worker_id,
+        organizationId: organizationId,
         name: dashboardData.name,
         config: dashboardData.config || { widgets: [] },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
-
-      // Save dashboard to database
-      const { error } = await supabase.from('dashboards').insert({
-        id: dashboard.id,
-        worker_id: dashboard.worker_id,
-        organization_id: dashboard.organization_id,
-        name: dashboard.name,
-        config: dashboard.config,
-        created_at: dashboard.created_at,
-        updated_at: dashboard.updated_at,
-      })
-
-      if (error) {
-        throw error
-      }
+      } as Parameters<typeof dashboardRepo.create>[0])
 
       return c.json(
         {
@@ -328,31 +347,16 @@ v1.post(
     })
   ),
   async (c) => {
-    const tenant = c.get('tenant')
+    const organizationId = c.get('organizationId')
     const dashboardId = c.req.param('id')
     const { message, expires_in_hours } = c.req.valid('json')
 
     try {
-      // Get dashboard with worker info
-      const { data: results, error } = await supabase
-        .from('dashboards')
-        .select(
-          `
-          *,
-          workers (
-            name as worker_name,
-            phone as worker_phone
-          )
-        `
-        )
-        .eq('id', dashboardId)
-        .eq('organization_id', tenant.orgId)
+      // Get dashboard via repository
+      const dashboardRepo = getDashboardRepository()
+      const dashboard = await dashboardRepo.findById(dashboardId)
 
-      if (error) {
-        throw error
-      }
-
-      if (!results || results.length === 0) {
+      if (!dashboard || dashboard.organizationId !== organizationId) {
         return c.json(
           {
             success: false,
@@ -365,17 +369,28 @@ v1.post(
         )
       }
 
-      const dashboard = results[0] as unknown as {
-        id: string;
-        worker_id: string;
-        workers: { worker_name: string; worker_phone: string }
+      // Get worker info via repository
+      const workerRepo = getWorkerRepository()
+      const worker = await workerRepo.findById(dashboard.workerId)
+
+      if (!worker) {
+        return c.json(
+          {
+            success: false,
+            error: {
+              code: 'WORKER_NOT_FOUND',
+              message: 'Associated worker not found',
+            },
+          },
+          404
+        )
       }
 
       // Create secure token
       const tokenService = new TokenService()
       const token = await tokenService.createToken({
-        workerId: dashboard.worker_id,
-        orgId: tenant.orgId,
+        workerId: dashboard.workerId,
+        orgId: organizationId,
         dashboardId: dashboardId,
         expiresInHours: expires_in_hours,
       })
@@ -383,11 +398,11 @@ v1.post(
       // Enqueue SMS job
       const smsService = new SMSService()
       const smsJob = await smsService.enqueueSMS({
-        to: dashboard.workers.worker_phone,
+        to: worker.phone,
         message:
           message ||
           `Your dashboard is ready: ${process.env.APP_URL || 'http://localhost:5173'}/dashboard/${token}`,
-        orgId: tenant.orgId,
+        orgId: organizationId,
         type: 'dashboard_link',
       })
 
@@ -408,13 +423,16 @@ v1.post(
       )
     } catch (error) {
       if (error instanceof Error && error.message.includes('not implemented')) {
-        return c.json({
-          success: false,
-          error: {
-            code: 'NOT_IMPLEMENTED',
-            message: 'Service not yet available',
+        return c.json(
+          {
+            success: false,
+            error: {
+              code: 'NOT_IMPLEMENTED',
+              message: 'Service not yet available',
+            },
           },
-        }, 501)
+          501
+        )
       }
 
       return c.json(
@@ -429,18 +447,19 @@ v1.post(
 )
 
 // Configure adapter
+// TODO: Create AdapterConfigRepository for full repository pattern (R05 tracked)
 v1.post(
   '/adapters/configs',
   zValidator(
     'json',
     z.object({
       adapter_type: z.string().min(1, { message: 'Adapter type is required' }),
-      config: z.record(z.string(), z.any()),
+      config: z.record(z.string(), z.unknown()),
       enabled: z.boolean().optional().default(true),
     })
   ),
   async (c) => {
-    const tenant = c.get('tenant')
+    const organizationId = c.get('organizationId')
     const adapterData = c.req.valid('json')
 
     try {
@@ -460,9 +479,16 @@ v1.post(
       }
 
       // Store adapter configuration
-      const config = {
+      // TODO: Move to AdapterConfigRepository when created
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabaseAdmin = createClient(
+        process.env.SUPABASE_URL || '',
+        process.env.SUPABASE_SERVICE_KEY || ''
+      )
+
+      const adapterConfig = {
         id: crypto.randomUUID(),
-        organization_id: tenant.orgId,
+        organization_id: organizationId,
         adapter_type: adapterData.adapter_type,
         config: adapterData.config,
         enabled: adapterData.enabled,
@@ -470,15 +496,7 @@ v1.post(
         updated_at: new Date().toISOString(),
       }
 
-      const { error } = await supabase.from('adapter_configs').insert({
-        id: config.id,
-        organization_id: config.organization_id,
-        adapter_type: config.adapter_type,
-        config: config.config,
-        enabled: config.enabled,
-        created_at: config.created_at,
-        updated_at: config.updated_at,
-      })
+      const { error } = await supabaseAdmin.from('adapter_configs').insert(adapterConfig)
 
       if (error) {
         throw error
@@ -487,7 +505,7 @@ v1.post(
       return c.json(
         {
           success: true,
-          data: config,
+          data: adapterConfig,
           meta: {
             requestId: crypto.randomUUID(),
             version: '2024-01-01',
