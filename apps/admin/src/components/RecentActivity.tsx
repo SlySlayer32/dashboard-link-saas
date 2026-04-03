@@ -1,15 +1,14 @@
-import { CheckCircle, Clock, MessageCircle, XCircle } from 'lucide-react'
+import { CheckCircle, Clock, Eye, MessageCircle, XCircle } from 'lucide-react'
 
 interface ActivityItem {
   id: string
+  type: 'sms' | 'dashboard_open'
   message: string
   status: string
-  created_at: string
-  worker_id: string
-  workers: {
-    name: string
-    phone: string
-  }
+  createdAt: string
+  workerId?: string
+  workerName: string
+  workerPhone?: string
 }
 
 interface RecentActivityProps {
@@ -17,9 +16,14 @@ interface RecentActivityProps {
   isLoading?: boolean
 }
 
-function getStatusIcon(status: string) {
-  switch (status) {
+function getStatusIcon(activity: ActivityItem) {
+  if (activity.type === 'dashboard_open') {
+    return <Eye className='h-4 w-4 text-cyan-500' />
+  }
+
+  switch (activity.status) {
     case 'sent':
+    case 'delivered':
       return <CheckCircle className='h-4 w-4 text-green-500' />
     case 'failed':
       return <XCircle className='h-4 w-4 text-red-500' />
@@ -28,9 +32,14 @@ function getStatusIcon(status: string) {
   }
 }
 
-function getStatusColor(status: string) {
-  switch (status) {
+function getStatusColor(activity: ActivityItem) {
+  if (activity.type === 'dashboard_open') {
+    return 'text-cyan-700 bg-cyan-50'
+  }
+
+  switch (activity.status) {
     case 'sent':
+    case 'delivered':
       return 'text-green-700 bg-green-50'
     case 'failed':
       return 'text-red-700 bg-red-50'
@@ -41,7 +50,7 @@ function getStatusColor(status: string) {
 
 function formatMessage(message: string, maxLength: number = 60) {
   if (message.length <= maxLength) return message
-  return message.substring(0, maxLength) + '...'
+  return `${message.substring(0, maxLength)}...`
 }
 
 function formatTime(dateString: string) {
@@ -90,8 +99,10 @@ export function RecentActivity({ activities, isLoading }: RecentActivityProps) {
         <h3 className='text-lg font-semibold text-gray-900 mb-4'>Recent Activity</h3>
         <div className='text-center py-8'>
           <MessageCircle className='h-12 w-12 text-gray-400 mx-auto mb-3' />
-          <p className='text-gray-500'>No recent SMS activity</p>
-          <p className='text-sm text-gray-400 mt-1'>Send your first SMS to see activity here</p>
+          <p className='text-gray-500'>No recent worker activity</p>
+          <p className='text-sm text-gray-400 mt-1'>
+            Sent messages and dashboard opens will appear here
+          </p>
         </div>
       </div>
     )
@@ -103,34 +114,26 @@ export function RecentActivity({ activities, isLoading }: RecentActivityProps) {
       <div className='space-y-4'>
         {activities.map((activity) => (
           <div key={activity.id} className='flex items-start space-x-3'>
-            <div className='flex-shrink-0 mt-1'>{getStatusIcon(activity.status)}</div>
+            <div className='flex-shrink-0 mt-1'>{getStatusIcon(activity)}</div>
             <div className='flex-1 min-w-0'>
               <div className='flex items-center space-x-2 mb-1'>
-                <p className='text-sm font-medium text-gray-900 truncate'>
-                  {activity.workers.name}
-                </p>
+                <p className='text-sm font-medium text-gray-900 truncate'>{activity.workerName}</p>
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity)}`}
                 >
-                  {activity.status}
+                  {activity.type === 'dashboard_open' ? 'opened' : activity.status}
                 </span>
               </div>
               <p className='text-sm text-gray-600 mb-1'>{formatMessage(activity.message)}</p>
+              {activity.workerPhone && <p className='text-xs text-gray-500 mb-1'>{activity.workerPhone}</p>}
               <p className='text-xs text-gray-500 flex items-center'>
                 <Clock className='h-3 w-3 mr-1' />
-                {formatTime(activity.created_at)}
+                {formatTime(activity.createdAt)}
               </p>
             </div>
           </div>
         ))}
       </div>
-      {activities.length > 0 && (
-        <div className='mt-4 pt-4 border-t border-gray-200'>
-          <button className='text-sm text-blue-600 hover:text-blue-700 font-medium'>
-            View all activity →
-          </button>
-        </div>
-      )}
     </div>
   )
 }

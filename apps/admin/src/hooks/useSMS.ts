@@ -1,32 +1,22 @@
 import type { SMSDashboardLinkRequest, SMSDashboardLinkResponse } from '@dashboard-link/shared'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
+import { api } from '../lib/api'
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1'
+function parseExpiryHours(expiresIn: string) {
+  const hours = Number.parseInt(expiresIn.replace('h', ''), 10)
+  return Number.isNaN(hours) ? 6 : hours
+}
 
 export function useSendDashboardLink() {
   return useMutation({
     mutationFn: async (data: SMSDashboardLinkRequest): Promise<SMSDashboardLinkResponse> => {
-      const token = localStorage.getItem('auth_token')
-      if (!token) {
-        throw new Error('No authentication token found')
-      }
-
-      const response = await fetch(`${API_BASE}/sms/send-dashboard-link`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
+      const response = await api.post<SMSDashboardLinkResponse>('/api/v1/sms/send-dashboard-link', {
+        workerId: data.workerId,
+        expiryHours: parseExpiryHours(data.expiresIn),
+        message: data.customMessage?.trim() || undefined,
       })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error?.message || 'Failed to send dashboard link')
-      }
-
-      return response.json()
+      return response.data
     },
     onSuccess: (data) => {
       if (data.success) {
@@ -43,27 +33,14 @@ export function useSendDashboardLink() {
 
 export function useSendSMS() {
   return useMutation({
-    mutationFn: async ({ workerId, message }: { workerId: string; message: string }) => {
-      const token = localStorage.getItem('auth_token')
-      if (!token) {
-        throw new Error('No authentication token found')
-      }
-
-      const response = await fetch(`${API_BASE}/sms/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ workerId, message }),
+    mutationFn: async ({ workerId, to, message }: { workerId?: string; to?: string; message: string }) => {
+      const response = await api.post('/api/v1/sms/send', {
+        workerId,
+        to,
+        message,
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error?.message || 'Failed to send SMS')
-      }
-
-      return response.json()
+      return response.data
     },
     onSuccess: () => {
       toast.success('SMS sent successfully!')

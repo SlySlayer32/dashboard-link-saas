@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "lint": "eslint --config ../../eslint.config.js src --ext .ts,.tsx",
+    "lint": "node ../../node_modules/eslint/bin/eslint.js --config ../../eslint.config.js src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
   },

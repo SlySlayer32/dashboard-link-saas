@@ -5,6 +5,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CogIcon,
+  DocumentTextIcon,
   HomeIcon,
   KeyIcon,
   Bars3Icon as MenuIcon,
@@ -24,6 +25,7 @@ interface NavigationProps {
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Workers', href: '/workers', icon: UserGroupIcon },
+  { name: 'Manual Data', href: '/manual-data', icon: DocumentTextIcon },
   { name: 'Tokens', href: '/tokens', icon: KeyIcon },
   { name: 'SMS Logs', href: '/sms-logs', icon: ChatBubbleLeftRightIcon },
   { name: 'Plugins', href: '/plugins', icon: PuzzlePieceIcon },
@@ -36,7 +38,6 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
   const location = useLocation()
   const { user, logout } = useAuthStore()
 
-  // Compute collapsed state: use prop if provided, otherwise read from localStorage
   const currentIsCollapsed =
     propIsCollapsed !== undefined
       ? propIsCollapsed
@@ -45,7 +46,6 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
           return saved !== null ? JSON.parse(saved) : false
         })()
 
-  // Save collapsed state to localStorage
   const handleToggle = () => {
     const newState = !currentIsCollapsed
     localStorage.setItem('sidebar-collapsed', JSON.stringify(newState))
@@ -62,7 +62,6 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
     setIsMobileMenuOpen(!isMobileMenuOpen)
   }
 
-  // Close mobile menu when route changes
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsMobileMenuOpen(false)
@@ -72,7 +71,6 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
 
   return (
     <>
-      {/* Mobile menu button */}
       <div className='lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-3'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center'>
@@ -86,7 +84,7 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
                 <MenuIcon className='h-6 w-6' />
               )}
             </button>
-            <h1 className='ml-3 text-lg font-semibold text-gray-900'>CleanConnect</h1>
+            <h1 className='ml-3 text-lg font-semibold text-gray-900'>Dashboard Link</h1>
           </div>
           <Button variant='ghost' size='sm' onClick={handleLogout} className='text-gray-500'>
             <ArrowRightOnRectangleIcon className='h-5 w-5' />
@@ -94,7 +92,6 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
         </div>
       </div>
 
-      {/* Mobile menu overlay */}
       {isMobileMenuOpen && (
         <div className='lg:hidden fixed inset-0 z-50 flex'>
           <div className='fixed inset-0 bg-black bg-opacity-25' onClick={handleMobileMenuToggle} />
@@ -109,7 +106,7 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
             </div>
             <div className='flex-1 h-0 pt-5 pb-4 overflow-y-auto'>
               <div className='flex-shrink-0 flex items-center px-4'>
-                <h1 className='text-xl font-bold text-gray-900'>CleanConnect</h1>
+                <h1 className='text-xl font-bold text-gray-900'>Dashboard Link</h1>
               </div>
               <nav className='mt-8 px-2 space-y-1'>
                 {navigation.map((item) => (
@@ -163,10 +160,8 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
         </div>
       )}
 
-      {/* Desktop sidebar */}
       <div className='hidden lg:flex lg:flex-shrink-0'>
         <div className='flex flex-col w-64'>
-          {/* Sidebar component, swap this element with another sidebar if you like */}
           <div className='flex flex-col flex-grow bg-white border-r border-gray-200 pt-5 pb-4 overflow-y-auto'>
             <div className='flex items-center justify-between flex-shrink-0 px-4'>
               <h1
@@ -174,7 +169,7 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
                   currentIsCollapsed ? 'hidden' : 'block'
                 }`}
               >
-                CleanConnect
+                Dashboard Link
               </h1>
               <button
                 onClick={handleToggle}

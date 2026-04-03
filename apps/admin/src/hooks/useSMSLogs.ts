@@ -1,13 +1,24 @@
-import type { SMSLog } from '@dashboard-link/shared'
 import { keepPreviousData, useQuery, UseQueryResult } from '@tanstack/react-query'
+import { api } from '../lib/api'
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1'
+export interface AdminSMSLog {
+  id: string
+  organizationId?: string
+  workerId?: string
+  to: string
+  body: string
+  status: 'pending' | 'sent' | 'failed' | 'delivered'
+  errorReason?: string
+  sentAt?: string
+  deliveredAt?: string
+  createdAt: string
+}
 
 interface SMSLogsParams {
   page?: number
   limit?: number
   workerId?: string
-  status?: SMSLog['status']
+  status?: AdminSMSLog['status']
   dateFrom?: string
   dateTo?: string
   search?: string
@@ -19,11 +30,6 @@ export function useSMSLogs(params: SMSLogsParams = {}): UseQueryResult<SMSLogsRe
   return useQuery({
     queryKey: ['sms-logs', page, limit, workerId, status, dateFrom, dateTo, search],
     queryFn: async (): Promise<SMSLogsResponse> => {
-      const token = localStorage.getItem('auth_token')
-      if (!token) {
-        throw new Error('No authentication token found')
-      }
-
       const searchParams = new URLSearchParams()
       searchParams.set('page', page.toString())
       searchParams.set('limit', limit.toString())
@@ -35,18 +41,39 @@ export function useSMSLogs(params: SMSLogsParams = {}): UseQueryResult<SMSLogsRe
       if (dateTo) searchParams.set('dateTo', dateTo)
       if (search) searchParams.set('search', search)
 
-      const response = await fetch(`${API_BASE}/sms/logs?${searchParams.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      const response = await api.get<{
+        success: boolean
+        data: Array<{
+          id: string
+          organization_id?: string
+          worker_id?: string
+          phone_number: string
+          message_content: string
+          status: AdminSMSLog['status']
+          error_reason?: string
+          sent_at?: string
+          delivered_at?: string
+          created_at: string
+        }>
+        pagination: SMSLogsResponse['pagination']
+      }>(`/api/v1/sms/logs?${searchParams.toString()}`)
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error?.message || 'Failed to fetch SMS logs')
+      return {
+        success: response.data.success,
+        data: response.data.data.map((log) => ({
+          id: log.id,
+          organizationId: log.organization_id,
+          workerId: log.worker_id,
+          to: log.phone_number,
+          body: log.message_content,
+          status: log.status,
+          errorReason: log.error_reason,
+          sentAt: log.sent_at,
+          deliveredAt: log.delivered_at,
+          createdAt: log.created_at,
+        })),
+        pagination: response.data.pagination,
       }
-
-      return response.json()
     },
     placeholderData: keepPreviousData, // ignore: legitimate TanStack Query caching
     staleTime: 2 * 60 * 1000, // 2 minutes for logs
@@ -58,7 +85,7 @@ export function useSMSLogs(params: SMSLogsParams = {}): UseQueryResult<SMSLogsRe
 
 interface SMSLogsResponse {
   success: boolean
-  data: SMSLog[]
+  data: AdminSMSLog[]
   pagination: {
     page: number
     limit: number

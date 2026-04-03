@@ -32,7 +32,7 @@ export function WorkerActions({ worker }: WorkerActionsProps) {
       await sendDashboardLinkMutation.mutateAsync({
         workerId: worker.id,
         expiresIn: data.expiresIn,
-        customMessage: data.customMessage || undefined,
+        customMessage: data.message.trim() || undefined,
       })
       setShowSMSModal(false)
     } catch {

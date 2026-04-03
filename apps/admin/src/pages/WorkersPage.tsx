@@ -1,5 +1,6 @@
 import type { Worker } from '@dashboard-link/shared'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { WorkerForm } from '../components/workers/WorkerForm'
 import { WorkerList } from '../components/workers/WorkerList'
 import { useDebouncedSearch, useWorkerMutations, useWorkers } from '../hooks/useWorkers'
@@ -8,10 +9,21 @@ export function WorkersPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingWorker, setEditingWorker] = useState<Worker | undefined>()
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const { searchValue, setSearchValue } = useDebouncedSearch(300)
   const { deleteWorker } = useWorkerMutations()
   const { workers, total, isLoading, error, refetch } = useWorkers()
+  const routeState = location.state as { openCreateWorker?: boolean } | null
+
+  useEffect(() => {
+    if (routeState?.openCreateWorker) {
+      setEditingWorker(undefined)
+      setIsFormOpen(true)
+      navigate(location.pathname, { replace: true })
+    }
+  }, [location.pathname, navigate, routeState])
 
   const filteredWorkers = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase()
@@ -45,7 +57,7 @@ export function WorkersPage() {
 
   const handleDelete = (worker: Worker) => {
     return deleteWorker.mutateAsync(worker.id).then(() => {
-      refetch()
+      void refetch()
     })
   }
 
@@ -62,7 +74,7 @@ export function WorkersPage() {
   const handleFormSuccess = async () => {
     setIsFormOpen(false)
     setEditingWorker(undefined)
-    refetch()
+    await refetch()
   }
 
   const handleStatusFilterChange = (newStatus: 'all' | 'active' | 'inactive') => {
@@ -71,12 +83,11 @@ export function WorkersPage() {
 
   return (
     <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-      {/* Header */}
       <div className='sm:flex sm:items-center sm:justify-between mb-8'>
         <div>
           <h1 className='text-2xl font-bold text-gray-900'>Workers</h1>
           <p className='mt-1 text-sm text-gray-500'>
-            Manage your organization's workers and their access to dashboards
+            Manage your organization&apos;s workers and their access to dashboards
           </p>
         </div>
         <div className='mt-4 sm:mt-0'>
@@ -102,7 +113,6 @@ export function WorkersPage() {
         </div>
       </div>
 
-      {/* Filters and Search */}
       <div className='bg-white shadow rounded-lg mb-6 p-4'>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <div>
@@ -112,7 +122,7 @@ export function WorkersPage() {
             <input
               type='text'
               id='search'
-              placeholder='Search by name or email...'
+              placeholder='Search by name, phone, or email...'
               className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500'
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
@@ -138,14 +148,12 @@ export function WorkersPage() {
         </div>
       </div>
 
-      {/* Worker Count */}
       <div className='mb-4'>
         <p className='text-sm text-gray-600'>
           Showing {filteredWorkers.length} of {total} workers
         </p>
       </div>
 
-      {/* Worker List */}
       <WorkerList
         workers={filteredWorkers}
         isLoading={isLoading}
@@ -158,7 +166,6 @@ export function WorkersPage() {
         }}
       />
 
-      {/* Worker Form Modal */}
       {isFormOpen && (
         <div className='fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50'>
           <div className='relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white'>

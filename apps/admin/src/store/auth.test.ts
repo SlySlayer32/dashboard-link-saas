@@ -1,306 +1,247 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { LoginCredentials } from '../types/auth'
+
+const authMocks = vi.hoisted(() => ({
+  signInWithPassword: vi.fn(),
+  signUp: vi.fn(),
+  signOut: vi.fn(),
+  refreshSession: vi.fn(),
+  getSession: vi.fn(),
+}))
+
+vi.mock('../lib/supabase', () => ({
+  supabase: {
+    auth: {
+      signInWithPassword: authMocks.signInWithPassword,
+      signUp: authMocks.signUp,
+      signOut: authMocks.signOut,
+      refreshSession: authMocks.refreshSession,
+      getSession: authMocks.getSession,
+    },
+  },
+}))
+
 import { useAuthStore } from './auth'
 
-// Mock fetch
-global.fetch = vi.fn()
-
-// Use the same User interface as the auth store
-interface User {
-  id: string
-  email: string
-  name: string
+const mockSession = {
+  access_token: 'test-token',
+  refresh_token: 'refresh-token',
+  expires_at: Math.floor(Date.now() / 1000) + 3600,
 }
 
-const mockUser: User = {
+const mockUser = {
   id: 'test-user-id',
   email: 'test@example.com',
-  name: 'Test User',
-}
-
-const mockCredentials: LoginCredentials = {
-  email: 'test@example.com',
-  password: 'password123',
+  user_metadata: {
+    name: 'Test User',
+    organization_id: 'org-123',
+    role: 'admin',
+  },
 }
 
 describe('Auth Store', () => {
   beforeEach(() => {
-    // Clear localStorage mock
-    const localStorageMock = vi.fn()
-    ;(global.localStorage.getItem as any) = localStorageMock
-    ;(global.localStorage.setItem as any) = vi.fn()
-    ;(global.localStorage.removeItem as any) = vi.fn()
+    localStorage.clear()
     vi.clearAllMocks()
-  })
-
-  afterEach(() => {
-    // Reset store state
     useAuthStore.setState({
       user: null,
       token: null,
       refreshToken: null,
+      expiresAt: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
     })
+
+    authMocks.signOut.mockResolvedValue({ error: null })
+    authMocks.getSession.mockResolvedValue({ data: { session: null } })
   })
 
-  describe('Initial State', () => {
-    it('should have correct initial state', () => {
-      const state = useAuthStore.getState()
-
-      expect(state.user).toBeNull()
-      expect(state.token).toBeNull()
-      expect(state.refreshToken).toBeNull()
-      expect(state.isLoading).toBe(false)
-      expect(state.error).toBeNull()
-      expect(state.isAuthenticated).toBe(false)
-    })
-
-    it('should handle rehydration without localStorage', async () => {
-      // Skip localStorage persistence testing as it's implementation detail
-      // Focus on store behavior instead
-      const state = useAuthStore.getState()
-      expect(state.isAuthenticated).toBe(false)
-    })
+  afterEach(() => {
+    localStorage.clear()
   })
 
-  describe('Login', () => {
-    it('should login successfully with valid credentials', async () => {
-      const mockResponse = {
+  it('should have the correct initial state', () => {
+    const state = useAuthStore.getState()
+
+    expect(state.user).toBeNull()
+    expect(state.token).toBeNull()
+    expect(state.refreshToken).toBeNull()
+    expect(state.expiresAt).toBeNull()
+    expect(state.isAuthenticated).toBe(false)
+    expect(state.isLoading).toBe(false)
+    expect(state.error).toBeNull()
+  })
+
+  it('should login successfully with valid credentials', async () => {
+    authMocks.signInWithPassword.mockResolvedValueOnce({
+      data: {
         user: mockUser,
-        token: 'test-token',
-        refreshToken: 'refresh-token',
-      }
-
-      ;(fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      } as Response)
-
-      const state = useAuthStore.getState()
-
-      await expect(state.login(mockCredentials)).resolves.not.toThrow()
-
-      const currentState = useAuthStore.getState()
-      expect(currentState.user).toEqual(mockUser)
-      expect(currentState.token).toBe('test-token')
-      expect(currentState.refreshToken).toBe('refresh-token')
-      expect(currentState.isAuthenticated).toBe(true)
-      expect(currentState.isLoading).toBe(false)
-      expect(currentState.error).toBeNull()
-
-      // Verify localStorage was updated
-      expect(localStorage.setItem).toHaveBeenCalledWith(
-        'auth-storage',
-        expect.stringContaining('test-token')
-      )
+        session: mockSession,
+      },
+      error: null,
     })
 
-    it('should handle login failure with invalid credentials', async () => {
-      const errorResponse = {
-        message: 'Invalid credentials',
-      }
-
-      ;(fetch as any).mockResolvedValueOnce({
-        ok: false,
-        json: async () => errorResponse,
-      } as Response)
-
-      const state = useAuthStore.getState()
-
-      await expect(state.login(mockCredentials)).rejects.toThrow('Invalid credentials')
-
-      const currentState = useAuthStore.getState()
-      expect(currentState.user).toBeNull()
-      expect(currentState.token).toBeNull()
-      expect(currentState.isAuthenticated).toBe(false)
-      expect(currentState.isLoading).toBe(false)
-      expect(currentState.error).toBe('Invalid credentials')
+    const result = await useAuthStore.getState().login({
+      email: 'test@example.com',
+      password: 'password123',
     })
 
-    it('should handle network errors during login', async () => {
-      ;(fetch as any).mockRejectedValueOnce(new Error('Network error'))
-
-      const state = useAuthStore.getState()
-
-      await expect(state.login(mockCredentials)).rejects.toThrow('An unexpected error occurred')
-
-      const currentState = useAuthStore.getState()
-      expect(currentState.error).toBe('An unexpected error occurred')
-      expect(currentState.isLoading).toBe(false)
-      expect(currentState.isAuthenticated).toBe(false)
+    const currentState = useAuthStore.getState()
+    expect(result).toEqual({ success: true })
+    expect(currentState.user).toEqual({
+      id: mockUser.id,
+      email: mockUser.email,
+      name: 'Test User',
+      organization_id: 'org-123',
+      role: 'admin',
     })
-
-    it('should set loading state during login', async () => {
-      // Create a promise that we control
-      let resolveLogin: (value: unknown) => void = () => {}
-      const loginPromise = new Promise((resolve) => {
-        resolveLogin = resolve
-      })
-
-      ;(fetch as any).mockReturnValueOnce(loginPromise as any)
-
-      const state = useAuthStore.getState()
-
-      // Start login
-      const loginCall = state.login(mockCredentials)
-
-      // Check loading state
-      expect(useAuthStore.getState().isLoading).toBe(true)
-
-      // Resolve the promise
-      resolveLogin({
-        ok: true,
-        json: async () => ({
-          user: mockUser,
-          token: 'test-token',
-          refreshToken: 'refresh-token',
-        }),
-      })
-
-      await loginCall
-
-      // Loading should be false
-      expect(useAuthStore.getState().isLoading).toBe(false)
-    })
+    expect(currentState.token).toBe('test-token')
+    expect(currentState.refreshToken).toBe('refresh-token')
+    expect(currentState.isAuthenticated).toBe(true)
+    expect(currentState.error).toBeNull()
+    expect(localStorage.setItem).toHaveBeenCalledWith('auth_token', 'test-token')
+    expect(localStorage.setItem).toHaveBeenCalledWith('sb-access-token', 'test-token')
   })
 
-  describe('Logout', () => {
-    it('should clear all auth state on logout', () => {
-      // Set up authenticated state
-      useAuthStore.setState({
-        user: mockUser,
-        token: 'test-token',
-        refreshToken: 'refresh-token',
-        isAuthenticated: true,
-        error: 'some error',
-      })
-
-      const state = useAuthStore.getState()
-      state.logout()
-
-      const currentState = useAuthStore.getState()
-      expect(currentState.user).toBeNull()
-      expect(currentState.token).toBeNull()
-      expect(currentState.refreshToken).toBeNull()
-      expect(currentState.isAuthenticated).toBe(false)
-      expect(currentState.error).toBeNull()
-      expect(currentState.isLoading).toBe(false)
+  it('should return an auth error when login fails', async () => {
+    authMocks.signInWithPassword.mockResolvedValueOnce({
+      data: { user: null, session: null },
+      error: { message: 'Invalid login credentials' },
     })
+
+    const result = await useAuthStore.getState().login({
+      email: 'test@example.com',
+      password: 'wrong-password',
+    })
+
+    const currentState = useAuthStore.getState()
+    expect(result).toEqual({ success: false, error: 'Invalid login credentials' })
+    expect(currentState.user).toBeNull()
+    expect(currentState.token).toBeNull()
+    expect(currentState.isAuthenticated).toBe(false)
+    expect(currentState.error).toBe('Invalid login credentials')
   })
 
-  describe('Refresh Token', () => {
-    it('should refresh token successfully', async () => {
-      // Set up authenticated state
-      useAuthStore.setState({
-        user: mockUser,
-        token: 'old-token',
-        refreshToken: 'refresh-token',
-        expiresAt: '2024-12-31T23:59:59Z',
-        isAuthenticated: true,
-      })
+  it('should return an unexpected error when login throws', async () => {
+    authMocks.signInWithPassword.mockRejectedValueOnce(new Error('Network error'))
 
-      const mockResponse = {
-        token: 'new-token',
-        expires_at: '2025-12-31T23:59:59Z',
-      }
-
-      ;(fetch as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      } as Response)
-
-      const state = useAuthStore.getState()
-
-      await expect(state.refreshAuthToken()).resolves.not.toThrow()
-
-      const currentState = useAuthStore.getState()
-      expect(currentState.token).toBe('new-token')
-      expect(currentState.user).toEqual(mockUser) // User should remain the same
-      expect(currentState.isAuthenticated).toBe(true)
+    const result = await useAuthStore.getState().login({
+      email: 'test@example.com',
+      password: 'password123',
     })
 
-    it('should handle refresh token failure', async () => {
-      // Set up authenticated state
-      useAuthStore.setState({
-        user: mockUser,
-        token: 'old-token',
-        refreshToken: 'refresh-token',
-        expiresAt: '2024-12-31T23:59:59Z',
-        isAuthenticated: true,
-      })
-      ;(fetch as any).mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ message: 'Token refresh failed' }),
-      } as Response)
-
-      const state = useAuthStore.getState()
-
-      await expect(state.refreshAuthToken()).rejects.toThrow('Token refresh failed')
-
-      // Should logout on refresh failure
-      const currentState = useAuthStore.getState()
-      expect(currentState.user).toBeNull()
-      expect(currentState.token).toBeNull()
-      expect(currentState.isAuthenticated).toBe(false)
-    })
-
-    it('should throw error when no token to refresh', async () => {
-      const state = useAuthStore.getState()
-
-      await expect(state.refreshAuthToken()).rejects.toThrow('No refresh token available')
-    })
+    expect(result).toEqual({ success: false, error: 'An unexpected error occurred' })
+    expect(useAuthStore.getState().error).toBe('An unexpected error occurred')
   })
 
-  describe('Clear Error', () => {
-    it('should clear error state', () => {
-      useAuthStore.setState({ error: 'Some error' })
-
-      const state = useAuthStore.getState()
-      state.clearError()
-
-      expect(useAuthStore.getState().error).toBeNull()
+  it('should clear auth state on logout', () => {
+    useAuthStore.setState({
+      user: {
+        id: mockUser.id,
+        email: mockUser.email,
+        name: 'Test User',
+        organization_id: 'org-123',
+        role: 'admin',
+      },
+      token: 'test-token',
+      refreshToken: 'refresh-token',
+      expiresAt: new Date().toISOString(),
+      isAuthenticated: true,
+      isLoading: false,
+      error: 'old error',
     })
+    localStorage.setItem('auth_token', 'test-token')
+    localStorage.setItem('sb-access-token', 'test-token')
 
-    it('should clear error state and set loading to false', () => {
-      useAuthStore.setState({ error: 'Some error', isLoading: true })
+    useAuthStore.getState().logout()
 
-      const state = useAuthStore.getState()
-      state.clearError()
-
-      expect(useAuthStore.getState().error).toBeNull()
-      expect(useAuthStore.getState().isLoading).toBe(false)
-    })
+    const currentState = useAuthStore.getState()
+    expect(currentState.user).toBeNull()
+    expect(currentState.token).toBeNull()
+    expect(currentState.refreshToken).toBeNull()
+    expect(currentState.isAuthenticated).toBe(false)
+    expect(currentState.error).toBeNull()
+    expect(localStorage.removeItem).toHaveBeenCalledWith('auth_token')
+    expect(localStorage.removeItem).toHaveBeenCalledWith('sb-access-token')
   })
 
-  describe('Set Loading', () => {
-    it('should set loading state', () => {
-      const state = useAuthStore.getState()
-
-      state.setLoading(true)
-      expect(useAuthStore.getState().isLoading).toBe(true)
-
-      state.setLoading(false)
-      expect(useAuthStore.getState().isLoading).toBe(false)
+  it('should refresh the token successfully', async () => {
+    useAuthStore.setState({
+      user: {
+        id: mockUser.id,
+        email: mockUser.email,
+        name: 'Test User',
+        organization_id: 'org-123',
+        role: 'admin',
+      },
+      token: 'old-token',
+      refreshToken: 'old-refresh-token',
+      expiresAt: new Date().toISOString(),
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
     })
+
+    authMocks.refreshSession.mockResolvedValueOnce({
+      data: {
+        session: {
+          ...mockSession,
+          access_token: 'new-token',
+          refresh_token: 'new-refresh-token',
+        },
+      },
+      error: null,
+    })
+
+    await expect(useAuthStore.getState().refreshAuthToken()).resolves.toBeUndefined()
+
+    const currentState = useAuthStore.getState()
+    expect(currentState.token).toBe('new-token')
+    expect(currentState.refreshToken).toBe('new-refresh-token')
+    expect(currentState.isAuthenticated).toBe(true)
+    expect(localStorage.setItem).toHaveBeenCalledWith('auth_token', 'new-token')
+    expect(localStorage.setItem).toHaveBeenCalledWith('sb-access-token', 'new-token')
   })
 
-  describe('Typed Selectors', () => {
-    it('should return correct values from selectors', () => {
-      useAuthStore.setState({
-        user: mockUser,
-        token: 'test-token',
-        isLoading: true,
-        error: 'test error',
-        isAuthenticated: true,
-      })
-
-      expect(useAuthStore.getState().user).toEqual(mockUser)
-      expect(useAuthStore.getState().token).toBe('test-token')
-      expect(useAuthStore.getState().isLoading).toBe(true)
-      expect(useAuthStore.getState().error).toBe('test error')
-      expect(useAuthStore.getState().isAuthenticated).toBe(true)
+  it('should clear auth state when token refresh fails', async () => {
+    useAuthStore.setState({
+      user: {
+        id: mockUser.id,
+        email: mockUser.email,
+        name: 'Test User',
+        organization_id: 'org-123',
+        role: 'admin',
+      },
+      token: 'old-token',
+      refreshToken: 'old-refresh-token',
+      expiresAt: new Date().toISOString(),
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
     })
+
+    authMocks.refreshSession.mockResolvedValueOnce({
+      data: { session: null },
+      error: { message: 'Token refresh failed' },
+    })
+
+    await expect(useAuthStore.getState().refreshAuthToken()).rejects.toThrow(
+      'Token refresh failed'
+    )
+
+    const currentState = useAuthStore.getState()
+    expect(currentState.user).toBeNull()
+    expect(currentState.token).toBeNull()
+    expect(currentState.refreshToken).toBeNull()
+    expect(currentState.isAuthenticated).toBe(false)
+  })
+
+  it('should clear the error state', () => {
+    useAuthStore.setState({ error: 'Some error', isLoading: true })
+
+    useAuthStore.getState().clearError()
+
+    expect(useAuthStore.getState().error).toBeNull()
+    expect(useAuthStore.getState().isLoading).toBe(false)
   })
 })

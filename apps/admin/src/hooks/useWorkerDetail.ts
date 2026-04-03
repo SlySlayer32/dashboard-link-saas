@@ -1,7 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useAuthStore } from '../store/auth'
-
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1'
+import { api } from '../lib/api'
 
 interface WorkerData {
   id: string
@@ -9,10 +7,10 @@ interface WorkerData {
   phone: string
   email?: string
   active: boolean
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
   metadata: Record<string, unknown>
-  organization_id: string
+  organizationId: string
 }
 
 interface WorkerStats {
@@ -23,33 +21,27 @@ interface WorkerStats {
   smsThisWeek: number
 }
 
+interface WorkerAccessSummary {
+  lastOpenedAt: string | null
+  totalOpens: number
+}
+
 interface WorkerDetailResponse {
   worker: WorkerData
   stats: WorkerStats
+  access: WorkerAccessSummary
 }
 
-async function fetchWorkerDetail(token: string, workerId: string): Promise<WorkerDetailResponse> {
-  const response = await fetch(`${API_BASE}/workers/${workerId}/stats`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch worker details')
-  }
-
-  return response.json()
+async function fetchWorkerDetail(workerId: string): Promise<WorkerDetailResponse> {
+  const response = await api.get<WorkerDetailResponse>(`/api/v1/workers/${workerId}/stats`)
+  return response.data
 }
 
 export function useWorkerDetail(workerId: string) {
-  const { token } = useAuthStore()
-
   return useQuery({
     queryKey: ['worker', 'detail', workerId],
-    queryFn: () => fetchWorkerDetail(token || '', workerId),
-    enabled: !!token && !!workerId,
+    queryFn: () => fetchWorkerDetail(workerId),
+    enabled: !!workerId,
     staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
   })
 }

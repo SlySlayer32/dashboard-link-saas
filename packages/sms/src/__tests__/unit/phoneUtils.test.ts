@@ -1,11 +1,11 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-  formatToE164,
-  isValidE164,
-  extractCountryCode,
-  getCountryFromCode,
-  maskPhoneNumber,
   arePhonesEqual,
+  extractCountryCode,
+  formatToE164,
+  getCountryFromCode,
+  isValidE164,
+  maskPhoneNumber,
 } from '../../utils/phoneUtils'
 
 describe('phoneUtils', () => {
@@ -35,9 +35,9 @@ describe('phoneUtils', () => {
 
     it('should reject invalid E.164 numbers', () => {
       expect(isValidE164('0412345678')).toBe(false)
-      expect(isValidE164('+0412345678')).toBe(false) // Can't start with 0
-      expect(isValidE164('61412345678')).toBe(false) // Missing +
-      expect(isValidE164('+61')).toBe(false) // Too short
+      expect(isValidE164('+0412345678')).toBe(false)
+      expect(isValidE164('61412345678')).toBe(false)
+      expect(isValidE164('+61')).toBe(false)
     })
 
     it('should reject numbers with non-digits', () => {
@@ -82,7 +82,7 @@ describe('phoneUtils', () => {
 
   describe('maskPhoneNumber', () => {
     it('should mask all but last 4 digits', () => {
-      expect(maskPhoneNumber('+61412345678')).toBe('**********5678')
+      expect(maskPhoneNumber('+61412345678')).toBe('********5678')
       expect(maskPhoneNumber('1234567890')).toBe('******7890')
     })
 

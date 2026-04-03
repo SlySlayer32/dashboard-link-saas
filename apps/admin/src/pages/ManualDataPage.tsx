@@ -103,6 +103,7 @@ export function ManualDataPage() {
   ) => {
     if (!editingItem) return
     await updateScheduleMutation.mutateAsync({
+      workerId: selectedWorkerId,
       itemId: editingItem.id,
       data: data as UpdateScheduleItemRequest,
     })
@@ -112,7 +113,7 @@ export function ManualDataPage() {
 
   const handleDeleteSchedule = async (item: ScheduleItem) => {
     if (window.confirm('Are you sure you want to delete this schedule item?')) {
-      await deleteScheduleMutation.mutateAsync(item.id)
+      await deleteScheduleMutation.mutateAsync({ workerId: selectedWorkerId, itemId: item.id })
       refetchSchedule()
     }
   }
@@ -126,6 +127,7 @@ export function ManualDataPage() {
   const handleUpdateTask = async (data: CreateTaskItemRequest | UpdateTaskItemRequest) => {
     if (!editingItem) return
     await updateTaskMutation.mutateAsync({
+      workerId: selectedWorkerId,
       itemId: editingItem.id,
       data: data as UpdateTaskItemRequest,
     })
@@ -135,7 +137,7 @@ export function ManualDataPage() {
 
   const handleDeleteTask = async (item: TaskItem) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
-      await deleteTaskMutation.mutateAsync(item.id)
+      await deleteTaskMutation.mutateAsync({ workerId: selectedWorkerId, itemId: item.id })
       refetchTasks()
     }
   }
@@ -333,7 +335,8 @@ export function ManualDataPage() {
             description: (editingItem as TaskItem).description,
             dueDate: (editingItem as TaskItem).dueDate,
             priority: (editingItem as TaskItem).priority,
-            status: (editingItem as TaskItem).status,
+            status:
+              (editingItem as TaskItem).status === 'completed' ? 'completed' : 'pending',
           }}
           onSubmit={handleUpdateTask}
           onCancel={() => setEditingItem(null)}

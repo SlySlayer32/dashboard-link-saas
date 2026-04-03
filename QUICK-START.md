@@ -1,124 +1,78 @@
-# 🚀 Quick Start - Development Workflow
+# Quick Start
 
-## Essential Commands
+## Prerequisites
 
-### 🔧 Fix Everything Automatically
+- Node.js 18+
+- pnpm 9+
+- Supabase project
+- MobileMessage account for SMS delivery
+
+## Install
+
 ```bash
-pnpm run fix:all
-```
-Runs ESLint auto-fix + Prettier formatting on all files.
-
-### ✅ Validate Before Commit
-```bash
-pnpm run dev:check
-```
-Comprehensive check: TypeScript + ESLint + Prettier + Build verification.
-
-### 📋 Generate Full Report
-```bash
-pnpm run lint:report
-```
-Creates `lint-report.txt` with all issues across the codebase.
-
----
-
-## Common Workflows
-
-### Starting Development
-```bash
-pnpm run db:start    # Start Supabase
-pnpm run dev         # Start all dev servers
+pnpm install
 ```
 
-### After Making Changes
+## Configure Environment Variables
+
+Create local environment files from the documented keys in [ENV-VARIABLES.md](/E:/CleanConnect/docs/5-dev-guide/ENV-VARIABLES.md).
+
+At minimum you need:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_API_URL`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_KEY`
+- `JWT_SECRET`
+- `MOBILE_MESSAGE_USERNAME`
+- `MOBILE_MESSAGE_PASSWORD`
+- `CORS_ORIGIN`
+
+## Start Local Infrastructure
+
+If you are using local Supabase:
+
 ```bash
-pnpm run fix:all     # Auto-fix linting and formatting
-pnpm run typecheck   # Check for type errors
+pnpm db:start
+pnpm db:migrate
 ```
 
-### Before Committing
+## Start the Workspace
+
 ```bash
-pnpm run dev:check   # Run all quality checks
-```
-Or just commit - pre-commit hooks will run automatically!
-
-### Debugging Issues
-```bash
-# Type errors
-pnpm run typecheck
-
-# Linting errors
-pnpm run lint
-
-# Formatting issues
-pnpm run format:check
-
-# Full report
-pnpm run lint:report
+pnpm dev
 ```
 
----
+Local app URLs:
 
-## Available Scripts
+- Admin: `http://localhost:5173`
+- Worker: `http://localhost:5174`
+- API: `http://localhost:3000`
 
-| Command | Description |
-|---------|-------------|
-| `pnpm run fix:all` | Fix all auto-fixable issues (ESLint + Prettier) |
-| `pnpm run dev:check` | Run comprehensive pre-commit checks |
-| `pnpm run validate` | Type check + lint + format check |
-| `pnpm run typecheck` | Check TypeScript types |
-| `pnpm run lint` | Check for linting issues |
-| `pnpm run lint:fix` | Fix auto-fixable linting issues |
-| `pnpm run format` | Format all files with Prettier |
-| `pnpm run format:check` | Check formatting without changes |
-| `pnpm run lint:report` | Generate comprehensive lint report |
-| `pnpm run test` | Run all tests |
-| `pnpm run build` | Build all packages |
+## Daily Developer Workflow
 
----
-
-## Pre-Commit Hooks
-
-**Automatic on every commit:**
-- ✅ ESLint with auto-fix on staged files
-- ✅ Prettier formatting on staged files
-
-**Bypass (not recommended):**
 ```bash
-git commit --no-verify
+pnpm build
+pnpm lint
+pnpm test
 ```
 
----
+Helpful repo-level checks:
 
-## Troubleshooting
-
-### "Cannot find module" errors
 ```bash
-pnpm run build --filter=@dashboard-link/shared
+pnpm dev:check
+pnpm lint:report
 ```
 
-### Git hooks not running
-```bash
-pnpm run postinstall
-```
+## MVP Verification Flow
 
-### IDE type errors but CLI is fine
-Restart TypeScript server in your IDE:
-- VS Code: `Cmd/Ctrl + Shift + P` → "TypeScript: Restart TS Server"
+Use this as the minimum manual verification path after local changes:
 
----
-
-## 📚 Full Documentation
-
-See [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md) for detailed information.
-
----
-
-## 🎯 Best Practice
-
-**Run this after implementing features:**
-```bash
-pnpm run dev:check
-```
-
-This ensures code quality before you commit!
+1. Sign in to the admin app.
+2. Create a worker.
+3. Open Manual Data and add schedule/task content.
+4. Send a dashboard link from worker detail.
+5. Open the worker dashboard link.
+6. Confirm dashboard-open history appears in admin.

@@ -1,12 +1,12 @@
-import type { SMSLog } from '@dashboard-link/shared'
 import { ArrowDownTrayIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import { format } from 'date-fns'
+import type { AdminSMSLog } from '../hooks/useSMSLogs'
 import { SMSStatusBadge } from './SMSStatusBadge'
 
 interface SMSLogTableProps {
-  logs: SMSLog[]
+  logs: AdminSMSLog[]
   isLoading?: boolean
-  onResend?: (log: SMSLog) => void
+  onResend?: (log: AdminSMSLog) => void
 }
 
 export function SMSLogTable({ logs, isLoading, onResend }: SMSLogTableProps) {
@@ -80,40 +80,22 @@ export function SMSLogTable({ logs, isLoading, onResend }: SMSLogTableProps) {
         <table className='min-w-full divide-y divide-gray-200'>
           <thead className='bg-gray-50'>
             <tr>
-              <th
-                scope='col'
-                className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-              >
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                 Date
               </th>
-              <th
-                scope='col'
-                className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-              >
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                 Worker
               </th>
-              <th
-                scope='col'
-                className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-              >
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                 Phone
               </th>
-              <th
-                scope='col'
-                className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-              >
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                 Status
               </th>
-              <th
-                scope='col'
-                className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-              >
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                 Message
               </th>
-              <th
-                scope='col'
-                className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'
-              >
+              <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                 Actions
               </th>
             </tr>
@@ -132,7 +114,10 @@ export function SMSLogTable({ logs, isLoading, onResend }: SMSLogTableProps) {
                   <SMSStatusBadge status={log.status} />
                 </td>
                 <td className='px-6 py-4 text-sm text-gray-900 max-w-xs truncate'>
-                  <span title={log.body}>{log.body}</span>
+                  <div>
+                    <span title={log.body}>{log.body}</span>
+                    {log.errorReason && <p className='mt-1 text-xs text-red-600'>{log.errorReason}</p>}
+                  </div>
                 </td>
                 <td className='px-6 py-4 whitespace-nowrap text-sm font-medium'>
                   {log.status === 'failed' && onResend && (
@@ -143,15 +128,6 @@ export function SMSLogTable({ logs, isLoading, onResend }: SMSLogTableProps) {
                     >
                       <ArrowPathIcon className='h-4 w-4 mr-1' />
                       Resend
-                    </button>
-                  )}
-                  {log.status === 'failed' && log.metadata && (
-                    <button
-                      type='button'
-                      className='ml-4 text-gray-600 hover:text-gray-900'
-                      title={JSON.stringify(log.metadata)}
-                    >
-                      View Error
                     </button>
                   )}
                 </td>

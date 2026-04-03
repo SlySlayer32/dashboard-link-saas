@@ -10,7 +10,7 @@ function ScheduleWidget({ schedule }: ScheduleWidgetProps) {
     return (
       <div className='bg-white rounded-lg shadow'>
         <div className='px-6 py-4 border-b border-gray-200'>
-          <h2 className='text-lg font-semibold text-gray-900'>Today's Schedule</h2>
+          <h2 className='text-lg font-semibold text-gray-900'>Today&apos;s Schedule</h2>
         </div>
         <div className='px-6 py-8 text-center'>
           <p className='text-gray-600'>No scheduled items for today</p>
@@ -19,7 +19,6 @@ function ScheduleWidget({ schedule }: ScheduleWidgetProps) {
     )
   }
 
-  // Sort schedule items chronologically by startTime
   const sortedSchedule = [...schedule].sort(
     (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
   )
@@ -27,7 +26,7 @@ function ScheduleWidget({ schedule }: ScheduleWidgetProps) {
   return (
     <div className='bg-white rounded-lg shadow'>
       <div className='px-6 py-4 border-b border-gray-200'>
-        <h2 className='text-lg font-semibold text-gray-900'>Today's Schedule</h2>
+        <h2 className='text-lg font-semibold text-gray-900'>Today&apos;s Schedule</h2>
       </div>
       <div className='divide-y divide-gray-200'>
         {sortedSchedule.map((item) => (
@@ -43,9 +42,16 @@ function ScheduleWidget({ schedule }: ScheduleWidgetProps) {
                 <p className='text-sm text-gray-600 mt-1'>
                   {formatTime(item.startTime)} - {formatTime(item.endTime)}
                 </p>
-                {item.location && <p className='text-sm text-gray-600 mt-1'>📍 {item.location}</p>}
+                {item.location && (
+                  <p className='text-sm text-gray-600 mt-1'>Location: {item.location}</p>
+                )}
                 {item.description && (
-                  <p className='text-sm text-gray-700 mt-2'>{item.description}</p>
+                  <div className='mt-2 rounded-md bg-gray-50 px-3 py-2'>
+                    <p className='text-xs font-semibold uppercase tracking-wide text-gray-500'>
+                      Instructions
+                    </p>
+                    <p className='mt-1 text-sm text-gray-700'>{item.description}</p>
+                  </div>
                 )}
               </div>
             </div>

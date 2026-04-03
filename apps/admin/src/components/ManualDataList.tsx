@@ -28,8 +28,6 @@ function getStatusColor(status: string) {
   switch (status) {
     case 'completed':
       return 'text-green-700 bg-green-100'
-    case 'in_progress':
-      return 'text-blue-700 bg-blue-100'
     case 'pending':
       return 'text-gray-700 bg-gray-100'
     default:

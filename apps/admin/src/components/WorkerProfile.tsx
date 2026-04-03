@@ -7,9 +7,10 @@ interface WorkerData {
   phone: string
   email?: string
   active: boolean
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
   metadata: Record<string, unknown>
+  organizationId: string
 }
 
 interface WorkerStats {
@@ -20,9 +21,15 @@ interface WorkerStats {
   smsThisWeek: number
 }
 
+interface WorkerAccessSummary {
+  lastOpenedAt: string | null
+  totalOpens: number
+}
+
 interface WorkerProfileProps {
   worker: WorkerData
   stats: WorkerStats
+  access?: WorkerAccessSummary
   isLoading?: boolean
 }
 
@@ -50,7 +57,7 @@ function StatCard({
   )
 }
 
-export function WorkerProfile({ worker, stats, isLoading }: WorkerProfileProps) {
+export function WorkerProfile({ worker, stats, access, isLoading }: WorkerProfileProps) {
   if (isLoading) {
     return (
       <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
@@ -113,7 +120,7 @@ export function WorkerProfile({ worker, stats, isLoading }: WorkerProfileProps) 
               <div className='flex items-center text-sm'>
                 <Calendar className='h-4 w-4 text-gray-400 mr-3' />
                 <span className='text-gray-500'>
-                  Added {new Date(worker.created_at).toLocaleDateString()}
+                  Added {new Date(worker.createdAt).toLocaleDateString()}
                 </span>
               </div>
             </div>
@@ -146,6 +153,24 @@ export function WorkerProfile({ worker, stats, isLoading }: WorkerProfileProps) 
                 icon={<BarChart3 className='h-4 w-4 text-purple-600' />}
                 color='bg-purple-100'
               />
+            </div>
+          </div>
+        </div>
+
+        <div className='mt-6'>
+          <h3 className='text-lg font-semibold text-gray-900 mb-4'>Dashboard Access</h3>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+            <div className='rounded-lg border border-gray-200 bg-gray-50 p-4'>
+              <p className='text-sm font-medium text-gray-600'>Total opens</p>
+              <p className='mt-1 text-2xl font-bold text-gray-900'>{access?.totalOpens ?? 0}</p>
+            </div>
+            <div className='rounded-lg border border-gray-200 bg-gray-50 p-4'>
+              <p className='text-sm font-medium text-gray-600'>Last opened</p>
+              <p className='mt-1 text-sm font-medium text-gray-900'>
+                {access?.lastOpenedAt
+                  ? new Date(access.lastOpenedAt).toLocaleString()
+                  : 'No dashboard opens yet'}
+              </p>
             </div>
           </div>
         </div>

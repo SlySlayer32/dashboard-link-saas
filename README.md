@@ -1,371 +1,85 @@
-# 📱 Dashboard Link SaaS Platform
+# Dashboard Link
 
-> 🚀 The **fastest way** to deliver personalized daily dashboards to your team via SMS.  
-> Built for modern businesses—cleaning companies, construction firms, healthcare agencies, and more.  
-> **Zero app installs required.** Workers tap a link and see their day.
+Dashboard Link is a multi-tenant SaaS product for sending workers a secure SMS link to a mobile dashboard with their schedule, tasks, and day-of instructions.
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/SlySlayer32/dashboard-link-saas/ci.yml?branch=main)
-![License](https://img.shields.io/github/license/SlySlayer32/dashboard-link-saas)
-![Version](https://img.shields.io/github/v/release/SlySlayer32/dashboard-link-saas)
-![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
-![Node.js](https://img.shields.io/badge/Node.js-43853D?logo=node.js&logoColor=white)
+## Current Status
 
----
+Verified on April 3, 2026:
 
-## 🚧 Current Project Status (March 30, 2026)
+- `pnpm build` passes for the full workspace.
+- `pnpm lint` runs successfully across the workspace.
+- `pnpm test` passes using the maintained local test suites.
+- Admin, API, and worker apps all compile successfully.
+- Manual entry is the launch path for MVP delivery.
 
-**Project Completion: 85%** | **Quality: B+ (Very Good)** | **Status: Realignment Phase Complete**
+## MVP Scope
 
-### ✅ What's Working
-- All 7 backend packages build successfully
-- Complete repository pattern with type-safe QueryBuilder
-- Database migrations applied (9/9) with RLS policies active
-- Worker app builds successfully
-- API app builds successfully
-- Local Supabase running and verified
+The current MVP path is:
 
-### ⚠️ What Needs Attention
-- **Admin app has 18 TypeScript errors** (30-45 min to fix)
-- No runtime verification performed yet
-- 1 direct Supabase call remains (needs `AdapterConfigRepository`)
+1. Manager creates or updates workers in the admin app.
+2. Manager adds schedule items and task items through Manual Data.
+3. Manager sends a dashboard link by SMS.
+4. Worker opens the public dashboard link with no account required.
+5. Admin can review SMS delivery activity and dashboard-open history.
 
-### 📋 Next Steps for Developers
-1. Fix admin app TypeScript errors (see `HANDOVER-2026-03-30.md`)
-2. Run `pnpm build` to verify success
-3. Run `pnpm dev` and test all apps
-4. See full details in:
-   - `HANDOVER-2026-03-30.md` - Complete handover documentation
-   - `REALIGNMENT-AUDIT-2026-03-27.md` - Detailed audit report
-   - `CHANGELOG.md` - All changes made during realignment
-   - `docs/GIT-WORKFLOW.md` - Branch strategy and commit conventions
+Plugin integrations remain in the repo, but they are not required for MVP launch readiness.
 
-**Estimated time to 100% completion: 3-4 hours**
+## Apps
 
----
+- Admin app: `apps/admin`
+- API: `apps/api`
+- Worker app: `apps/worker`
 
-## 🎯 Why Dashboard Link?
+## Core Commands
 
-- **📱 No apps, no logins**—Workers receive a simple SMS link. Open, view, done.
-- **⚡ 2-minute setup**—Connect Google Calendar, Airtable, or enter data manually.
-- **� Enterprise-grade security**—Time-limited tokens, organization isolation, encrypted data.
-- **💰 Cost-effective SMS**—Australian rates from 2¢/SMS with MobileMessage.
-- **📊 Real-time updates**—Dashboards refresh automatically; no page reloads.
-
-**Perfect for:**
-- 🧹 Cleaning companies → Daily jobs & locations
-- 🏗️ Construction firms → Site assignments & safety briefs
-- 🏥 Healthcare agencies → Patient visit schedules
-- 📦 Delivery companies → Routes & delivery notes
-- 🎓 Schools → Student timetables & events
-
----
-
-## ✨ What You Get
-
-### 🚀 Core Features
-- **SMS Dashboard Delivery** – One-click links sent straight to workers' phones
-- **Secure Access Tokens** – Auto-expiring links (1h–24h), single-use protection
-- **Plugin System** – Pull data from Google Calendar, Airtable, Notion, or manual entry
-- **Multi-tenant by Design** – Each organization is fully isolated (RLS-enabled)
-- **Mobile-First UI** – Looks great on any phone, no zooming needed
-
-### 🎨 Admin Dashboard
-- **Worker Management** – Add/edit workers with phone validation
-- **SMS Logs** – Track delivery status and engagement
-- **Plugin Configuration** – OAuth setup for Google, API keys for Airtable/Notion
-- **Token Controls** – Generate links with custom expiry times
-- **Organization Settings** – Configure company details and preferences
-
-### 📱 Worker Experience
-- **Clean, focused view** – Only today's schedule and tasks
-- **One-tap refresh** – Always see the latest info
-- **Offline-friendly** – Works even with spotty connections
-- **No training needed** – Intuitive interface for non-technical users
-
----
-
-## 🏗️ Architecture at a Glance
-
-```mermaid
-graph TD
-    A[Admin Config] --> B[Workers + Plugins]
-    B --> C[Generate Token Link]
-    C --> D[SMS Provider]
-    D --> E[Worker Gets SMS]
-    E --> F[Clicks Link]
-    F --> G[Token Validation]
-    G --> H[Dashboard API]
-    H --> I[Plugin Adapters]
-    I --> J[External APIs]
-    J --> K[Display Dashboard]
-    
-    style A fill:#e1f5fe
-    style F fill:#f3e5f5
-    style K fill:#e8f5e9
+```bash
+pnpm install
+pnpm build
+pnpm lint
+pnpm test
+pnpm dev
 ```
 
-### 🛠️ Tech Stack
+Windows-friendly maintenance scripts:
 
-- **Frontend**: Vite + React 18 + TanStack Query + Tailwind + Zustand
-- **Backend**: Hono.js + Supabase (PostgreSQL + Auth)
-- **SMS**: MobileMessage.com.au (Australia)
-- **Tooling**: Turborepo + pnpm + TypeScript + Vitest
-
----
-
-## � Quick Start (5 minutes)
-
-### Prerequisites
-- Node.js 18+
-- pnpm 9+
-- Supabase account (free tier works)
-- MobileMessage.com.au account (for SMS)
-
-###  Manual Setup
-
-#### 1️⃣ Clone & Install
 ```bash
-git clone https://github.com/SlySlayer32/dashboard-link-saas.git
-cd dashboard-link-saas
+pnpm dev:check
+pnpm lint:report
+```
+
+These now run PowerShell wrappers in `scripts/dev-check.ps1` and `scripts/lint-report.ps1`.
+
+## Local Development
+
+1. Install dependencies:
+
+```bash
 pnpm install
 ```
 
-#### 2️⃣ Environment Variables
+2. Start local Supabase if you are running against local infrastructure:
+
 ```bash
-cp ENV.example .env
+pnpm db:start
 ```
 
-Edit `.env` with your keys:
-```env
-# App
-APP_URL=http://localhost:5173
-API_URL=http://localhost:3000
+3. Start the apps:
 
-# Supabase (get from https://supabase.com/dashboard/project/_/settings/api)
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-key
-
-# MobileMessage.com.au SMS
-MOBILE_MESSAGE_USERNAME=your-username
-MOBILE_MESSAGE_PASSWORD=your-password
-MOBILE_MESSAGE_SENDER_ID=DashLink
-
-# Optional plugins
-GOOGLE_CLIENT_ID=your-client-id
-GOOGLE_CLIENT_SECRET=your-client-secret
-AIRTABLE_API_KEY=your-api-key
-NOTION_INTEGRATION_SECRET=your-integration-secret
-```
-
-#### 3️⃣ Database Setup
-```bash
-# Apply migrations to your online Supabase project
-npx supabase link --project-ref your-project-ref
-npx supabase db push
-
-# (Optional) Seed sample data
-npx supabase db reset
-```
-
-#### 4️⃣ Start Everything
 ```bash
 pnpm dev
 ```
 
-🎉 **Your apps are live:**
-- Admin: http://localhost:5173
-- Worker: http://localhost:5174
-- API: http://localhost:3000
+Default local URLs:
 
----
+- Admin: `http://localhost:5173`
+- Worker: `http://localhost:5174`
+- API: `http://localhost:3000`
 
-## 🧪 Testing & Quality
+## Quality Gates
 
-```bash
-# Run all tests
-pnpm test
+- `pnpm build` is the full workspace compile/build gate.
+- `pnpm lint` is the workspace lint gate.
+- `pnpm test` runs the maintained local suites that are safe in standard CI.
+- The real-database API soft-delete suite remains opt-in via `pnpm --filter @dashboard-link/api run test:integration:db`.
 
-# Run with coverage
-pnpm test:coverage
-
-# Lint and format
-pnpm lint
-pnpm format
-
-# Type check (build)
-pnpm build
-```
-
-**Test coverage targets:**
-- API routes: 90%+
-- React components: 85%+
-- Utils/validators: 95%+
-
----
-
-## 🔌 Plugin System
-
-Connect your existing tools in minutes.
-
-| Plugin | What it does | Setup time |
-|--------|--------------|------------|
-| **Manual Entry** | Type schedules/tasks directly | 30s |
-| **Google Calendar** | Sync events from calendars | 2m |
-| **Airtable** | Pull from any base | 2m |
-| **Notion** | Fetch from databases | 2m |
-
-### Create Your Own Plugin
-
-```typescript
-import { BaseAdapter } from '@dashboard-link/plugins';
-
-export class MyAdapter extends BaseAdapter {
-  id = 'my-plugin';
-  name = 'My Custom Plugin';
-  version = '1.0.0';
-
-  async getTodaySchedule(workerId: string, config: any) {
-    // Fetch schedule from your API
-    return [];
-  }
-
-  async getTodayTasks(workerId: string, config: any) {
-    // Fetch tasks from your API
-    return [];
-  }
-}
-```
-
----
-
-## 📱 SMS Integration Details
-
-We use **MobileMessage.com.au** for unbeatable Australian rates:
-
-| Feature | Detail |
-|---------|--------|
-| **Cost** | 2¢/SMS intro, 3¢ ongoing |
-| **Fees** | None |
-| **Number** | Free virtual number for replies |
-| **Support** | Australian-based |
-
-**Example SMS to a worker:**
-```
-Hi Sarah! Your daily dashboard is ready: https://dash.yourco.com/dashboard/7x9k2m
-```
-
----
-
-## 🚀 Deploy to Production
-
-### Vercel (Recommended)
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel --prod
-
-# Custom domain
-vercel --prod --domains dashboard.yourcompany.com
-```
-
-### Docker
-
-```bash
-# Build
-docker build -t dashboard-link .
-
-# Run with compose
-docker-compose up -d
-```
-
-### Environment Checklist for Production
-
-- [ ] Supabase URL & keys
-- [ ] MobileMessage credentials
-- [ ] Plugin API keys (if used)
-- [ ] CORS allowed origins
-- [ ] Custom domain (optional)
-
----
-
-## 📚 Documentation
-
-## 📘 Developer Docs
-
-- [INSTRUCTIONS.md](./INSTRUCTIONS.md)
-- [docs/SETUP_CHECKLIST.md](./docs/SETUP_CHECKLIST.md)
-- [ENV.example](./ENV.example)
-
-The project follows a Zapier-style architecture (see [Architecture Blueprint](./docs/ARCHITECTURE_BLUEPRINT.md)).
-
-### 🎯 Maturity-Level Development System
-
-This project uses **maturity-level driven development** to ensure AI development teams build exactly what's needed at each stage.
-
-**Current Maturity**: V1 (Professional Product)
-
-When working with AI tools, define the intended maturity level in the request so scope stays aligned with production quality expectations.
-
-- **[Architecture](./docs/ARCHITECTURE.md)** – System design
-- **[Development Guide](./docs/DEVELOPMENT_ENVIRONMENT.md)** – Local setup
-- **[Plugin Development](./docs/PLUGIN_DEVELOPMENT.md)** – Build adapters
-- **[API Reference](./docs/API.md)** – Endpoints & examples
-- **[Deployment](./docs/DEPLOYMENT.md)** – Production guide
-
----
-
-## 🤝 Contributing
-
-We love contributions! Here's how:
-
-1. Fork this repo
-2. Create a feature branch: `git checkout -b feature/amazing`
-3. Make changes and test: `pnpm test`
-4. Commit: `git commit -m 'Add amazing feature'`
-5. Push: `git push origin feature/amazing`
-6. Open a Pull Request
-
-Read our [Contributing Guide](./CONTRIBUTING.md) for details.
-
----
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE) for full details.
-
----
-
-## 🙏 Made Possible By
-
-- [Hono.js](https://hono.dev) – Blazing-fast web framework
-- [Supabase](https://supabase.com) – Backend-as-a-Service
-- [Vite](https://vitejs.dev) – Instant dev server
-- [MobileMessage.com.au](https://mobilemessage.com.au) – SMS delivery
-- [Tailwind CSS](https://tailwindcss.com) – Utility-first styling
-
----
-
-## 📞 Need Help?
-
-- 📧 Email: support@dashboardlink.com
-- 💬 Discord: [Join our community](https://discord.gg/dashboardlink)
-- 🐛 Report issues: [GitHub Issues](https://github.com/SlySlayer32/dashboard-link-saas/issues)
-- 📖 Docs: [docs.dashboardlink.com](https://docs.dashboardlink.com)
-
----
-
-<div align="center">
-
-**⭐ Star us if Dashboard Link saves you time!**
-
-Made with ❤️ in Australia 🇦🇺
-
-[⬆ Back to top](#-dashboard-link-saas-platform)
-
-</div>
+See [QUICK-START.md](/E:/CleanConnect/QUICK-START.md), [TESTING.md](/E:/CleanConnect/docs/5-dev-guide/TESTING.md), [DEPLOYMENT.md](/E:/CleanConnect/docs/5-dev-guide/DEPLOYMENT.md), and [ENV-VARIABLES.md](/E:/CleanConnect/docs/5-dev-guide/ENV-VARIABLES.md) for operational details.

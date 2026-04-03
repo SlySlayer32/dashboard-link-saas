@@ -1,4 +1,4 @@
-import { Calendar, MessageSquare, UserCheck, UserX, Users } from 'lucide-react'
+import { Calendar, Eye, MessageSquare, UserCheck, UserX, Users } from 'lucide-react'
 import React from 'react'
 
 interface DashboardStatsData {
@@ -7,6 +7,8 @@ interface DashboardStatsData {
   inactiveWorkers: number
   smsToday: number
   smsThisWeek: number
+  dashboardOpensToday: number
+  uniqueWorkersOpenedToday: number
 }
 
 interface DashboardStatsProps {
@@ -41,7 +43,7 @@ export function DashboardStats({ stats, isLoading }: DashboardStatsProps) {
   if (isLoading) {
     return (
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-        {[...Array(5)].map((_, i) => (
+        {[...Array(7)].map((_, i) => (
           <div key={i} className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
             <div className='animate-pulse'>
               <div className='flex items-center justify-between'>
@@ -99,6 +101,18 @@ export function DashboardStats({ stats, isLoading }: DashboardStatsProps) {
         value={stats.smsThisWeek}
         icon={<Calendar className='h-6 w-6 text-indigo-600' />}
         color='bg-indigo-100'
+      />
+      <StatCard
+        title='Dashboard Opens Today'
+        value={stats.dashboardOpensToday}
+        icon={<Eye className='h-6 w-6 text-cyan-600' />}
+        color='bg-cyan-100'
+      />
+      <StatCard
+        title='Workers Opened Today'
+        value={stats.uniqueWorkersOpenedToday}
+        icon={<Users className='h-6 w-6 text-slate-700' />}
+        color='bg-slate-100'
       />
     </div>
   )

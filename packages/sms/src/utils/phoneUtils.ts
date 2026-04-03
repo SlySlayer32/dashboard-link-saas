@@ -34,7 +34,7 @@ export function formatToE164(phone: string, defaultCountryCode: string = '+1'): 
  * Validate E.164 format
  */
 export function isValidE164(phone: string): boolean {
-  const e164Regex = /^\+[1-9]\d{1,14}$/
+  const e164Regex = /^\+[1-9]\d{7,14}$/
   return e164Regex.test(phone)
 }
 

@@ -1,4 +1,5 @@
 import {
+  getAdapterConfigRepository,
   getDashboardRepository,
   getOrganizationRepository,
   getWorkerRepository,
@@ -25,6 +26,20 @@ import { TokenService } from './services/TokenService'
 import { WebhookService } from './services/webhook-service'
 
 import type { AppContextVariables } from './types'
+
+function getRelatedWorker(
+  workerRecord:
+    | { name?: string | null; phone?: string | null }
+    | Array<{ name?: string | null; phone?: string | null }>
+    | null
+    | undefined
+) {
+  if (!workerRecord) {
+    return null
+  }
+
+  return Array.isArray(workerRecord) ? workerRecord[0] ?? null : workerRecord
+}
 
 // Create v1 API with tenant isolation
 const v1 = new Hono<{
@@ -150,18 +165,18 @@ v1.get('/dashboards/:token', async (c) => {
 
     const [scheduleResult, tasksResult] = await Promise.all([
       supabase
-        .from('manual_schedules')
+        .from('schedule_items')
         .select('*')
         .eq('worker_id', result.workerId)
         .gte('start_time', `${today}T00:00:00`)
         .lte('start_time', `${today}T23:59:59`)
         .order('start_time', { ascending: true }),
       supabase
-        .from('manual_tasks')
+        .from('task_items')
         .select('*')
         .eq('worker_id', result.workerId)
         .or(`due_date.eq.${today},due_date.is.null`)
-        .order('created_at', { ascending: true }),
+        .order('due_date', { ascending: true })
     ])
 
     return c.json({
@@ -175,14 +190,17 @@ v1.get('/dashboards/:token', async (c) => {
         startTime: s.start_time,
         endTime: s.end_time,
         location: s.location || '',
-        description: s.description || '',
+        description: s.notes || '',
+        metadata: {},
       })),
       tasks: (tasksResult.data || []).map((t) => ({
         id: t.id,
         title: t.title,
         description: t.description || '',
-        status: t.status || 'pending',
+        dueDate: t.due_date || undefined,
+        status: t.completed ? 'completed' : 'pending',
         priority: t.priority || 'medium',
+        metadata: {},
       })),
     })
   } catch (error) {
@@ -337,7 +355,8 @@ v1.get('/dashboard/stats', async (c) => {
       now.getDate() - now.getDay()
     ).toISOString()
 
-    const [workersResult, activeResult, smsToday, smsWeek, recentSms] = await Promise.all([
+    const [workersResult, activeResult, smsToday, smsWeek, todaysAccessLogs, recentSms, recentAccess] =
+      await Promise.all([
       supabase
         .from('workers')
         .select('id', { count: 'exact' })
@@ -360,15 +379,65 @@ v1.get('/dashboard/stats', async (c) => {
         .eq('organization_id', organizationId)
         .gte('created_at', weekStart),
       supabase
+        .from('access_logs')
+        .select('id, worker_id')
+        .eq('organization_id', organizationId)
+        .eq('validation_status', 'success')
+        .gte('accessed_at', todayStart),
+      supabase
         .from('sms_logs')
-        .select('id, status, created_at, phone_number, worker_id, workers(full_name, phone)')
+        .select('id, status, created_at, phone_number, worker_id, workers(name, phone)')
         .eq('organization_id', organizationId)
         .order('created_at', { ascending: false })
+        .limit(10),
+      supabase
+        .from('access_logs')
+        .select('id, validation_status, accessed_at, worker_id, workers(name, phone)')
+        .eq('organization_id', organizationId)
+        .eq('validation_status', 'success')
+        .order('accessed_at', { ascending: false })
         .limit(10),
     ])
 
     const totalWorkers = workersResult.count || 0
     const activeWorkers = activeResult.count || 0
+    const uniqueWorkersOpenedToday = new Set(
+      (todaysAccessLogs.data || []).map((log) => log.worker_id).filter(Boolean)
+    ).size
+
+    const smsActivity = (recentSms.data || []).map((s) => {
+      const worker = getRelatedWorker(s.workers)
+
+      return {
+        id: `sms-${s.id}`,
+        type: 'sms' as const,
+        status: s.status,
+        createdAt: s.created_at,
+        workerId: s.worker_id,
+        workerName: worker?.name || 'Unknown worker',
+        workerPhone: worker?.phone || s.phone_number,
+        message: 'Dashboard link sent',
+      }
+    })
+
+    const accessActivity = (recentAccess.data || []).map((entry) => {
+      const worker = getRelatedWorker(entry.workers)
+
+      return {
+        id: `access-${entry.id}`,
+        type: 'dashboard_open' as const,
+        status: entry.validation_status,
+        createdAt: entry.accessed_at,
+        workerId: entry.worker_id,
+        workerName: worker?.name || 'Unknown worker',
+        workerPhone: worker?.phone || '',
+        message: 'Dashboard opened',
+      }
+    })
+
+    const recentActivity = [...smsActivity, ...accessActivity]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10)
 
     return c.json({
       success: true,
@@ -379,16 +448,10 @@ v1.get('/dashboard/stats', async (c) => {
           inactiveWorkers: totalWorkers - activeWorkers,
           smsToday: smsToday.count || 0,
           smsThisWeek: smsWeek.count || 0,
+          dashboardOpensToday: todaysAccessLogs.data?.length || 0,
+          uniqueWorkersOpenedToday,
         },
-        recentActivity: (recentSms.data || []).map((s) => ({
-          id: s.id,
-          type: 'sms_sent',
-          status: s.status,
-          created_at: s.created_at,
-          phone_number: s.phone_number,
-          worker_id: s.worker_id,
-          workers: s.workers,
-        })),
+        recentActivity,
       },
     })
   } catch (error) {

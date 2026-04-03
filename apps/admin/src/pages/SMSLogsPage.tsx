@@ -1,16 +1,15 @@
-import type { SMSLog } from '@dashboard-link/shared'
 import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { format } from 'date-fns'
 import { useState } from 'react'
 import { SMSLogTable } from '../components/SMSLogTable'
 import { useSendSMS } from '../hooks/useSMS'
-import { useSMSLogs } from '../hooks/useSMSLogs'
+import { type AdminSMSLog, useSMSLogs } from '../hooks/useSMSLogs'
 
 export function SMSLogsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [filters, setFilters] = useState<{
     workerId: string
-    status: SMSLog['status'] | undefined
+    status: AdminSMSLog['status'] | undefined
     dateFrom: string
     dateTo: string
     search: string
@@ -29,12 +28,13 @@ export function SMSLogsPage() {
   })
 
   const sendSMS = useSendSMS()
+  const [resendError, setResendError] = useState<string | null>(null)
 
   const handleFilterChange = (key: string, value: string) => {
     if (key === 'status') {
       setFilters((prev) => ({
         ...prev,
-        status: value === '' ? undefined : (value as SMSLog['status']),
+        status: value === '' ? undefined : (value as AdminSMSLog['status']),
       }))
     } else {
       setFilters((prev) => ({ ...prev, [key]: value }))
@@ -42,25 +42,23 @@ export function SMSLogsPage() {
     setCurrentPage(1)
   }
 
-  const [resendError, setResendError] = useState<string | null>(null)
-
-  const handleResend = async (log: SMSLog) => {
+  const handleResend = async (log: AdminSMSLog) => {
     setResendError(null)
 
-    if (!log.workerId) {
-      setResendError('Cannot resend message: worker not found')
+    if (!log.workerId && !log.to) {
+      setResendError('Cannot resend message: destination is missing')
       return
     }
 
     if (window.confirm('Are you sure you want to resend this message?')) {
       sendSMS.mutate(
-        { workerId: log.workerId, message: log.body },
+        { workerId: log.workerId, to: log.to, message: log.body },
         {
           onSuccess: () => {
-            refetch()
+            void refetch()
           },
-          onError: (error: Error) => {
-            setResendError(error.message)
+          onError: (mutationError: Error) => {
+            setResendError(mutationError.message)
           },
         }
       )
@@ -104,7 +102,6 @@ export function SMSLogsPage() {
 
   return (
     <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-      {/* Header */}
       <div className='sm:flex sm:items-center sm:justify-between mb-8'>
         <div>
           <h1 className='text-2xl font-bold text-gray-900'>SMS Logs</h1>
@@ -112,7 +109,6 @@ export function SMSLogsPage() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className='bg-white shadow rounded-lg mb-6 p-4'>
         <h3 className='text-lg font-medium text-gray-900 mb-4'>Filters</h3>
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
@@ -197,7 +193,6 @@ export function SMSLogsPage() {
         </div>
       </div>
 
-      {/* Resend Error */}
       {resendError && (
         <div className='mb-4 bg-red-50 border border-red-200 rounded-md p-4'>
           <div className='flex'>
@@ -226,17 +221,14 @@ export function SMSLogsPage() {
         </div>
       )}
 
-      {/* Results Count */}
       <div className='mb-4'>
         <p className='text-sm text-gray-600'>
           Showing {data?.data.length || 0} of {data?.pagination.total || 0} logs
         </p>
       </div>
 
-      {/* SMS Logs Table */}
       <SMSLogTable logs={data?.data || []} isLoading={isLoading} onResend={handleResend} />
 
-      {/* Pagination */}
       {data?.pagination && data.pagination.totalPages > 1 && (
         <div className='mt-6 flex items-center justify-between'>
           <div className='text-sm text-gray-700'>

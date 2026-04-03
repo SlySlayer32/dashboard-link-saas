@@ -8,22 +8,23 @@ import { useDashboardData } from '../hooks/useDashboardData'
 function DashboardPage() {
   const { token } = useParams<{ token: string }>()
   const navigate = useNavigate()
-  const { data, isLoading, error, refetch } = useDashboardData(token)
+  const { data, isLoading, error, refetch, isFetching } = useDashboardData(token)
   const [isValidating, setIsValidating] = useState(false)
 
-  // Handle different error types
   useEffect(() => {
-    if (error) {
-      if (error.message.includes('expired')) {
-        const expiredAt = new Date().toISOString()
-        navigate(`/error/expired-token?expiredAt=${expiredAt}`, { replace: true })
-      } else if (error.message.includes('Invalid') || error.message.includes('401')) {
-        navigate('/error/invalid-token', { replace: true })
-      }
+    if (!error) return
+
+    if (error.code === 'expired-token') {
+      const expiredAt = new Date().toISOString()
+      navigate(`/error/expired-token?expiredAt=${expiredAt}`, { replace: true })
+      return
+    }
+
+    if (error.code === 'invalid-token' || error.code === 'missing-token') {
+      navigate('/error/invalid-token', { replace: true })
     }
   }, [error, navigate])
 
-  // Handle token validation
   const handleValidateToken = useCallback(
     async (_tokenToValidate: string) => {
       setIsValidating(true)
@@ -36,7 +37,10 @@ function DashboardPage() {
     [refetch]
   )
 
-  // Pull-to-refresh functionality
+  const handleManualRefresh = useCallback(async () => {
+    await refetch()
+  }, [refetch])
+
   const startY = useRef<number | null>(null)
   const currentY = useRef<number | null>(null)
   const isPulling = useRef(false)
@@ -65,7 +69,7 @@ function DashboardPage() {
     const pullDistance = (currentY.current - startY.current) / 2
 
     if (pullDistance > 100) {
-      refetch()
+      void refetch()
     }
 
     document.body.style.transform = ''
@@ -74,7 +78,6 @@ function DashboardPage() {
     isPulling.current = false
   }, [refetch])
 
-  // Add and clean up touch event listeners
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.addEventListener('touchstart', handleTouchStart, { passive: true })
@@ -89,7 +92,6 @@ function DashboardPage() {
     }
   }, [handleTouchStart, handleTouchMove, handleTouchEnd])
 
-  // Show worker access screen if no data yet (first time)
   if (!data && !error && !isLoading) {
     return (
       <WorkerAccess
@@ -100,7 +102,6 @@ function DashboardPage() {
     )
   }
 
-  // Show loading while validating token or loading data
   if (isLoading || isValidating) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-gray-50'>
@@ -132,26 +133,57 @@ function DashboardPage() {
 
   return (
     <div className='min-h-screen bg-gray-50 pb-12'>
-      {/* Header */}
       <header className='bg-white shadow-sm'>
         <div className='max-w-4xl mx-auto px-4 py-6'>
-          <h1 className='text-2xl font-bold text-gray-900'>Welcome, {data.worker.name}!</h1>
-          <p className='text-sm text-gray-600 mt-1'>{today}</p>
+          <div className='flex items-start justify-between gap-4'>
+            <div>
+              <h1 className='text-2xl font-bold text-gray-900'>Welcome, {data.worker.name}!</h1>
+              <p className='text-sm text-gray-600 mt-1'>{today}</p>
+              <p className='text-sm text-gray-500 mt-2'>
+                Your schedule, tasks, and key details for today are all in one place.
+              </p>
+            </div>
+            <button
+              type='button'
+              onClick={() => {
+                void handleManualRefresh()
+              }}
+              className='inline-flex items-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-60'
+              disabled={isFetching}
+            >
+              <svg
+                className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`}
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M4 4v5h5M20 20v-5h-5M5.64 18.36A9 9 0 1020 12'
+                />
+              </svg>
+              Refresh
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Dashboard Content */}
       <main className='max-w-4xl mx-auto px-4 py-8 space-y-6'>
-        {/* Schedule Widget */}
-        <ScheduleWidget schedule={data.schedule} />
+        <div className='rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800'>
+          Pull down or tap refresh if your manager updates your schedule during the day.
+        </div>
 
-        {/* Tasks Widget */}
+        <ScheduleWidget schedule={data.schedule} />
         <TasksWidget tasks={data.tasks} />
 
-        {/* Empty State */}
         {data.schedule.length === 0 && data.tasks.length === 0 && (
           <div className='bg-white rounded-lg shadow p-8 text-center'>
-            <p className='text-gray-600'>No schedule or tasks for today. Enjoy your day!</p>
+            <p className='text-gray-600'>No schedule or tasks for today yet.</p>
+            <p className='mt-2 text-sm text-gray-500'>
+              Check back shortly or refresh after your manager adds updates.
+            </p>
           </div>
         )}
       </main>

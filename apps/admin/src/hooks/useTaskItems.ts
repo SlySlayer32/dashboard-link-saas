@@ -1,15 +1,13 @@
 import type { TaskItem } from '@dashboard-link/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useAuthStore } from '../store/auth'
-
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1'
+import { api } from '../lib/api'
 
 interface CreateTaskItemRequest {
   title: string
   description?: string
   dueDate?: string
   priority: 'low' | 'medium' | 'high'
-  status: 'pending' | 'in_progress' | 'completed'
+  status: 'pending' | 'completed'
 }
 
 interface UpdateTaskItemRequest {
@@ -17,7 +15,7 @@ interface UpdateTaskItemRequest {
   description?: string
   dueDate?: string
   priority?: 'low' | 'medium' | 'high'
-  status?: 'pending' | 'in_progress' | 'completed'
+  status?: 'pending' | 'completed'
 }
 
 interface TaskItemsResponse {
@@ -31,92 +29,35 @@ interface TaskItemsResponse {
 }
 
 async function fetchTaskItems(
-  token: string,
   workerId: string,
   startDate?: string,
   endDate?: string,
   page = 1,
   limit = 20
 ): Promise<TaskItemsResponse> {
-  const params = new URLSearchParams({
-    page: page.toString(),
-    limit: limit.toString(),
+  const response = await api.get<TaskItemsResponse>(`/api/v1/workers/${workerId}/task-items`, {
+    params: { startDate, endDate, page, limit },
   })
 
-  if (startDate) params.append('startDate', startDate)
-  if (endDate) params.append('endDate', endDate)
-
-  const response = await fetch(`${API_BASE}/workers/${workerId}/task-items?${params}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch task items')
-  }
-
-  return response.json()
+  return response.data
 }
 
-async function createTaskItem(
-  token: string,
-  workerId: string,
-  data: CreateTaskItemRequest
-): Promise<TaskItem> {
-  const response = await fetch(`${API_BASE}/workers/${workerId}/task-items`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error || 'Failed to create task item')
-  }
-
-  return response.json()
+async function createTaskItem(workerId: string, data: CreateTaskItemRequest): Promise<TaskItem> {
+  const response = await api.post<TaskItem>(`/api/v1/workers/${workerId}/task-items`, data)
+  return response.data
 }
 
 async function updateTaskItem(
-  token: string,
+  workerId: string,
   itemId: string,
   data: UpdateTaskItemRequest
 ): Promise<TaskItem> {
-  const response = await fetch(`${API_BASE}/task-items/${itemId}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error || 'Failed to update task item')
-  }
-
-  return response.json()
+  const response = await api.put<TaskItem>(`/api/v1/workers/${workerId}/task-items/${itemId}`, data)
+  return response.data
 }
 
-async function deleteTaskItem(token: string, itemId: string): Promise<void> {
-  const response = await fetch(`${API_BASE}/task-items/${itemId}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error || 'Failed to delete task item')
-  }
+async function deleteTaskItem(workerId: string, itemId: string): Promise<void> {
+  await api.delete(`/api/v1/workers/${workerId}/task-items/${itemId}`)
 }
 
 export function useTaskItems(
@@ -126,21 +67,18 @@ export function useTaskItems(
   page = 1,
   limit = 20
 ) {
-  const { token } = useAuthStore()
-
   return useQuery({
     queryKey: ['task-items', workerId, startDate, endDate, page, limit],
-    queryFn: () => fetchTaskItems(token || '', workerId, startDate, endDate, page, limit),
-    enabled: !!token && !!workerId,
+    queryFn: () => fetchTaskItems(workerId, startDate, endDate, page, limit),
+    enabled: !!workerId,
   })
 }
 
 export function useCreateTaskItem(workerId: string) {
-  const { token } = useAuthStore()
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: CreateTaskItemRequest) => createTaskItem(token || '', workerId, data),
+    mutationFn: (data: CreateTaskItemRequest) => createTaskItem(workerId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['task-items', workerId],
@@ -150,29 +88,35 @@ export function useCreateTaskItem(workerId: string) {
 }
 
 export function useUpdateTaskItem() {
-  const { token } = useAuthStore()
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ itemId, data }: { itemId: string; data: UpdateTaskItemRequest }) =>
-      updateTaskItem(token || '', itemId, data),
-    onSuccess: () => {
+    mutationFn: ({
+      workerId,
+      itemId,
+      data,
+    }: {
+      workerId: string
+      itemId: string
+      data: UpdateTaskItemRequest
+    }) => updateTaskItem(workerId, itemId, data),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['task-items'],
+        queryKey: ['task-items', variables.workerId],
       })
     },
   })
 }
 
 export function useDeleteTaskItem() {
-  const { token } = useAuthStore()
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (itemId: string) => deleteTaskItem(token || '', itemId),
-    onSuccess: () => {
+    mutationFn: ({ workerId, itemId }: { workerId: string; itemId: string }) =>
+      deleteTaskItem(workerId, itemId),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ['task-items'],
+        queryKey: ['task-items', variables.workerId],
       })
     },
   })

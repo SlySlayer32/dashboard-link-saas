@@ -9,7 +9,7 @@ const taskItemSchema = z.object({
   description: z.string().optional(),
   dueDate: z.string().optional(),
   priority: z.enum(['low', 'medium', 'high']),
-  status: z.enum(['pending', 'in_progress', 'completed']),
+  status: z.enum(['pending', 'completed']),
 })
 
 type TaskItemFormData = z.infer<typeof taskItemSchema>
@@ -21,7 +21,7 @@ interface TaskItemFormProps {
     description?: string
     dueDate?: string
     priority?: 'low' | 'medium' | 'high'
-    status?: 'pending' | 'in_progress' | 'completed'
+    status?: 'pending' | 'completed'
   }
   onSubmit: (data: CreateTaskItemRequest | UpdateTaskItemRequest) => Promise<void>
   onCancel: () => void
@@ -43,7 +43,6 @@ const priorityOptions = [
 
 const statusOptions = [
   { value: 'pending', label: 'Pending', color: 'text-gray-700 bg-gray-100' },
-  { value: 'in_progress', label: 'In Progress', color: 'text-blue-700 bg-blue-100' },
   { value: 'completed', label: 'Completed', color: 'text-green-700 bg-green-100' },
 ] as const
 

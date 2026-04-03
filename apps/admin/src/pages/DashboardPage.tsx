@@ -1,36 +1,12 @@
-import { BarChart3, MessageSquare, Plus, Users } from 'lucide-react'
+import { CalendarDays, ClipboardList, MessageSquare, Plus, Users } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { DashboardStats } from '../components/DashboardStats'
-import { OnboardingFlow } from '../components/OnboardingFlow'
 import { RecentActivity } from '../components/RecentActivity'
 import { useDashboard } from '../hooks/useDashboard'
-import { useOnboardingStore } from '../store/onboarding'
 
 function DashboardPage() {
   const navigate = useNavigate()
   const { data, isLoading, error } = useDashboard()
-  const { isCompleted } = useOnboardingStore()
-
-  // Show onboarding flow if not completed
-  if (!isCompleted) {
-    return <OnboardingFlow />
-  }
-
-  const handleAddWorker = () => {
-    navigate('/workers/new')
-  }
-
-  const handleSendSMS = () => {
-    navigate('/sms/send')
-  }
-
-  const handleViewWorkers = () => {
-    navigate('/workers')
-  }
-
-  const handleViewReports = () => {
-    navigate('/reports')
-  }
 
   if (error) {
     return (
@@ -47,50 +23,47 @@ function DashboardPage() {
 
   return (
     <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-      {/* Header */}
       <div className='mb-8'>
         <h1 className='text-3xl font-bold text-gray-900'>Dashboard</h1>
         <p className='mt-2 text-gray-600'>
-          Welcome back! Here's an overview of your dashboard activity.
+          Track worker setup, send daily links, and confirm when dashboards have been opened.
         </p>
       </div>
 
-      {/* Quick Actions */}
       <div className='mb-8'>
         <h2 className='text-lg font-semibold text-gray-900 mb-4'>Quick Actions</h2>
         <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
           <button
-            onClick={handleAddWorker}
+            onClick={() => navigate('/workers', { state: { openCreateWorker: true } })}
             className='flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
           >
             <Plus className='h-5 w-5 mr-2' />
             Add Worker
           </button>
           <button
-            onClick={handleSendSMS}
-            className='flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors'
+            onClick={() => navigate('/manual-data')}
+            className='flex items-center justify-center px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors'
           >
-            <MessageSquare className='h-5 w-5 mr-2' />
-            Send SMS
+            <CalendarDays className='h-5 w-5 mr-2' />
+            Manual Data
           </button>
           <button
-            onClick={handleViewWorkers}
+            onClick={() => navigate('/workers')}
             className='flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors'
           >
             <Users className='h-5 w-5 mr-2' />
             View Workers
           </button>
           <button
-            onClick={handleViewReports}
-            className='flex items-center justify-center px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors'
+            onClick={() => navigate('/sms-logs')}
+            className='flex items-center justify-center px-4 py-3 bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition-colors'
           >
-            <BarChart3 className='h-5 w-5 mr-2' />
-            Reports
+            <MessageSquare className='h-5 w-5 mr-2' />
+            SMS Logs
           </button>
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className='mb-8'>
         <h2 className='text-lg font-semibold text-gray-900 mb-4'>Statistics</h2>
         <DashboardStats
@@ -101,25 +74,43 @@ function DashboardPage() {
               inactiveWorkers: 0,
               smsToday: 0,
               smsThisWeek: 0,
+              dashboardOpensToday: 0,
+              uniqueWorkersOpenedToday: 0,
             }
           }
           isLoading={isLoading}
         />
       </div>
 
-      {/* Recent Activity */}
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
         <div>
           <RecentActivity activities={data?.recentActivity || []} isLoading={isLoading} />
         </div>
 
-        {/* Placeholder for future charts */}
         <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-          <h3 className='text-lg font-semibold text-gray-900 mb-4'>SMS Trends</h3>
-          <div className='text-center py-8'>
-            <BarChart3 className='h-12 w-12 text-gray-400 mx-auto mb-3' />
-            <p className='text-gray-500'>Charts coming soon</p>
-            <p className='text-sm text-gray-400 mt-1'>Visualize your SMS activity over time</p>
+          <h3 className='text-lg font-semibold text-gray-900 mb-4'>MVP Workflow</h3>
+          <div className='space-y-4 text-sm text-gray-600'>
+            <div className='flex items-start'>
+              <Plus className='h-4 w-4 mr-3 mt-0.5 text-blue-600' />
+              <div>
+                <p className='font-medium text-gray-900'>1. Add or update workers</p>
+                <p>Keep the roster current before sending any dashboard links.</p>
+              </div>
+            </div>
+            <div className='flex items-start'>
+              <CalendarDays className='h-4 w-4 mr-3 mt-0.5 text-emerald-600' />
+              <div>
+                <p className='font-medium text-gray-900'>2. Enter schedule and task data</p>
+                <p>Manual entry is the launch path for delivering daily dashboard content.</p>
+              </div>
+            </div>
+            <div className='flex items-start'>
+              <ClipboardList className='h-4 w-4 mr-3 mt-0.5 text-slate-700' />
+              <div>
+                <p className='font-medium text-gray-900'>3. Send links and confirm opens</p>
+                <p>Use worker detail pages and recent activity to verify each dashboard was opened.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

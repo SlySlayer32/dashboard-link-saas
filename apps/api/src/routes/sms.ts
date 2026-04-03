@@ -17,6 +17,17 @@ function getSupabaseAdmin() {
   return createClient(process.env.SUPABASE_URL || '', process.env.SUPABASE_SERVICE_KEY || '')
 }
 
+const sendSmsSchema = z
+  .object({
+    workerId: z.string().uuid('Invalid worker ID').optional(),
+    to: z.string().trim().min(1, 'Phone number is required').optional(),
+    message: z.string().min(1, 'Message is required').max(320),
+  })
+  .refine((value) => Boolean(value.workerId || value.to), {
+    message: 'Either workerId or to is required',
+    path: ['to'],
+  })
+
 const sms = new Hono<{
   Variables: AppContextVariables & {
     tenantId: string
@@ -24,7 +35,6 @@ const sms = new Hono<{
   }
 }>()
 
-// GET /sms/logs - List SMS logs with pagination and filters
 sms.get('/logs', async (c) => {
   const organizationId = c.get('organizationId')
   const page = parseInt(c.req.query('page') || '1', 10)
@@ -69,40 +79,50 @@ sms.get('/logs', async (c) => {
   })
 })
 
-// POST /sms/send - Send an SMS message
-sms.post(
-  '/send',
-  zValidator(
-    'json',
-    z.object({
-      to: z.string().min(1, 'Phone number is required'),
-      message: z.string().min(1, 'Message is required').max(320),
-    })
-  ),
-  async (c) => {
-    const organizationId = c.get('organizationId')
-    const { to, message } = c.req.valid('json')
+sms.post('/send', zValidator('json', sendSmsSchema), async (c) => {
+  const organizationId = c.get('organizationId')
+  const { workerId, to, message } = c.req.valid('json')
+  const supabase = getSupabaseAdmin()
 
-    try {
-      const smsService = new SMSService()
-      const result = await smsService.enqueueSMS({
-        to,
-        message,
-        orgId: organizationId,
-        type: 'manual',
-      })
+  let resolvedPhone = to?.trim()
 
-      return c.json({ success: true, data: result }, 201)
-    } catch (error) {
-      return c.json(
-        { success: false, error: error instanceof Error ? error.message : 'Failed to send SMS' },
-        500
-      )
+  if (workerId) {
+    const { data: worker, error: workerError } = await supabase
+      .from('workers')
+      .select('id, phone')
+      .eq('id', workerId)
+      .eq('organization_id', organizationId)
+      .single()
+
+    if (workerError || !worker) {
+      return c.json({ success: false, error: 'Worker not found or access denied' }, 404)
     }
-  }
-)
 
-// POST /sms/send-dashboard-link - Send a dashboard link to a worker
+    resolvedPhone = worker.phone
+  }
+
+  if (!resolvedPhone) {
+    return c.json({ success: false, error: 'Phone number is required' }, 400)
+  }
+
+  try {
+    const smsService = new SMSService()
+    const result = await smsService.enqueueSMS({
+      to: resolvedPhone,
+      message,
+      orgId: organizationId,
+      type: 'manual',
+    })
+
+    return c.json({ success: true, data: result }, 201)
+  } catch (error) {
+    return c.json(
+      { success: false, error: error instanceof Error ? error.message : 'Failed to send SMS' },
+      500
+    )
+  }
+})
+
 sms.post(
   '/send-dashboard-link',
   zValidator(
@@ -119,7 +139,6 @@ sms.post(
 
     const supabase = getSupabaseAdmin()
 
-    // Fetch worker
     const { data: worker, error: workerError } = await supabase
       .from('workers')
       .select('id, full_name, phone')
@@ -137,7 +156,7 @@ sms.post(
       const rawToken = await tokenService.createToken({
         workerId,
         orgId: organizationId,
-        dashboardId: workerId, // Use worker ID as dashboard reference
+        dashboardId: workerId,
         expiresInHours: expiryHours,
       })
 

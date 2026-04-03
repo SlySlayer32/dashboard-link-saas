@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint --config ../../eslint.config.js src --ext .ts,.tsx",
+    "lint": "node ../../node_modules/eslint/bin/eslint.js --config ../../eslint.config.js src --ext .ts,.tsx",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
   },
   "dependencies": {
