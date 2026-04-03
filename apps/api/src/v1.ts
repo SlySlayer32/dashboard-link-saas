@@ -9,6 +9,8 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 
 // Import routes
+import { plugins } from './routes/plugins'
+import { sms } from './routes/sms'
 import tokens from './routes/tokens'
 import { workers } from './routes/workers'
 
@@ -39,7 +41,8 @@ v1.use('*', async (c, next) => {
   if (
     c.req.path.startsWith('/auth/') ||
     c.req.path.startsWith('/webhooks/') ||
-    c.req.path === '/dashboard/redeem'
+    c.req.path === '/dashboard/redeem' ||
+    c.req.path.startsWith('/dashboards/')
   ) {
     await next()
     return
@@ -52,7 +55,8 @@ v1.use('*', async (c, next) => {
   if (
     c.req.path.startsWith('/auth/') ||
     c.req.path.startsWith('/webhooks/') ||
-    c.req.path === '/dashboard/redeem'
+    c.req.path === '/dashboard/redeem' ||
+    c.req.path.startsWith('/dashboards/')
   ) {
     await next()
     return
@@ -113,19 +117,6 @@ v1.post(
         )
       }
 
-      if (error instanceof Error && error.message.includes('not implemented')) {
-        return c.json(
-          {
-            success: false,
-            error: {
-              code: 'NOT_IMPLEMENTED',
-              message: 'Token service not yet available',
-            },
-          },
-          501
-        )
-      }
-
       return c.json(
         {
           success: false,
@@ -139,6 +130,74 @@ v1.post(
     }
   }
 )
+
+// GET /dashboards/:token - Public endpoint for worker dashboard (token-based auth)
+v1.get('/dashboards/:token', async (c) => {
+  const rawToken = c.req.param('token')
+  const tokenService = new TokenService()
+
+  try {
+    const result = await tokenService.redeemToken(rawToken)
+
+    // Fetch worker schedule and tasks for today
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      process.env.SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_KEY || ''
+    )
+
+    const today = new Date().toISOString().split('T')[0]
+
+    const [scheduleResult, tasksResult] = await Promise.all([
+      supabase
+        .from('manual_schedules')
+        .select('*')
+        .eq('worker_id', result.workerId)
+        .gte('start_time', `${today}T00:00:00`)
+        .lte('start_time', `${today}T23:59:59`)
+        .order('start_time', { ascending: true }),
+      supabase
+        .from('manual_tasks')
+        .select('*')
+        .eq('worker_id', result.workerId)
+        .or(`due_date.eq.${today},due_date.is.null`)
+        .order('created_at', { ascending: true }),
+    ])
+
+    return c.json({
+      worker: {
+        id: result.workerId,
+        name: result.workerName,
+      },
+      schedule: (scheduleResult.data || []).map((s) => ({
+        id: s.id,
+        title: s.title,
+        startTime: s.start_time,
+        endTime: s.end_time,
+        location: s.location || '',
+        description: s.description || '',
+      })),
+      tasks: (tasksResult.data || []).map((t) => ({
+        id: t.id,
+        title: t.title,
+        description: t.description || '',
+        status: t.status || 'pending',
+        priority: t.priority || 'medium',
+      })),
+    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Invalid token'
+
+    if (message.includes('expired')) {
+      return c.json({ error: 'Dashboard link has expired', reason: 'expired' }, 401)
+    }
+    if (message.includes('revoked')) {
+      return c.json({ error: 'Dashboard link has been revoked', reason: 'revoked' }, 401)
+    }
+
+    return c.json({ error: 'Invalid or expired link', reason: 'invalid' }, 401)
+  }
+})
 
 // Webhook endpoints (public - signature-based auth)
 v1.post('/webhooks/:provider', async (c) => {
@@ -258,6 +317,87 @@ v1.get('/organizations', async (c) => {
 })
 
 // Workers CRUD with validation - REMOVED - now using mounted route from ./routes/workers.ts
+
+// Dashboard stats (protected - admin app)
+v1.get('/dashboard/stats', async (c) => {
+  const organizationId = c.get('organizationId')
+
+  try {
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      process.env.SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_KEY || ''
+    )
+
+    const now = new Date()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
+    const weekStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - now.getDay()
+    ).toISOString()
+
+    const [workersResult, activeResult, smsToday, smsWeek, recentSms] = await Promise.all([
+      supabase
+        .from('workers')
+        .select('id', { count: 'exact' })
+        .eq('organization_id', organizationId)
+        .is('deleted_at', null),
+      supabase
+        .from('workers')
+        .select('id', { count: 'exact' })
+        .eq('organization_id', organizationId)
+        .eq('status', 'active')
+        .is('deleted_at', null),
+      supabase
+        .from('sms_logs')
+        .select('id', { count: 'exact' })
+        .eq('organization_id', organizationId)
+        .gte('created_at', todayStart),
+      supabase
+        .from('sms_logs')
+        .select('id', { count: 'exact' })
+        .eq('organization_id', organizationId)
+        .gte('created_at', weekStart),
+      supabase
+        .from('sms_logs')
+        .select('id, status, created_at, phone_number, worker_id, workers(full_name, phone)')
+        .eq('organization_id', organizationId)
+        .order('created_at', { ascending: false })
+        .limit(10),
+    ])
+
+    const totalWorkers = workersResult.count || 0
+    const activeWorkers = activeResult.count || 0
+
+    return c.json({
+      success: true,
+      data: {
+        stats: {
+          totalWorkers,
+          activeWorkers,
+          inactiveWorkers: totalWorkers - activeWorkers,
+          smsToday: smsToday.count || 0,
+          smsThisWeek: smsWeek.count || 0,
+        },
+        recentActivity: (recentSms.data || []).map((s) => ({
+          id: s.id,
+          type: 'sms_sent',
+          status: s.status,
+          created_at: s.created_at,
+          phone_number: s.phone_number,
+          worker_id: s.worker_id,
+          workers: s.workers,
+        })),
+      },
+    })
+  } catch (error) {
+    return c.json(
+      { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
+      500
+    )
+  }
+})
 
 // Create dashboard
 v1.post(
@@ -422,19 +562,6 @@ v1.post(
         201
       )
     } catch (error) {
-      if (error instanceof Error && error.message.includes('not implemented')) {
-        return c.json(
-          {
-            success: false,
-            error: {
-              code: 'NOT_IMPLEMENTED',
-              message: 'Service not yet available',
-            },
-          },
-          501
-        )
-      }
-
       return c.json(
         {
           success: false,
@@ -447,7 +574,6 @@ v1.post(
 )
 
 // Configure adapter
-// TODO: Create AdapterConfigRepository for full repository pattern (R05 tracked)
 v1.post(
   '/adapters/configs',
   zValidator(
@@ -478,29 +604,14 @@ v1.post(
         )
       }
 
-      // Store adapter configuration
-      // TODO: Move to AdapterConfigRepository when created
-      const { createClient } = await import('@supabase/supabase-js')
-      const supabaseAdmin = createClient(
-        process.env.SUPABASE_URL || '',
-        process.env.SUPABASE_SERVICE_KEY || ''
-      )
-
-      const adapterConfig = {
-        id: crypto.randomUUID(),
-        organization_id: organizationId,
-        adapter_type: adapterData.adapter_type,
+      // Store adapter configuration via repository
+      const adapterConfigRepo = getAdapterConfigRepository()
+      const adapterConfig = await adapterConfigRepo.create({
+        organizationId,
+        adapterType: adapterData.adapter_type,
         config: adapterData.config,
         enabled: adapterData.enabled,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
-
-      const { error } = await supabaseAdmin.from('adapter_configs').insert(adapterConfig)
-
-      if (error) {
-        throw error
-      }
+      })
 
       return c.json(
         {
@@ -524,6 +635,12 @@ v1.post(
     }
   }
 )
+
+// Mount plugins routes
+v1.route('/plugins', plugins)
+
+// Mount SMS routes
+v1.route('/sms', sms)
 
 // Mount tokens route
 v1.route('/tokens', tokens)

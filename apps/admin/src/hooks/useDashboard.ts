@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '../store/auth'
 
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1'
 const DEV_MODE = import.meta.env.MODE === 'development'
 
 interface DashboardStatsData {
@@ -77,7 +78,7 @@ async function fetchDashboardStats(token: string): Promise<DashboardResponse> {
     }
   }
 
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/dashboard/stats`, {
+  const response = await fetch(`${API_BASE}/dashboard/stats`, {
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',

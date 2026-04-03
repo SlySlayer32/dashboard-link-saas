@@ -18,8 +18,10 @@ interface UpdateOrganizationRequest {
   metadata?: Record<string, unknown>
 }
 
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1'
+
 async function fetchOrganization(token: string): Promise<Organization> {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/organizations`, {
+  const response = await fetch(`${API_BASE}/organizations`, {
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -38,7 +40,7 @@ async function updateOrganization(
   token: string,
   data: UpdateOrganizationRequest
 ): Promise<Organization> {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/organizations`, {
+  const response = await fetch(`${API_BASE}/organizations`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -57,7 +59,7 @@ async function updateOrganization(
 }
 
 async function deleteOrganization(token: string): Promise<void> {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/organizations`, {
+  const response = await fetch(`${API_BASE}/organizations`, {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`,

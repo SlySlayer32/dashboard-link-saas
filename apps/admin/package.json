@@ -19,6 +19,7 @@
     "@dashboard-link/ui": "workspace:*",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.2",
+    "@supabase/supabase-js": "^2.39.0",
     "@tanstack/react-query": "^5.14.2",
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",

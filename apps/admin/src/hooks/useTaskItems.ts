@@ -2,6 +2,8 @@ import type { TaskItem } from '@dashboard-link/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../store/auth'
 
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1'
+
 interface CreateTaskItemRequest {
   title: string
   description?: string
@@ -44,15 +46,12 @@ async function fetchTaskItems(
   if (startDate) params.append('startDate', startDate)
   if (endDate) params.append('endDate', endDate)
 
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/workers/${workerId}/task-items?${params}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  )
+  const response = await fetch(`${API_BASE}/workers/${workerId}/task-items?${params}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
 
   if (!response.ok) {
     throw new Error('Failed to fetch task items')
@@ -66,7 +65,7 @@ async function createTaskItem(
   workerId: string,
   data: CreateTaskItemRequest
 ): Promise<TaskItem> {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/workers/${workerId}/task-items`, {
+  const response = await fetch(`${API_BASE}/workers/${workerId}/task-items`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -88,7 +87,7 @@ async function updateTaskItem(
   itemId: string,
   data: UpdateTaskItemRequest
 ): Promise<TaskItem> {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/task-items/${itemId}`, {
+  const response = await fetch(`${API_BASE}/task-items/${itemId}`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -106,7 +105,7 @@ async function updateTaskItem(
 }
 
 async function deleteTaskItem(token: string, itemId: string): Promise<void> {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/task-items/${itemId}`, {
+  const response = await fetch(`${API_BASE}/task-items/${itemId}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`,

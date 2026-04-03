@@ -7,9 +7,8 @@ import { smsService } from './services/SMSService'
  * Registers all available SMS providers and sets up the system for use
  * This should be called during application startup
  *
- * TODO(sms-config): Add environment-based provider initialization
- * TODO(sms-config): Load MobileMessage credentials from environment variables
- * TODO(sms-config): Set up provider registration based on ADR-003 decision
+ * Environment-based provider initialization is handled by SMSProviderFactory.ts
+ * which reads credentials from process.env for each provider.
  */
 export function initializeSMSSystem(): void {
   try {

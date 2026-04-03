@@ -2,6 +2,8 @@ import type { ScheduleItem } from '@dashboard-link/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../store/auth'
 
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1'
+
 interface CreateScheduleItemRequest {
   title: string
   startTime: string
@@ -44,15 +46,12 @@ async function fetchScheduleItems(
   if (startDate) params.append('startDate', startDate)
   if (endDate) params.append('endDate', endDate)
 
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/workers/${workerId}/schedule-items?${params}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  )
+  const response = await fetch(`${API_BASE}/workers/${workerId}/schedule-items?${params}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  })
 
   if (!response.ok) {
     throw new Error('Failed to fetch schedule items')
@@ -66,17 +65,14 @@ async function createScheduleItem(
   workerId: string,
   data: CreateScheduleItemRequest
 ): Promise<ScheduleItem> {
-  const response = await fetch(
-    `${import.meta.env.VITE_API_URL}/workers/${workerId}/schedule-items`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    }
-  )
+  const response = await fetch(`${API_BASE}/workers/${workerId}/schedule-items`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
 
   if (!response.ok) {
     const error = await response.json()
@@ -91,7 +87,7 @@ async function updateScheduleItem(
   itemId: string,
   data: UpdateScheduleItemRequest
 ): Promise<ScheduleItem> {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/schedule-items/${itemId}`, {
+  const response = await fetch(`${API_BASE}/schedule-items/${itemId}`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -109,7 +105,7 @@ async function updateScheduleItem(
 }
 
 async function deleteScheduleItem(token: string, itemId: string): Promise<void> {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/schedule-items/${itemId}`, {
+  const response = await fetch(`${API_BASE}/schedule-items/${itemId}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`,

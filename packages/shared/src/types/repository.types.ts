@@ -195,3 +195,10 @@ export interface Token extends BaseEntity {
   active: boolean
   metadata?: Record<string, unknown>
 }
+
+export interface AdapterConfig extends BaseEntity {
+  organizationId: string
+  adapterType: string
+  config: Record<string, unknown>
+  enabled: boolean
+}

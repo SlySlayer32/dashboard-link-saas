@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { supabase } from '../lib/supabase'
 
 // User interface
 interface User {
@@ -38,41 +39,10 @@ interface AuthState {
   setLoading: (loading: boolean) => void
 }
 
-// Mock auth service for now (since we don't have the full auth service implemented)
-const mockAuthService = {
-  login: async (credentials: { email: string; password: string }) => {
-    // Mock successful login
-    return {
-      success: true,
-      user: { id: '1', email: credentials.email, name: 'Test User' },
-      tokens: { accessToken: 'mock-token', refreshToken: 'mock-refresh' },
-      error: undefined,
-    }
-  },
-
-  register: async (userData: {
-    email: string
-    password: string
-    name: string
-    organizationName: string
-  }) => {
-    // Mock successful registration
-    return {
-      success: true,
-      user: { id: '1', email: userData.email, name: userData.name },
-      error: undefined,
-    }
-  },
-
-  logout: async () => {
-    return { success: true }
-  },
-}
-
 // Create Zustand store
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
       token: null,
       refreshToken: null,
@@ -85,29 +55,53 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null })
 
         try {
-          const result = await mockAuthService.login(credentials)
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: credentials.email,
+            password: credentials.password,
+          })
 
-          if (result.success && result.user && result.tokens) {
-            set({
-              user: result.user,
-              token: result.tokens.accessToken,
-              refreshToken: result.tokens.refreshToken,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null,
-            })
-            return { success: true }
-          } else {
+          if (error) {
             set({
               user: null,
               token: null,
               refreshToken: null,
               isAuthenticated: false,
               isLoading: false,
-              error: result.error || 'Login failed',
+              error: error.message,
             })
-            return { success: false, error: result.error }
+            return { success: false, error: error.message }
           }
+
+          if (data.user && data.session) {
+            const user: User = {
+              id: data.user.id,
+              email: data.user.email || '',
+              name: data.user.user_metadata?.name || data.user.email || '',
+              organization_id: data.user.user_metadata?.organization_id,
+              role: data.user.user_metadata?.role || 'admin',
+            }
+
+            set({
+              user,
+              token: data.session.access_token,
+              refreshToken: data.session.refresh_token,
+              expiresAt: data.session.expires_at
+                ? new Date(data.session.expires_at * 1000).toISOString()
+                : null,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            })
+
+            // Store token for API calls
+            localStorage.setItem('auth_token', data.session.access_token)
+            localStorage.setItem('sb-access-token', data.session.access_token)
+
+            return { success: true }
+          }
+
+          set({ isLoading: false, error: 'Invalid response from auth service' })
+          return { success: false, error: 'Invalid response from auth service' }
         } catch {
           set({
             user: null,
@@ -125,37 +119,59 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null })
 
         try {
-          const result = await mockAuthService.register(userData)
+          const { data, error } = await supabase.auth.signUp({
+            email: userData.email,
+            password: userData.password,
+            options: {
+              data: {
+                name: userData.name,
+                organization_name: userData.organizationName,
+              },
+            },
+          })
 
-          if (result.success && result.user) {
-            // Auto-login after registration
-            const loginResult = await mockAuthService.login({
-              email: userData.email,
-              password: userData.password,
+          if (error) {
+            set({
+              user: null,
+              token: null,
+              refreshToken: null,
+              isAuthenticated: false,
+              isLoading: false,
+              error: error.message,
             })
-
-            if (loginResult.success && loginResult.user && loginResult.tokens) {
-              set({
-                user: loginResult.user,
-                token: loginResult.tokens.accessToken,
-                refreshToken: loginResult.tokens.refreshToken,
-                isAuthenticated: true,
-                isLoading: false,
-                error: null,
-              })
-              return { success: true }
-            }
+            return { success: false, error: error.message }
           }
 
-          set({
-            user: null,
-            token: null,
-            refreshToken: null,
-            isAuthenticated: false,
-            isLoading: false,
-            error: result.error || 'Registration failed',
-          })
-          return { success: false, error: result.error }
+          if (data.user && data.session) {
+            const user: User = {
+              id: data.user.id,
+              email: data.user.email || '',
+              name: userData.name,
+              organization_id: data.user.user_metadata?.organization_id,
+              role: 'admin',
+            }
+
+            set({
+              user,
+              token: data.session.access_token,
+              refreshToken: data.session.refresh_token,
+              expiresAt: data.session.expires_at
+                ? new Date(data.session.expires_at * 1000).toISOString()
+                : null,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            })
+
+            localStorage.setItem('auth_token', data.session.access_token)
+            localStorage.setItem('sb-access-token', data.session.access_token)
+
+            return { success: true }
+          }
+
+          // Email confirmation may be required
+          set({ isLoading: false, error: null })
+          return { success: true }
         } catch {
           set({
             user: null,
@@ -170,10 +186,14 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        supabase.auth.signOut()
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('sb-access-token')
         set({
           user: null,
           token: null,
           refreshToken: null,
+          expiresAt: null,
           isAuthenticated: false,
           isLoading: false,
           error: null,
@@ -185,17 +205,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       refreshAuthToken: async () => {
-        const { refreshToken } = get()
-        if (!refreshToken) throw new Error('No refresh token available')
+        const { data, error } = await supabase.auth.refreshSession()
 
-        const response = await fetch('/api/v1/auth/refresh', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken }),
-        })
-
-        const data = await response.json()
-        if (!response.ok) {
+        if (error || !data.session) {
           set({
             user: null,
             token: null,
@@ -203,10 +215,21 @@ export const useAuthStore = create<AuthState>()(
             expiresAt: null,
             isAuthenticated: false,
           })
-          throw new Error(data.message || 'Token refresh failed')
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('sb-access-token')
+          throw new Error(error?.message || 'Token refresh failed')
         }
 
-        set({ token: data.token })
+        localStorage.setItem('auth_token', data.session.access_token)
+        localStorage.setItem('sb-access-token', data.session.access_token)
+
+        set({
+          token: data.session.access_token,
+          refreshToken: data.session.refresh_token,
+          expiresAt: data.session.expires_at
+            ? new Date(data.session.expires_at * 1000).toISOString()
+            : null,
+        })
       },
 
       setLoading: (loading: boolean) => {
@@ -214,11 +237,28 @@ export const useAuthStore = create<AuthState>()(
       },
 
       checkAuth: async () => {
-        const { token } = get()
-        if (token) {
-          // For now, just set authenticated if token exists
-          // In real implementation, validate token with server
-          set({ isAuthenticated: true })
+        const { data } = await supabase.auth.getSession()
+        if (data.session) {
+          const user: User = {
+            id: data.session.user.id,
+            email: data.session.user.email || '',
+            name: data.session.user.user_metadata?.name || data.session.user.email || '',
+            organization_id: data.session.user.user_metadata?.organization_id,
+            role: data.session.user.user_metadata?.role || 'admin',
+          }
+
+          localStorage.setItem('auth_token', data.session.access_token)
+          localStorage.setItem('sb-access-token', data.session.access_token)
+
+          set({
+            user,
+            token: data.session.access_token,
+            refreshToken: data.session.refresh_token,
+            expiresAt: data.session.expires_at
+              ? new Date(data.session.expires_at * 1000).toISOString()
+              : null,
+            isAuthenticated: true,
+          })
         }
       },
     }),

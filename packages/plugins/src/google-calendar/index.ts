@@ -32,9 +32,6 @@ export class GoogleCalendarAdapter extends BasePluginAdapter {
       throw new Error('Google Calendar access token is required')
     }
 
-    // TODO(google-calendar): Confirm OAuth token acquisition/refresh flow.
-    // API keys are not sufficient for accessing private/primary calendars.
-
     // Fetch events from Google Calendar API
     const response = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?` +
@@ -122,17 +119,18 @@ export class GoogleCalendarAdapter extends BasePluginAdapter {
       accessToken?: string
     }
 
-    if (!calendarId || !accessToken) {
-      return {
-        valid: false,
-        errors: ['Calendar ID and Access Token are required'],
-      }
+    const errors: string[] = []
+    if (!accessToken) {
+      errors.push('Access token is required')
+    }
+    if (errors.length > 0) {
+      return { valid: false, errors }
     }
 
     try {
       // Test the access token by making a simple API call
       const response = await fetch(
-        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}`,
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId || 'primary')}`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,

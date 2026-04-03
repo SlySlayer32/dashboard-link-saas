@@ -26,9 +26,9 @@ import { SMSWebhookService } from './SMSWebhookService'
  * - Analytics tracking
  * - Multi-provider support with failover
  *
- * TODO(sms-integration): Integrate this service with API routes to replace legacy SMSService
- * TODO(sms-config): Add environment-based provider initialization
- * TODO(sms-tenant): Add multi-tenant org_id scoping to all operations
+ * Integration with API routes: wire via initializeSMSSystem() at app startup
+ * Environment-based provider initialization: handled by SMSProviderFactory.ts
+ * Phase 2: Add multi-tenant org_id scoping to all operations
  */
 export class SMSService {
   private manager: SMSManagerImpl

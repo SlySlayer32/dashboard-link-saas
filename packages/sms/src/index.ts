@@ -1,10 +1,9 @@
 // SMS Gateway Package - Zapier-Style Architecture
 // Export all SMS-related components
 //
-// TODO(sms-integration): This package is fully implemented and ready for integration
-// TODO(sms-config): Add environment-based provider initialization in index.ts
-// TODO(sms-setup): Create setup() function to auto-register providers from config
-// TODO(sms-tenant): Add org_id parameter to main service methods
+// Environment-based provider initialization: see SMSProviderFactory.ts
+// Provider auto-registration: see registerDefaultSMSProviders() in SMSProviderFactory.ts
+// Phase 2: Add org_id tenant scoping to main service methods
 
 // Core types and interfaces
 export type {

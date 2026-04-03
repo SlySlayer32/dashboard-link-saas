@@ -1,7 +1,9 @@
 import { logger } from '@dashboard-link/shared'
 import { MagicLinkAuth } from '@dashboard-link/ui'
 import { useEffect, useState } from 'react'
+import { toast } from 'react-hot-toast'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 import {
   useAuthActions,
   useAuthError,
@@ -53,10 +55,28 @@ export function LoginPage() {
     clearError()
 
     try {
-      // TODO: Implement magic link API call
-      logger.info('Magic link requested', { email: data.email })
-      // For now, just simulate success
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const { error } = await supabase.auth.signInWithOtp({
+        email: data.email,
+        options: {
+          emailRedirectTo: `${globalThis.location.origin}/`,
+        },
+      })
+
+      if (error) {
+        logger.error('Magic link request failed', undefined, {
+          email: data.email,
+          detail: error.message,
+        })
+        toast.error(error.message)
+        return
+      }
+
+      logger.info('Magic link sent', { email: data.email })
+      toast.success('Magic link sent! Check your email inbox.')
+    } catch (err) {
+      const caughtError = err instanceof Error ? err : new Error('Failed to send magic link')
+      logger.error('Magic link request error', caughtError, { email: data.email })
+      toast.error(caughtError.message)
     } finally {
       setIsSubmitting(false)
     }
@@ -72,10 +92,17 @@ export function LoginPage() {
     clearError()
 
     try {
-      // TODO: Implement signup API call
-      logger.info('Signup requested', { email: data.email })
-      // For now, just simulate success
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const authStore = useAuthStore.getState()
+      const result = await authStore.register({
+        email: data.email,
+        password: data.password,
+        name: data.email.split('@')[0],
+        organizationName: data.organization,
+      })
+
+      if (result.success) {
+        setIsModalOpen(false)
+      }
     } finally {
       setIsSubmitting(false)
     }

@@ -59,6 +59,7 @@ export {
 
 // Repositories
 export { AccessLogRepository } from './repositories/AccessLogRepository.js'
+export { AdapterConfigRepository } from './repositories/AdapterConfigRepository.js'
 export { DashboardRepository } from './repositories/DashboardRepository.js'
 export { OrganizationRepository } from './repositories/OrganizationRepository.js'
 export { SMSLogRepository } from './repositories/SMSLogRepository.js'
@@ -69,6 +70,7 @@ export {
   DIContainer,
   createContainerFromEnvironment,
   getAccessLogRepository,
+  getAdapterConfigRepository,
   getContainer,
   getDashboardRepository,
   getOrganizationRepository,

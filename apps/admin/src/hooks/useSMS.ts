@@ -2,7 +2,7 @@ import type { SMSDashboardLinkRequest, SMSDashboardLinkResponse } from '@dashboa
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1'
 
 export function useSendDashboardLink() {
   return useMutation({

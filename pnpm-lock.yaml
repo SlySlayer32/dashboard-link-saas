@@ -62,6 +62,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.69.0(react@18.3.1))
+      '@supabase/supabase-js':
+        specifier: ^2.39.0
+        version: 2.89.0
       '@tanstack/react-query':
         specifier: ^5.14.2
         version: 5.90.16(react@18.3.1)
@@ -6603,7 +6606,7 @@ snapshots:
       std-env: 3.10.0
       strip-literal: 2.1.1
       test-exclude: 6.0.0
-      vitest: 1.6.1(@types/node@20.19.27)(@vitest/ui@1.6.1)(jsdom@27.4.0)(terser@5.44.1)
+      vitest: 1.6.1(@types/node@20.19.27)(@vitest/ui@1.6.1)(jsdom@23.2.0)(terser@5.44.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -6638,7 +6641,7 @@ snapshots:
       pathe: 1.1.2
       picocolors: 1.1.1
       sirv: 2.0.4
-      vitest: 1.6.1(@types/node@20.19.27)(@vitest/ui@1.6.1)(jsdom@27.4.0)(terser@5.44.1)
+      vitest: 1.6.1(@types/node@20.19.27)(@vitest/ui@1.6.1)(jsdom@23.2.0)(terser@5.44.1)
 
   '@vitest/utils@1.6.1':
     dependencies:

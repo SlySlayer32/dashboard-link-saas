@@ -13,10 +13,9 @@ import { BaseSMSProvider } from '../base/BaseSMSProvider'
  * MobileMessage.com.au Provider Adapter
  * Australian SMS provider implementation
  *
- * TODO(sms-config): Add environment variable loading for username/password
- * TODO(sms-config): Add sender ID configuration from environment
- * TODO(sms-testing): Add proper API endpoint testing and validation
- * TODO(sms-webhooks): Implement webhook handling for delivery reports
+ * Credentials loaded from environment via SMSProviderFactory.ts
+ * Phase 2: Add proper API endpoint testing and validation
+ * Phase 2: Implement webhook handling for delivery reports
  */
 export class MobileMessageProvider extends BaseSMSProvider {
   readonly id = 'mobile-message'

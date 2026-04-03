@@ -227,18 +227,8 @@ export class AWSSNSProvider extends BaseSMSProvider {
     _action: string,
     _params: Record<string, unknown>
   ): Promise<Response> {
-    // TODO: Replace with AWS SDK - This is a placeholder implementation
-    // When implementing, use the stored credentials:
-    // - this.accessKeyId (for AWS authentication)
-    // - this.secretAccessKey (for AWS authentication)
-    // - this.region (for AWS endpoint)
-
-    // Credentials would be used here if AWS SDK was installed
-    // const credentials = {
-    //   accessKeyId: this.accessKeyId,
-    //   secretAccessKey: this.secretAccessKey,
-    //   region: this.region,
-    // }
+    // Phase 2: Replace with @aws-sdk/client-sns for proper AWS Signature V4 auth.
+    // Credentials are stored in this.accessKeyId, this.secretAccessKey, this.region.
 
     throw new Error(
       'AWS SNS provider requires AWS SDK for JavaScript (@aws-sdk/client-sns). ' +

@@ -9,6 +9,7 @@ import type { DatabaseAdapter as LocalDatabaseAdapter } from '../adapters/Databa
 import { createMockAdapter } from '../adapters/MockAdapter.js'
 import { createSupabaseAdapter } from '../adapters/SupabaseAdapter.js'
 import { AccessLogRepository } from '../repositories/AccessLogRepository.js'
+import { AdapterConfigRepository } from '../repositories/AdapterConfigRepository.js'
 import { DashboardRepository } from '../repositories/DashboardRepository.js'
 import { OrganizationRepository } from '../repositories/OrganizationRepository.js'
 import { SMSLogRepository } from '../repositories/SMSLogRepository.js'
@@ -20,6 +21,7 @@ export interface RepositoryContainer {
   dashboard: DashboardRepository
   smsLog: SMSLogRepository
   accessLog: AccessLogRepository
+  adapterConfig: AdapterConfigRepository
 }
 
 export interface ContainerConfig {
@@ -77,6 +79,7 @@ export class DIContainer {
       dashboard: new DashboardRepository(this.adapter),
       smsLog: new SMSLogRepository(this.adapter),
       accessLog: new AccessLogRepository(this.adapter),
+      adapterConfig: new AdapterConfigRepository(this.adapter),
     }
   }
 
@@ -101,6 +104,10 @@ export class DIContainer {
     return this.repositories.accessLog
   }
 
+  getAdapterConfigRepository(): AdapterConfigRepository {
+    return this.repositories.adapterConfig
+  }
+
   // Adapter access
   getAdapter(): LocalDatabaseAdapter {
     return this.adapter
@@ -120,6 +127,7 @@ export class DIContainer {
       dashboard: await this.checkRepository(this.repositories.dashboard),
       smsLog: await this.checkRepository(this.repositories.smsLog),
       accessLog: await this.checkRepository(this.repositories.accessLog),
+      adapterConfig: await this.checkRepository(this.repositories.adapterConfig),
     }
 
     const overall = databaseHealthy && Object.values(repositoryHealth).every((healthy) => healthy)
@@ -203,6 +211,10 @@ export function getSMSLogRepository(): SMSLogRepository {
 
 export function getAccessLogRepository(): AccessLogRepository {
   return getContainer().getAccessLogRepository()
+}
+
+export function getAdapterConfigRepository(): AdapterConfigRepository {
+  return getContainer().getAdapterConfigRepository()
 }
 
 // Factory for creating container with environment-based configuration

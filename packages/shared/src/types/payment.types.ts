@@ -1,7 +1,7 @@
 // Payment provider contracts for billing abstractions
 
-// TODO(billing): Stripe/provider implementation and plan/usage limit enforcement are not implemented yet.
-// These are contracts only; Phase 3 must pick provider, define plans/limits, and wire webhooks + metering.
+// Phase 3: Stripe/provider implementation, plan/usage limit enforcement, webhooks + metering.
+// These are contracts only — no runtime implementation yet.
 
 export interface PaymentMethod {
   id: string

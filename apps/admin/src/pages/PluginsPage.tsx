@@ -4,6 +4,16 @@ import { useEffect, useState } from 'react'
 import { PluginCard } from '../components/PluginCard'
 import { PluginConfigForm } from '../components/PluginConfigForm'
 
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1'
+
+function getAuthHeaders(): Record<string, string> {
+  const token = localStorage.getItem('auth_token') || localStorage.getItem('sb-access-token') || ''
+  return {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  }
+}
+
 export function PluginsPage() {
   const [plugins, setPlugins] = useState<PluginWithConfig[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -13,8 +23,8 @@ export function PluginsPage() {
 
   const fetchPlugins = async () => {
     try {
-      const response = await fetch('/api/plugins', {
-        credentials: 'include',
+      const response = await fetch(`${API_BASE}/plugins`, {
+        headers: getAuthHeaders(),
       })
 
       if (!response.ok) {
@@ -43,12 +53,9 @@ export function PluginsPage() {
       const plugin = plugins.find((p) => p.id === pluginId)
       if (!plugin) return
 
-      const response = await fetch(`/api/plugins/${pluginId}`, {
+      const response = await fetch(`${API_BASE}/plugins/${pluginId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           enabled,
           config: plugin.config,
@@ -82,12 +89,9 @@ export function PluginsPage() {
       const plugin = plugins.find((p) => p.id === pluginId)
       if (!plugin) return
 
-      const response = await fetch(`/api/plugins/${pluginId}`, {
+      const response = await fetch(`${API_BASE}/plugins/${pluginId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           enabled: plugin.enabled,
           config,
@@ -129,12 +133,9 @@ export function PluginsPage() {
         throw new Error('Plugin not found')
       }
 
-      const response = await fetch(`/api/plugins/${pluginId}/test`, {
+      const response = await fetch(`${API_BASE}/plugins/${pluginId}/test`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           config: plugin.config,
         }),
@@ -191,9 +192,9 @@ export function PluginsPage() {
 
   const handleDeleteConfig = async (pluginId: string) => {
     try {
-      const response = await fetch(`/api/plugins/${pluginId}`, {
+      const response = await fetch(`${API_BASE}/plugins/${pluginId}`, {
         method: 'DELETE',
-        credentials: 'include',
+        headers: getAuthHeaders(),
       })
 
       if (!response.ok) {

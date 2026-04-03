@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '../store/auth'
 
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1'
+
 interface WorkerData {
   id: string
   name: string
@@ -27,7 +29,7 @@ interface WorkerDetailResponse {
 }
 
 async function fetchWorkerDetail(token: string, workerId: string): Promise<WorkerDetailResponse> {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/workers/${workerId}/stats`, {
+  const response = await fetch(`${API_BASE}/workers/${workerId}/stats`, {
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
