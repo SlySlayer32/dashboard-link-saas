@@ -12,7 +12,7 @@ import type {
   AuthSession,
   AuthUser,
 } from '@dashboard-link/shared'
-import { BaseAuthProvider } from './BaseAuthProvider'
+import { BaseAuthProvider } from './BaseAuthProvider.js'
 
 export class MockAuthProvider extends BaseAuthProvider {
   private users = new Map<string, AuthUser>()

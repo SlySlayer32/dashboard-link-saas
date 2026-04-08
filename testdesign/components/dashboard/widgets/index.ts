@@ -1,0 +1,6 @@
+export { StatsWidget } from './stats-widget'
+export { ActivityWidget } from './activity-widget'
+export { ShiftsWidget } from './shifts-widget'
+export { TasksWidget } from './tasks-widget'
+export { MessagesWidget } from './messages-widget'
+export { QuickActionsWidget } from './quick-actions-widget'

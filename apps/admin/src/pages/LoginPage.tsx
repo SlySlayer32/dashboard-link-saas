@@ -106,29 +106,6 @@ export function LoginPage() {
     }
   }
 
-  const handleDevBypass = () => {
-    const mockUser = {
-      id: 'dev-user-123',
-      email: 'dev@example.com',
-      name: 'Development User',
-      role: 'admin' as const,
-      organization_id: 'dev-org-123',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-
-    const authStore = useAuthStore.getState()
-    authStore.setLoading(false)
-    authStore.clearError()
-    authStore.user = mockUser
-    authStore.token = 'dev-token-123'
-    authStore.refreshToken = 'dev-refresh-token-123'
-    authStore.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-    authStore.isAuthenticated = true
-
-    navigate('/', { replace: true })
-  }
-
   if (isLoading) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-gray-50'>
@@ -194,24 +171,13 @@ export function LoginPage() {
 
         <MagicLinkAuth
           isOpen={isModalOpen}
-          onClose={() => navigate('/')}
+          onClose={() => setIsModalOpen(false)}
           onLogin={handleLogin}
           onMagicLink={handleMagicLink}
           onSignup={handleSignup}
           isLoading={isSubmitting}
           error={error || undefined}
         />
-
-        {import.meta.env.DEV && (
-          <div className='fixed bottom-4 right-4'>
-            <button
-              onClick={handleDevBypass}
-              className='px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors'
-            >
-              Dev Bypass
-            </button>
-          </div>
-        )}
       </div>
     </div>
   )

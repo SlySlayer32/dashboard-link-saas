@@ -10,7 +10,7 @@ import { createClient } from '@supabase/supabase-js'
 import { Hono } from 'hono'
 import { z } from 'zod'
 
-import { SMSService } from '../services/SMSService'
+import { SMSService } from '../services/SMSService.js'
 import type { AppContextVariables } from '../types'
 
 function getSupabaseAdmin() {

@@ -1,5 +1,5 @@
 // Core contract types (Zapier-style architecture)
-export * from './plugin.types'
+export * from './plugin.types.js'
 
 // Auth types with conflict resolution
 export {
@@ -29,32 +29,32 @@ export {
   type SessionConfig,
   type UserRole,
   type ValidationError,
-} from './auth.types'
+} from './auth.types.js'
 
 // Token types - Export all from token.types
-export * from './token.types'
+export * from './token.types.js'
 
 // SMS types - full export
-export * from './sms.types'
+export * from './sms.types.js'
 
 // Repository types - full export
-export * from './repository.types'
+export * from './repository.types.js'
 
 // Payment types - full export
-export * from './payment.types'
+export * from './payment.types.js'
 
 // MVP Core Types - Export all from new type files (avoid conflicts with repository.types)
 // These are already exported via repository.types, so we skip them to avoid conflicts
 // export * from './access-log'
 // export * from './data-source'
 // export * from './organization'
-export * from './schedule'
+export * from './schedule.js'
 // export * from './sms'  // Already exported via sms.types
 // export * from './token'  // Already exported via token.types
 // export * from './worker'  // Already exported via repository.types
 
 // Legacy simple types (avoid conflicts with .types.ts files)
-export type { DashboardWidget } from './dashboard'
+export type { DashboardWidget } from './dashboard.js'
 
 // Utility types with conflict resolution
 export {
@@ -65,9 +65,9 @@ export {
   ConflictError,
   NotFoundError,
   RateLimitError,
-} from './errors'
+} from './errors.js'
 
-export * from './hono'
+export * from './hono.js'
 
 // Additional utility types needed by plugins
 export interface DateRange {

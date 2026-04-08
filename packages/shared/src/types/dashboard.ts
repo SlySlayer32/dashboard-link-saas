@@ -21,4 +21,4 @@ export interface DashboardWidget {
 }
 
 // Re-export standardized plugin types for frontend compatibility
-export { StandardScheduleItem as ScheduleItem, StandardTaskItem as TaskItem } from './plugin.types'
+export { StandardScheduleItem as ScheduleItem, StandardTaskItem as TaskItem } from './plugin.types.js'

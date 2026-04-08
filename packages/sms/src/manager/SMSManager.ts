@@ -5,7 +5,7 @@ import {
   SMSProvider,
   SMSResult,
 } from '@dashboard-link/shared'
-import { smsRegistry } from '../registry/SMSRegistry'
+import { smsRegistry } from '../registry/SMSRegistry.js'
 
 /**
  * SMS Manager Implementation

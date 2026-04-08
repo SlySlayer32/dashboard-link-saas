@@ -5,12 +5,12 @@
     "module": "ESNext",
     "baseUrl": ".",
     "paths": {
-      "@dashboard-link/shared": ["../shared/src"],
-      "@dashboard-link/database": ["../database/src"],
-      "@dashboard-link/sms": ["../sms/src"],
-      "@dashboard-link/tokens": ["../tokens/src"],
-      "@dashboard-link/auth": ["../auth/src"],
-      "@dashboard-link/plugins": ["../plugins/src"]
+      "@dashboard-link/shared": ["../../packages/shared/src/index.ts"],
+      "@dashboard-link/database": ["../../packages/database/src/index.ts"],
+      "@dashboard-link/sms": ["../../packages/sms/src/index.ts"],
+      "@dashboard-link/tokens": ["../../packages/tokens/src/index.ts"],
+      "@dashboard-link/auth": ["../../packages/auth/src/index.ts"],
+      "@dashboard-link/plugins": ["../../packages/plugins/src/index.ts"]
     }
   },
   "include": ["src/**/*"],

@@ -26,33 +26,33 @@ export type {
 } from '@dashboard-link/shared'
 
 // Base adapter
-export { BaseSMSProvider } from './base/BaseSMSProvider'
+export { BaseSMSProvider } from './base/BaseSMSProvider.js'
 
 // Provider implementations
-export { AWSSNSProvider } from './providers/AWSSNSProvider'
-export { MessageBirdProvider } from './providers/MessageBirdProvider'
-export { MobileMessageProvider } from './providers/MobileMessageProvider'
-export { TwilioProvider } from './providers/TwilioProvider'
+export { AWSSNSProvider } from './providers/AWSSNSProvider.js'
+export { MessageBirdProvider } from './providers/MessageBirdProvider.js'
+export { MobileMessageProvider } from './providers/MobileMessageProvider.js'
+export { TwilioProvider } from './providers/TwilioProvider.js'
 
 // Registry and Manager
-export { SMSManagerImpl, smsManager } from './manager/SMSManager'
-export { createSMSProvider, registerDefaultSMSProviders } from './registry/SMSProviderFactory'
-export { SMSRegistryImpl, smsRegistry } from './registry/SMSRegistry'
+export { SMSManagerImpl, smsManager } from './manager/SMSManager.js'
+export { createSMSProvider, registerDefaultSMSProviders } from './registry/SMSProviderFactory.js'
+export { SMSRegistryImpl, smsRegistry } from './registry/SMSRegistry.js'
 
 // Core Services
-export { SMSAnalyticsService } from './services/SMSAnalyticsService'
-export { SMSQueueService } from './services/SMSQueueService'
-export { SMSService, smsService } from './services/SMSService'
-export { SMSValidationService } from './services/SMSValidationService'
+export { SMSAnalyticsService } from './services/SMSAnalyticsService.js'
+export { SMSQueueService } from './services/SMSQueueService.js'
+export { SMSService, smsService } from './services/SMSService.js'
+export { SMSValidationService } from './services/SMSValidationService.js'
 export {
   AWSSNSWebhookHandler,
   MessageBirdWebhookHandler,
   SMSWebhookService,
   TwilioWebhookHandler,
-} from './services/SMSWebhookService'
+} from './services/SMSWebhookService.js'
 
 // Initialization
-export { getSMSManager, getSMSService, initializeSMSSystem, isSMSInitialized } from './initialize'
+export { getSMSManager, getSMSService, initializeSMSSystem, isSMSInitialized } from './initialize.js'
 
 // Service Types
 export type {
@@ -61,30 +61,30 @@ export type {
   FailureAnalysisResult,
   PeakUsageResult,
   ProviderPerformanceResult,
-} from './services/SMSAnalyticsService'
-export type { MessagePriority, QueueStats } from './services/SMSQueueService'
+} from './services/SMSAnalyticsService.js'
+export type { MessagePriority, QueueStats } from './services/SMSQueueService.js'
 export type {
   BatchValidationResult,
   PhoneNumberValidationResult,
   ValidationResult,
-} from './services/SMSValidationService'
-export type { DeliveryReport, WebhookHandler } from './services/SMSWebhookService'
+} from './services/SMSValidationService.js'
+export type { DeliveryReport, WebhookHandler } from './services/SMSWebhookService.js'
 
 // Middleware
-export { LoggingMiddleware } from './middleware/LoggingMiddleware'
+export { LoggingMiddleware } from './middleware/LoggingMiddleware.js'
 export {
   RateLimitError,
   RateLimitMiddleware,
   waitForRateLimit,
-} from './middleware/RateLimitMiddleware'
-export { ValidationError, ValidationMiddleware } from './middleware/ValidationMiddleware'
+} from './middleware/RateLimitMiddleware.js'
+export { ValidationError, ValidationMiddleware } from './middleware/ValidationMiddleware.js'
 
 // Middleware Types
-export type { LoggingOptions } from './middleware/LoggingMiddleware'
-export type { RateLimitConfig, RateLimitStatus } from './middleware/RateLimitMiddleware'
+export type { LoggingOptions } from './middleware/LoggingMiddleware.js'
+export type { RateLimitConfig, RateLimitStatus } from './middleware/RateLimitMiddleware.js'
 
 // Utilities
-export { SMSLogger, logSMSError, logSMSOperation, measureTime, smsLogger } from './utils/logger'
-export type { LogLevel, LogMetadata } from './utils/logger'
-export * from './utils/messageUtils'
-export * from './utils/phoneUtils'
+export { SMSLogger, logSMSError, logSMSOperation, measureTime, smsLogger } from './utils/logger.js'
+export type { LogLevel, LogMetadata } from './utils/logger.js'
+export * from './utils/messageUtils.js'
+export * from './utils/phoneUtils.js'

@@ -30,17 +30,19 @@ export { BaseRepository, RepositoryUtils } from './base/BaseRepository.js'
 
 // Adapters
 export {
-  AdapterConfig,
-  AdapterHealthCheck,
   AdapterRegistry,
   BaseTransaction,
-  ConnectionPool,
-  DatabaseAdapter,
   DatabaseAdapterFactory,
   adapterRegistry,
 } from './adapters/DatabaseAdapter.js'
 
-export type { DatabaseAdapter as BaseDatabaseAdapter } from './adapters/DatabaseAdapter.js'
+export type {
+  AdapterConfig,
+  AdapterHealthCheck,
+  ConnectionPool,
+  DatabaseAdapter,
+  DatabaseAdapter as BaseDatabaseAdapter,
+} from './adapters/DatabaseAdapter.js'
 
 export {
   SupabaseAdapter,

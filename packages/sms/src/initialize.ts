@@ -1,6 +1,6 @@
-import { smsManager } from './manager/SMSManager'
-import { registerDefaultSMSProviders } from './registry/SMSProviderFactory'
-import { smsService } from './services/SMSService'
+import { smsManager } from './manager/SMSManager.js'
+import { registerDefaultSMSProviders } from './registry/SMSProviderFactory.js'
+import { smsService } from './services/SMSService.js'
 
 /**
  * Initialize SMS System

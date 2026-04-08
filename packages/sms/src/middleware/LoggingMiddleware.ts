@@ -4,7 +4,7 @@
  */
 
 import { SMSMessage, SMSResult } from '@dashboard-link/shared'
-import { SMSLogger, LogMetadata, smsLogger } from '../utils/logger'
+import { SMSLogger, LogMetadata, smsLogger } from '../utils/logger.js'
 
 /**
  * Logging options

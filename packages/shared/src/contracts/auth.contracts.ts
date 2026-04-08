@@ -12,4 +12,4 @@ export type {
   AuthUser,
   PasswordPolicy,
   SessionConfig,
-} from '../types/auth.types'
+} from '../types/auth.types.js'

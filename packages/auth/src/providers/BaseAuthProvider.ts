@@ -17,7 +17,7 @@ import type {
   PasswordPolicy,
   SessionConfig,
 } from '@dashboard-link/shared'
-import type { ValidationError } from '../utils/AuthUtils'
+import type { ValidationError } from '../utils/AuthUtils.js'
 
 export abstract class BaseAuthProvider implements AuthProvider {
   protected config: AuthConfig

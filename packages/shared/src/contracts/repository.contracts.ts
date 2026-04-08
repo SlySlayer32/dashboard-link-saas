@@ -17,4 +17,4 @@ export type {
   Token,
   PaginatedResult,
   PaginationOptions,
-} from '../types/repository.types'
+} from '../types/repository.types.js'

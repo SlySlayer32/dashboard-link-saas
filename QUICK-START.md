@@ -49,7 +49,7 @@ Local app URLs:
 
 - Admin: `http://localhost:5173`
 - Worker: `http://localhost:5174`
-- API: `http://localhost:3000`
+- API: `http://localhost:3001`
 
 ## Daily Developer Workflow
 

@@ -5,10 +5,12 @@
     "source.organizeImports": "explicit"
   },
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "typescript.suggest.autoImports": true,
-  "typescript.updateImportsOnFileMove.enabled": "always",
+  "js/ts.preferences.importModuleSpecifier": "relative",
+  "js/ts.suggest.autoImports": true,
+  "js/ts.updateImportsOnFileMove.enabled": "always",
   "vitest.maximumConfigs": 20,
+  "vitest.workspaceConfig": "./apps/admin/vitest.workspace.ts",
+  "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,**/*.d.ts,**/vite.config.*,**/*.timestamp-*.mjs}",
   "files.exclude": {
     "**/node_modules": true,
     "**/dist": true,
@@ -16,7 +18,8 @@
     "**/.turbo": true,
     "**/coverage": true,
     "**/.next": true,
-    "**/*.tsbuildinfo": true
+    "**/*.tsbuildinfo": true,
+    "**/*.timestamp-*.mjs": true
   },
   "search.exclude": {
     "**/node_modules": true,
@@ -24,14 +27,16 @@
     "**/build": true,
     "**/.turbo": true,
     "**/coverage": true,
-    "**/.next": true
+    "**/.next": true,
+    "**/*.timestamp-*.mjs": true
   },
   "files.watcherExclude": {
     "**/node_modules/**": true,
     "**/dist/**": true,
     "**/build/**": true,
     "**/.turbo/**": true,
-    "**/coverage/**": true
+    "**/coverage/**": true,
+    "**/*.timestamp-*.mjs": true
   },
   "testing.automaticallyOpenPeekView": "failureInVisibleDocument",
   "testing.followRunningTest": true,
@@ -44,7 +49,8 @@
     "**/dist/**",
     "**/build/**",
     "**/.turbo/**",
-    "**/coverage/**"
+    "**/coverage/**",
+    "**/*.timestamp-*.mjs"
   ],
   "testExplorer.testMatch": [
     "**/*.{test,spec}.{js,jsx,ts,tsx}",

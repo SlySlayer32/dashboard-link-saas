@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { setPreviewMode } from '../lib/preview'
 import { supabase } from '../lib/supabase'
 
 // User interface
@@ -37,6 +38,7 @@ interface AuthState {
   checkAuth: () => Promise<void>
   refreshAuthToken: () => Promise<void>
   setLoading: (loading: boolean) => void
+  devBypass: () => void
 }
 
 // Create Zustand store
@@ -53,6 +55,7 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (credentials) => {
         set({ isLoading: true, error: null })
+        setPreviewMode(false)
 
         try {
           const { data, error } = await supabase.auth.signInWithPassword({
@@ -117,6 +120,7 @@ export const useAuthStore = create<AuthState>()(
 
       register: async (userData) => {
         set({ isLoading: true, error: null })
+        setPreviewMode(false)
 
         try {
           const { data, error } = await supabase.auth.signUp({
@@ -186,6 +190,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        setPreviewMode(false)
         supabase.auth.signOut()
         localStorage.removeItem('auth_token')
         localStorage.removeItem('sb-access-token')
@@ -234,6 +239,30 @@ export const useAuthStore = create<AuthState>()(
 
       setLoading: (loading: boolean) => {
         set({ isLoading: loading })
+      },
+
+      devBypass: () => {
+        const mockUser: User = {
+          id: 'dev-user-123',
+          email: 'dev@example.com',
+          name: 'Development User',
+          role: 'admin',
+          organization_id: 'dev-org-123',
+        }
+
+        setPreviewMode(true)
+        localStorage.setItem('auth_token', 'dev-token-123')
+        localStorage.setItem('sb-access-token', 'dev-token-123')
+
+        set({
+          user: mockUser,
+          token: 'dev-token-123',
+          refreshToken: 'dev-refresh-token-123',
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        })
       },
 
       checkAuth: async () => {
@@ -286,18 +315,15 @@ export const useAuthActions = () =>
     logout: state.logout,
     clearError: state.clearError,
     checkAuth: state.checkAuth,
+    devBypass: state.devBypass,
   }))
 
 // Development helper for quick login
 export const useDevLogin = () => {
-  const { login } = useAuthActions()
+  const { devBypass } = useAuthActions()
 
   return {
-    devLogin: () =>
-      login({
-        email: 'dev@example.com',
-        password: 'dev-password',
-      }),
+    devLogin: () => devBypass(),
   }
 }
 

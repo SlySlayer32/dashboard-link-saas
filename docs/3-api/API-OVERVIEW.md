@@ -1,7 +1,7 @@
 # API Overview
 
 ## Base URL
-**Local Development:** `http://localhost:3000/api`  
+**Local Development:** `http://localhost:3001/api`  
 **Production:** ## TODO: Add production API URL once deployed
 
 ## Authentication Method

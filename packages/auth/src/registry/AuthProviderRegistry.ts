@@ -12,8 +12,8 @@ import type {
   AuthProviderRegistry,
 } from '@dashboard-link/shared'
 import { createClient } from '@supabase/supabase-js'
-import { MockAuthProvider } from '../providers/MockAuthProvider'
-import { SupabaseAuthProvider } from '../providers/SupabaseAuthProvider'
+import { MockAuthProvider } from '../providers/MockAuthProvider.js'
+import { SupabaseAuthProvider } from '../providers/SupabaseAuthProvider.js'
 
 export class AuthProviderRegistryImpl implements AuthProviderRegistry {
   private providers = new Map<string, AuthProvider>()

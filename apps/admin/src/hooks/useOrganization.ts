@@ -18,7 +18,7 @@ interface UpdateOrganizationRequest {
   metadata?: Record<string, unknown>
 }
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1'
+const API_BASE = (import.meta.env.VITE_API_URL || '/api') + '/api/v1'
 
 async function fetchOrganization(token: string): Promise<Organization> {
   const response = await fetch(`${API_BASE}/organizations`, {

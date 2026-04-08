@@ -10,20 +10,20 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 
 // Import routes
-import { plugins } from './routes/plugins'
-import { sms } from './routes/sms'
-import tokens from './routes/tokens'
-import { workers } from './routes/workers'
+import { plugins } from './routes/plugins.js'
+import { sms } from './routes/sms.js'
+import tokens from './routes/tokens.js'
+import { workers } from './routes/workers.js'
 
 // Import canonical middleware
-import { authMiddleware } from './middleware/auth'
-import { cacheMiddleware, createCacheConfig } from './middleware/cache'
-import { tenantContextMiddleware } from './middleware/tenant'
+import { authMiddleware } from './middleware/auth.js'
+import { cacheMiddleware, createCacheConfig } from './middleware/cache.js'
+import { tenantContextMiddleware } from './middleware/tenant.js'
 
 // Import services
-import { SMSService } from './services/SMSService'
-import { TokenService } from './services/TokenService'
-import { WebhookService } from './services/webhook-service'
+import { SMSService } from './services/SMSService.js'
+import { TokenService } from './services/TokenService.js'
+import { WebhookService } from './services/webhook-service.js'
 
 import type { AppContextVariables } from './types'
 

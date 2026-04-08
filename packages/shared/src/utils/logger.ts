@@ -1,4 +1,4 @@
-import type { RequestContext } from '../types/hono'
+import type { RequestContext } from '../types/hono.js'
 
 export interface LogEntry {
   level: 'debug' | 'info' | 'warn' | 'error'

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { isPreviewMode } from './preview'
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
@@ -27,7 +28,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized access
+      if (isPreviewMode()) {
+        return Promise.reject(error)
+      }
+
+      // Handle unauthorized access by clearing the full persisted session.
+      localStorage.removeItem('auth-storage')
+      localStorage.removeItem('auth_token')
       localStorage.removeItem('sb-access-token')
       window.location.href = '/login'
     }

@@ -13,4 +13,4 @@ export type {
   PluginBatchResult,
   StandardScheduleItem,
   StandardTaskItem,
-} from '../types/plugin.types'
+} from '../types/plugin.types.js'

@@ -7,18 +7,18 @@
 
 import type { AuthConfig, AuthService } from '@dashboard-link/shared'
 import { createClient } from '@supabase/supabase-js'
-import { MockAuthProvider } from './providers/MockAuthProvider'
-import { SupabaseAuthProvider } from './providers/SupabaseAuthProvider'
-import { AuthServiceImpl } from './services/AuthService'
+import { MockAuthProvider } from './providers/MockAuthProvider.js'
+import { SupabaseAuthProvider } from './providers/SupabaseAuthProvider.js'
+import { AuthServiceImpl } from './services/AuthService.js'
 
-export * from './middleware/AuthMiddleware'
-export * from './providers/BaseAuthProvider'
-export * from './providers/MockAuthProvider'
-export * from './providers/SupabaseAuthProvider'
-export * from './registry/AuthProviderRegistry'
-export { registerDefaultAuthProvider } from './registry/AuthProviderRegistry'
-export * from './services/AuthService'
-export * from './utils/AuthUtils'
+export * from './middleware/AuthMiddleware.js'
+export * from './providers/BaseAuthProvider.js'
+export * from './providers/MockAuthProvider.js'
+export * from './providers/SupabaseAuthProvider.js'
+export * from './registry/AuthProviderRegistry.js'
+export { registerDefaultAuthProvider } from './registry/AuthProviderRegistry.js'
+export * from './services/AuthService.js'
+export * from './utils/AuthUtils.js'
 
 // Factory function to create auth service
 export function createAuthService(provider: string, config: AuthConfig): AuthService {

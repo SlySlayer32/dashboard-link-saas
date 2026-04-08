@@ -14,7 +14,7 @@ import type {
   AuthUser,
 } from '@dashboard-link/shared'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { BaseAuthProvider } from './BaseAuthProvider'
+import { BaseAuthProvider } from './BaseAuthProvider.js'
 
 export class SupabaseAuthProvider extends BaseAuthProvider {
   private client: SupabaseClient

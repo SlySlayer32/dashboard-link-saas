@@ -7,7 +7,7 @@ import {
   SMSResult,
   SMSStatus,
 } from '@dashboard-link/shared'
-import { BaseSMSProvider } from '../base/BaseSMSProvider'
+import { BaseSMSProvider } from '../base/BaseSMSProvider.js'
 
 /**
  * Twilio SMS Provider Adapter

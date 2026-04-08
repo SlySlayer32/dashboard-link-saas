@@ -6,7 +6,7 @@ import {
   SMSResult,
   SMSStatus,
 } from '@dashboard-link/shared'
-import { BaseSMSProvider } from '../base/BaseSMSProvider'
+import { BaseSMSProvider } from '../base/BaseSMSProvider.js'
 
 type MessageBirdMessagePayload = {
   recipients: string[]

@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod'
-import { validateAustralianPhone } from '../utils/phone'
+import { validateAustralianPhone } from '../utils/phone.js'
 
 /**
  * Validate Australian mobile phone number

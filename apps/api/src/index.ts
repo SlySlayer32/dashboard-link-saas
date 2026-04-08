@@ -6,8 +6,8 @@ import { cors } from 'hono/cors'
 import { logger as honoLogger } from 'hono/logger'
 
 // Import middleware and config
-import { validateRuntimeDependencies } from './config/env'
-import { errorHandler } from './middleware/error-handler'
+import { validateRuntimeDependencies } from './config/env.js'
+import { errorHandler } from './middleware/error-handler.js'
 import type { AppContextVariables } from './types'
 import { logger } from './utils/logger.js'
 

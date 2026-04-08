@@ -8,4 +8,4 @@ export type {
   PaymentStatus,
   PaymentHealth,
   PaymentMethod,
-} from '../types/payment.types'
+} from '../types/payment.types.js'

@@ -9,11 +9,11 @@ import {
   SMSResult,
   SMSStatus,
 } from '@dashboard-link/shared'
-import { SMSManagerImpl } from '../manager/SMSManager'
-import { DateRange, SMSAnalyticsService } from './SMSAnalyticsService'
-import { MessagePriority, SMSQueueService } from './SMSQueueService'
-import { SMSValidationService } from './SMSValidationService'
-import { SMSWebhookService } from './SMSWebhookService'
+import { SMSManagerImpl } from '../manager/SMSManager.js'
+import { DateRange, SMSAnalyticsService } from './SMSAnalyticsService.js'
+import { MessagePriority, SMSQueueService } from './SMSQueueService.js'
+import { SMSValidationService } from './SMSValidationService.js'
+import { SMSWebhookService } from './SMSWebhookService.js'
 
 /**
  * Main SMS Service Facade

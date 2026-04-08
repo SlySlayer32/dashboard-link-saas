@@ -16,4 +16,4 @@ export type {
   SMSCostStats,
   SMSDeliveryStats,
   SMSError,
-} from '../types/sms.types'
+} from '../types/sms.types.js'

@@ -53,7 +53,7 @@ pnpm dev
 This starts:
 - Admin dashboard: http://localhost:5173 ✅ (verified in `apps/admin/vite.config.ts`)
 - Worker dashboard: http://localhost:5174 ✅ (verified in `apps/worker/vite.config.ts`)
-- API server: http://localhost:3000 ✅ (verified in `apps/api/src/index.ts`)
+- API server: http://localhost:3001 ✅ (verified in `apps/api/src/index.ts`)
 
 ### Run individual apps:
 ```bash

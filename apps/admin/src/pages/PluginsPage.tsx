@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { PluginCard } from '../components/PluginCard'
 import { PluginConfigForm } from '../components/PluginConfigForm'
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api/v1'
+const API_BASE = (import.meta.env.VITE_API_URL || '/api') + '/api/v1'
 
 function getAuthHeaders(): Record<string, string> {
   const token = localStorage.getItem('auth_token') || localStorage.getItem('sb-access-token') || ''

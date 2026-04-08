@@ -4,7 +4,7 @@
  */
 
 import { SMSMessage } from '@dashboard-link/shared'
-import { SMSValidationService, ValidationResult } from '../services/SMSValidationService'
+import { SMSValidationService, ValidationResult } from '../services/SMSValidationService.js'
 
 /**
  * Validation error

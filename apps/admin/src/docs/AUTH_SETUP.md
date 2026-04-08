@@ -11,7 +11,7 @@ The auth system uses Supabase for authentication with a custom API layer. The sy
 
 ### Admin App (.env)
 ```env
-VITE_API_URL=http://localhost:3000  # Your API server URL
+VITE_API_URL=http://localhost:3001  # Your API server URL
 ```
 
 ### API App (.env)
