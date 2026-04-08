@@ -8,7 +8,7 @@
 | Feature | Status | Notes |
 |---------|--------|-------|
 | **Admin Dashboard** | | |
-| Worker management (add/edit/delete) | 🔄 | Core admin flow |
+| Worker management (add/edit/delete) | ✅ | Core admin flow - full CRUD with soft delete and phone validation |
 | Plugin configuration | 🔄 | Connect Google Calendar, Airtable, Notion, manual |
 | SMS delivery (one-click send) | 🔄 | Send to one or all workers |
 | Delivery status tracking | 📋 | See sent/delivered/failed status |
@@ -34,7 +34,7 @@
 | **Security & Access** | | |
 | Time-limited tokens (1-24hr) | ✅ | Configurable per organization with SHA-256 hashing and auto-cleanup |
 | Single-use protection | 📋 | Optional one-time access |
-| Multi-tenant isolation (RLS) | 🔄 | Database-level org separation |
+| Multi-tenant isolation (RLS) | ✅ | Database-level org separation with comprehensive security |
 | JWT authentication | 🔄 | Supabase Auth for admin users |
 | Access logging | 📋 | Track dashboard opens |
 
