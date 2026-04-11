@@ -1,5 +1,4 @@
-export * from './AuthModal'
+export { AuthModal, LoginForm, SignupForm } from './LoginForm'
 export * from './ForgotPassword'
-export * from './MagicLinkAuth'
 export * from './ResetPassword'
 export * from './WorkerAccess'

@@ -105,17 +105,19 @@ export function LoginForm({
             required
           />
 
-          <div className='flex items-center justify-between'>
-            <Button
-              type='button'
-              variant='ghost'
-              size='sm'
-              onClick={onForgotPassword}
-              disabled={isLoading}
-            >
-              Forgot password?
-            </Button>
-          </div>
+          {onForgotPassword && (
+            <div className='flex items-center justify-between'>
+              <Button
+                type='button'
+                variant='ghost'
+                size='sm'
+                onClick={onForgotPassword}
+                disabled={isLoading}
+              >
+                Forgot password?
+              </Button>
+            </div>
+          )}
 
           <Button type='submit' className='w-full' disabled={isLoading} variant='default'>
             {isLoading ? 'Signing in...' : 'Sign in'}

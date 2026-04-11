@@ -1,5 +1,5 @@
 import { logger } from '@dashboard-link/shared'
-import { MagicLinkAuth } from '@dashboard-link/ui'
+import { AuthModal, ForgotPassword } from '@dashboard-link/ui'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { Navigate, useNavigate } from 'react-router-dom'
@@ -14,7 +14,10 @@ import {
 
 export function LoginPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [resetPasswordError, setResetPasswordError] = useState<string>()
+  const [resetPasswordSuccess, setResetPasswordSuccess] = useState(false)
 
   const { login, clearError } = useAuthActions()
   const isAuthenticated = useAuthIsAuthenticated()
@@ -36,44 +39,48 @@ export function LoginPage() {
     }
   }, [isAuthenticated, isLoading])
 
-  const handleLogin = async (data: { email: string; password: string }) => {
+  const handleLogin = async (email: string, password: string) => {
     setIsSubmitting(true)
     clearError()
 
     try {
-      await login({ email: data.email, password: data.password })
-      setIsModalOpen(false)
+      const result = await login({ email, password })
+      if (result.success) {
+        setIsModalOpen(false)
+      }
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleMagicLink = async (data: { email: string }) => {
+  const handleForgotPassword = async (email: string) => {
     setIsSubmitting(true)
-    clearError()
+    setResetPasswordError(undefined)
+    setResetPasswordSuccess(false)
 
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: data.email,
-        options: {
-          emailRedirectTo: `${globalThis.location.origin}/`,
-        },
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${globalThis.location.origin}/reset-password`,
       })
 
       if (error) {
-        logger.error('Magic link request failed', undefined, {
-          email: data.email,
+        logger.error('Password reset request failed', undefined, {
+          email,
           detail: error.message,
         })
+        setResetPasswordError(error.message)
         toast.error(error.message)
         return
       }
 
-      logger.info('Magic link sent', { email: data.email })
-      toast.success('Magic link sent! Check your email inbox.')
+      logger.info('Password reset email sent', { email })
+      setResetPasswordSuccess(true)
+      toast.success('Password reset email sent. Check your inbox.')
     } catch (err) {
-      const caughtError = err instanceof Error ? err : new Error('Failed to send magic link')
-      logger.error('Magic link request error', caughtError, { email: data.email })
+      const caughtError =
+        err instanceof Error ? err : new Error('Failed to send password reset email')
+      logger.error('Password reset request error', caughtError, { email })
+      setResetPasswordError(caughtError.message)
       toast.error(caughtError.message)
     } finally {
       setIsSubmitting(false)
@@ -151,7 +158,9 @@ export function LoginPage() {
             <div className='space-y-3'>
               <div className='flex items-center'>
                 <div className='w-2 h-2 bg-green-500 rounded-full mr-3'></div>
-                <span className='text-sm text-gray-600'>Passwordless admin login with magic links</span>
+                <span className='text-sm text-gray-600'>
+                  Secure admin login with email and password
+                </span>
               </div>
               <div className='flex items-center'>
                 <div className='w-2 h-2 bg-green-500 rounded-full mr-3'></div>
@@ -169,14 +178,40 @@ export function LoginPage() {
           </div>
         </div>
 
-        <MagicLinkAuth
+        <AuthModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onOpenChange={setIsModalOpen}
           onLogin={handleLogin}
-          onMagicLink={handleMagicLink}
-          onSignup={handleSignup}
+          onSignup={(data) =>
+            handleSignup({
+              organization: data.organizationName,
+              email: data.adminEmail,
+              password: data.adminPassword,
+              confirmPassword: data.confirmPassword,
+            })
+          }
+          onForgotPassword={() => {
+            setResetPasswordError(undefined)
+            setResetPasswordSuccess(false)
+            setIsModalOpen(false)
+            setIsForgotPasswordOpen(true)
+          }}
           isLoading={isSubmitting}
           error={error || undefined}
+        />
+
+        <ForgotPassword
+          isOpen={isForgotPasswordOpen}
+          onClose={() => {
+            setIsForgotPasswordOpen(false)
+            setResetPasswordError(undefined)
+            setResetPasswordSuccess(false)
+            setIsModalOpen(true)
+          }}
+          onSubmit={handleForgotPassword}
+          isLoading={isSubmitting}
+          error={resetPasswordError}
+          success={resetPasswordSuccess}
         />
       </div>
     </div>

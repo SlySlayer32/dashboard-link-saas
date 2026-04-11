@@ -8,7 +8,7 @@ export {
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from './components/Card'
 export { ErrorBoundary } from './components/ErrorBoundary'
 export { Input } from './components/Input'
@@ -22,7 +22,7 @@ export {
   ModalOverlay,
   ModalPortal,
   ModalTitle,
-  ModalTrigger
+  ModalTrigger,
 } from './components/Modal'
 export { PageTransition } from './components/PageTransition'
 export { MutationBoundary, QueryBoundary } from './components/QueryBoundary'
@@ -35,7 +35,6 @@ export { Tabs, TabsContent, TabsList, TabsTrigger } from './components/Tabs'
 
 // Authentication Components
 export * from './components/auth'
-export { AuthModal, LoginForm, SignupForm } from './components/auth/LoginForm'
 
 // Mobile Components
 export {
@@ -43,14 +42,14 @@ export {
   MobileBottomNav,
   MobileFab,
   MobilePullToRefresh,
-  MobileStatusCard
+  MobileStatusCard,
 } from './components/mobile/MobileComponents'
 export {
   MobileDashboard,
   MobileDashboardHeader,
   MobileScheduleItem,
   MobileSectionHeader,
-  MobileTaskItem
+  MobileTaskItem,
 } from './components/mobile/MobileDashboard'
 
 // Design tokens and theming
@@ -65,4 +64,3 @@ export { useProgressiveLoading } from './hooks/useProgressiveLoading'
 
 // Utilities
 export * from './utils/loading'
-

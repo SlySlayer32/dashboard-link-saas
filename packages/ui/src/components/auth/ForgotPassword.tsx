@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from '../Button'
 import { Card, CardContent, CardHeader, CardTitle } from '../Card'
 import { Input } from '../Input'
@@ -22,6 +22,13 @@ export function ForgotPassword({
 }: ForgotPasswordProps) {
   const [email, setEmail] = useState('')
   const [isSubmitted, setIsSubmitted] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) {
+      setEmail('')
+      setIsSubmitted(false)
+    }
+  }, [isOpen])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

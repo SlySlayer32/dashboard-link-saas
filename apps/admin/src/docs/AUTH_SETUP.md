@@ -1,10 +1,11 @@
 # Authentication System Setup Guide
 
 ## Overview
-The auth system uses Supabase for authentication with a custom API layer. The system includes:
+The auth system uses Supabase Auth for email and password authentication. The system includes:
 - JWT-based authentication with refresh tokens
 - Automatic token refresh
 - Persistent sessions using localStorage
+- Password reset via Supabase recovery emails
 - Protected routes with loading states
 
 ## Environment Variables
@@ -12,6 +13,8 @@ The auth system uses Supabase for authentication with a custom API layer. The sy
 ### Admin App (.env)
 ```env
 VITE_API_URL=http://localhost:3001  # Your API server URL
+VITE_SUPABASE_URL=http://127.0.0.1:54321
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 ### API App (.env)
@@ -24,8 +27,9 @@ SUPABASE_SERVICE_KEY=your_supabase_service_key
 ## Auth Flow
 
 ### 1. Login
-1. User submits email/password to `/auth/login`
-2. API validates with Supabase and returns:
+1. User submits email/password in the admin app
+2. The app authenticates directly with Supabase using `supabase.auth.signInWithPassword()`
+3. Supabase returns:
    ```json
    {
      "user": { ... },
@@ -34,14 +38,19 @@ SUPABASE_SERVICE_KEY=your_supabase_service_key
      "expires_at": "2024-01-01T00:00:00Z"
    }
    ```
-3. Store saves to localStorage and sets `isAuthenticated: true`
+4. The auth store saves the session to localStorage and sets `isAuthenticated: true`
 
 ### 2. Token Refresh
 - Automatic refresh 5 minutes before expiry
 - Manual refresh via `refreshToken()` method
 - Failed refresh triggers automatic logout
 
-### 3. Protected Routes
+### 3. Password Reset
+- The login modal sends reset emails with `supabase.auth.resetPasswordForEmail()`
+- Recovery links return the user to `/reset-password`
+- The app verifies the recovery session and completes the password update with `supabase.auth.updateUser()`
+
+### 4. Protected Routes
 - Checks `isAuthenticated` state
 - Shows loading spinner during auth check
 - Redirects to `/login` if not authenticated
@@ -101,9 +110,14 @@ The auth system expects these tables in Supabase:
 ## Troubleshooting
 
 ### Login Fails
-- Check Supabase credentials in API .env
+- Check Supabase credentials in the admin app environment
 - Verify CORS settings in Supabase
 - Check network requests in browser dev tools
+
+### Password Reset Link Fails
+- Verify `supabase/config.toml` uses the admin app URL (`http://localhost:5173`) for `site_url`
+- Confirm `/reset-password` is included in `additional_redirect_urls`
+- Check the browser URL for expired or incomplete recovery parameters
 
 ### Token Not Saving
 - Check browser localStorage for 'auth-storage'
