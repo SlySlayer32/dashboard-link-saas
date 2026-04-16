@@ -15,6 +15,9 @@ const authActions = vi.hoisted(() => ({
 
 const authStore = vi.hoisted(() => ({
   getState: vi.fn(),
+  state: {
+    user: null as null | { workspace_preferences?: { completedAt?: string; defaultRoute: string } },
+  },
 }))
 
 const supabaseAuth = vi.hoisted(() => ({
@@ -33,7 +36,13 @@ vi.mock('../store/auth', () => ({
   useAuthError: () => authState.error,
   useAuthIsAuthenticated: () => authState.isAuthenticated,
   useAuthIsLoading: () => authState.isLoading,
-  useAuthStore: authStore,
+  useAuthStore: Object.assign(
+    (selector?: (state: typeof authStore.state) => unknown) =>
+      selector ? selector(authStore.state) : authStore.state,
+    {
+      getState: authStore.getState,
+    }
+  ),
 }))
 
 vi.mock('../lib/supabase', () => ({
@@ -51,6 +60,7 @@ describe('LoginPage', () => {
     authState.error = null
     authState.isAuthenticated = false
     authState.isLoading = false
+    authStore.state.user = null
 
     authActions.login.mockResolvedValue({ success: true })
     authStore.getState.mockReturnValue({

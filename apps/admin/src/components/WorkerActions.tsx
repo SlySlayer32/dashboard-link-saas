@@ -24,15 +24,16 @@ export function WorkerActions({ worker }: WorkerActionsProps) {
   const sendDashboardLinkMutation = useSendDashboardLink()
 
   const handleSendSMS = async (data: {
-    message: string
     expiresIn: string
     customMessage?: string
+    templateId?: string
   }) => {
     try {
       await sendDashboardLinkMutation.mutateAsync({
         workerId: worker.id,
         expiresIn: data.expiresIn,
-        customMessage: data.message.trim() || undefined,
+        customMessage: data.customMessage?.trim() || undefined,
+        templateId: data.templateId,
       })
       setShowSMSModal(false)
     } catch {
@@ -113,6 +114,7 @@ export function WorkerActions({ worker }: WorkerActionsProps) {
         onClose={() => setShowSMSModal(false)}
         onSubmit={handleSendSMS}
         isLoading={sendDashboardLinkMutation.isPending}
+        workerId={worker.id}
         workerName={worker.name}
         workerPhone={worker.phone}
       />

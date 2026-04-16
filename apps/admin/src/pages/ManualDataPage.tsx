@@ -1,8 +1,9 @@
 import { endOfMonth, endOfWeek, format, startOfMonth, startOfWeek } from 'date-fns'
-import { Calendar, ChevronLeft, Plus, Users } from 'lucide-react'
+import { Calendar, ChevronLeft, MessageSquare, Plus, Users } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ManualDataList } from '../components/ManualDataList'
+import { SMSModal } from '../components/SMSModal'
 import { ScheduleItemForm } from '../components/ScheduleItemForm'
 import { TaskItemForm } from '../components/TaskItemForm'
 import type {
@@ -24,6 +25,7 @@ import {
   useUpdateTaskItem,
 } from '../hooks/useTaskItems'
 import { useWorkers } from '../hooks/useWorkers'
+import { useSendDashboardLink } from '../hooks/useSMS'
 
 type TabType = 'schedule' | 'tasks'
 type DateRangeType = 'today' | 'week' | 'month' | 'custom'
@@ -36,9 +38,12 @@ export function ManualDataPage() {
   const [customEndDate, setCustomEndDate] = useState<string>('')
   const [showScheduleForm, setShowScheduleForm] = useState(false)
   const [showTaskForm, setShowTaskForm] = useState(false)
+  const [showSMSModal, setShowSMSModal] = useState(false)
   const [editingItem, setEditingItem] = useState<ScheduleItem | TaskItem | null>(null)
 
   const workersData = useWorkers()
+  const selectedWorker = workersData.workers.find((worker) => worker.id === selectedWorkerId)
+  const sendDashboardLinkMutation = useSendDashboardLink()
 
   const getDateRange = () => {
     const now = new Date()
@@ -153,6 +158,27 @@ export function ManualDataPage() {
 
   const currentItems = activeTab === 'schedule' ? scheduleData?.data || [] : taskData?.data || []
   const isLoading = activeTab === 'schedule' ? scheduleLoading : taskLoading
+  const scheduleCount = scheduleData?.data.length || 0
+  const taskCount = taskData?.data.length || 0
+  const assignmentCount = scheduleCount + taskCount
+
+  const handleSendDashboardLink = async (data: {
+    expiresIn: string
+    customMessage?: string
+    templateId?: string
+  }) => {
+    if (!selectedWorkerId) {
+      return
+    }
+
+    await sendDashboardLinkMutation.mutateAsync({
+      workerId: selectedWorkerId,
+      expiresIn: data.expiresIn,
+      customMessage: data.customMessage,
+      templateId: data.templateId,
+    })
+    setShowSMSModal(false)
+  }
 
   return (
     <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
@@ -165,14 +191,32 @@ export function ManualDataPage() {
           <ChevronLeft className='h-4 w-4 mr-1' />
           Back to Workers
         </Link>
-        <h1 className='text-3xl font-bold text-gray-900'>Manual Data Entry</h1>
-        <p className='mt-2 text-gray-600'>Add schedule items and tasks for your workers</p>
+        <h1 className='text-3xl font-bold text-gray-900'>Scheduling</h1>
+        <p className='mt-2 text-gray-600'>
+          Plan schedules and tasks by date range, track assignment counts, and send dashboard links
+          directly from the planner.
+        </p>
       </div>
 
       {/* Filters */}
       <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8'>
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-          {/* Worker Selector */}
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+          <div>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <Calendar className='inline h-4 w-4 mr-1' />
+              Date Range
+            </label>
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value as DateRangeType)}
+              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+            >
+              <option value='today'>Today</option>
+              <option value='week'>This Week</option>
+              <option value='month'>This Month</option>
+              <option value='custom'>Custom Range</option>
+            </select>
+          </div>
           <div>
             <label className='block text-sm font-medium text-gray-700 mb-2'>
               <Users className='inline h-4 w-4 mr-1' />
@@ -191,23 +235,24 @@ export function ManualDataPage() {
               ))}
             </select>
           </div>
-
-          {/* Date Range */}
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
-              <Calendar className='inline h-4 w-4 mr-1' />
-              Date Range
-            </label>
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value as DateRangeType)}
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-            >
-              <option value='today'>Today</option>
-              <option value='week'>This Week</option>
-              <option value='month'>This Month</option>
-              <option value='custom'>Custom Range</option>
-            </select>
+          <div className='rounded-lg border border-gray-200 bg-gray-50 px-4 py-3'>
+            <p className='text-xs font-semibold uppercase tracking-[0.16em] text-gray-500'>
+              Assignment counts
+            </p>
+            <div className='mt-3 grid grid-cols-3 gap-3 text-center'>
+              <div>
+                <p className='text-xl font-semibold text-gray-900'>{assignmentCount}</p>
+                <p className='text-xs text-gray-500'>Total</p>
+              </div>
+              <div>
+                <p className='text-xl font-semibold text-gray-900'>{scheduleCount}</p>
+                <p className='text-xs text-gray-500'>Schedule</p>
+              </div>
+              <div>
+                <p className='text-xl font-semibold text-gray-900'>{taskCount}</p>
+                <p className='text-xs text-gray-500'>Tasks</p>
+              </div>
+            </div>
           </div>
 
           {/* Custom Date Inputs */}
@@ -270,6 +315,13 @@ export function ManualDataPage() {
               <Plus className='h-4 w-4 mr-2' />
               Add {activeTab === 'schedule' ? 'Schedule Item' : 'Task'}
             </button>
+            <button
+              onClick={() => setShowSMSModal(true)}
+              className='ml-3 inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-white transition-colors hover:bg-slate-800'
+            >
+              <MessageSquare className='mr-2 h-4 w-4' />
+              Send Dashboard Link
+            </button>
           </div>
 
           {/* List */}
@@ -288,7 +340,9 @@ export function ManualDataPage() {
       ) : (
         <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center'>
           <Users className='h-12 w-12 text-gray-400 mx-auto mb-3' />
-          <p className='text-gray-500'>Select a worker to manage their schedule and tasks</p>
+          <p className='text-gray-500'>
+            Choose a worker to plan their schedule, tasks, and delivery workflow
+          </p>
         </div>
       )}
 
@@ -335,12 +389,23 @@ export function ManualDataPage() {
             description: (editingItem as TaskItem).description,
             dueDate: (editingItem as TaskItem).dueDate,
             priority: (editingItem as TaskItem).priority,
-            status:
-              (editingItem as TaskItem).status === 'completed' ? 'completed' : 'pending',
+            status: (editingItem as TaskItem).status === 'completed' ? 'completed' : 'pending',
           }}
           onSubmit={handleUpdateTask}
           onCancel={() => setEditingItem(null)}
           isLoading={updateTaskMutation.isPending}
+        />
+      )}
+
+      {selectedWorker && (
+        <SMSModal
+          isOpen={showSMSModal}
+          onClose={() => setShowSMSModal(false)}
+          onSubmit={handleSendDashboardLink}
+          isLoading={sendDashboardLinkMutation.isPending}
+          workerId={selectedWorker.id}
+          workerName={selectedWorker.name}
+          workerPhone={selectedWorker.phone}
         />
       )}
     </div>

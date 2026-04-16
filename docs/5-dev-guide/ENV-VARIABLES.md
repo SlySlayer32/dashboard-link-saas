@@ -34,7 +34,10 @@ Used by `apps/api`:
 ## Local Development Notes
 
 - Keep local secrets in your uncommitted `.env` files.
+- Use the local Supabase URL and keys from `supabase status` for normal development.
 - Use different Supabase and SMS credentials for development and production.
+- Do not keep the repo persistently linked to a hosted Supabase project.
+- If you intentionally run a hosted Supabase CLI task, provide credentials via environment variables and remove repo-local link artifacts afterward.
 - Never expose `SUPABASE_SERVICE_KEY` to the frontend.
 
 ## Production Checklist

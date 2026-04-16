@@ -1,6 +1,7 @@
 import { Button } from '@dashboard-link/ui'
 import {
   ArrowRightOnRectangleIcon,
+  Bars3Icon as MenuIcon,
   ChatBubbleLeftRightIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -8,42 +9,52 @@ import {
   DocumentTextIcon,
   HomeIcon,
   KeyIcon,
-  Bars3Icon as MenuIcon,
   PuzzlePieceIcon,
   UserGroupIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { getVisibleWorkspaceModules } from '../lib/workspace'
 import { useAuthStore } from '../store/auth'
+import { useWorkspacePreferences } from './WorkspacePreferencesProvider'
 
 interface NavigationProps {
   isCollapsed?: boolean
   onToggle?: () => void
 }
 
-const navigation = [
-  { name: 'Dashboard', href: '/', icon: HomeIcon },
-  { name: 'Workers', href: '/workers', icon: UserGroupIcon },
-  { name: 'Manual Data', href: '/manual-data', icon: DocumentTextIcon },
-  { name: 'Tokens', href: '/tokens', icon: KeyIcon },
-  { name: 'SMS Logs', href: '/sms-logs', icon: ChatBubbleLeftRightIcon },
-  { name: 'Plugins', href: '/plugins', icon: PuzzlePieceIcon },
-  { name: 'Settings', href: '/settings', icon: CogIcon },
-]
+const iconMap = {
+  dashboard: HomeIcon,
+  workers: UserGroupIcon,
+  'manual-data': DocumentTextIcon,
+  tokens: KeyIcon,
+  'sms-logs': ChatBubbleLeftRightIcon,
+  plugins: PuzzlePieceIcon,
+}
 
 export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuthStore()
+  const { preferences } = useWorkspacePreferences()
+
+  const navigation = [
+    ...getVisibleWorkspaceModules(preferences).map((item) => ({
+      name: item.label,
+      href: item.route,
+      icon: iconMap[item.id],
+    })),
+    { name: 'Settings', href: '/settings', icon: CogIcon },
+  ]
 
   const currentIsCollapsed =
     propIsCollapsed !== undefined
       ? propIsCollapsed
       : (() => {
           const saved = localStorage.getItem('sidebar-collapsed')
-          return saved !== null ? JSON.parse(saved) : false
+          return saved ? JSON.parse(saved) : false
         })()
 
   const handleToggle = () => {
@@ -58,25 +69,22 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
     setIsMobileMenuOpen(false)
   }
 
-  const handleMobileMenuToggle = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen)
-  }
-
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsMobileMenuOpen(false)
     }, 0)
+
     return () => clearTimeout(timer)
   }, [location.pathname])
 
   return (
     <>
-      <div className='lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-3'>
+      <div className='fixed top-0 left-0 right-0 z-40 border-b border-[hsl(var(--cc-border))] bg-[hsl(var(--cc-surface))] px-4 py-3 lg:hidden'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center'>
             <button
-              onClick={handleMobileMenuToggle}
-              className='p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500'
+              onClick={() => setIsMobileMenuOpen((current) => !current)}
+              className='rounded-md p-2 text-[hsl(var(--cc-text-muted))] hover:bg-[hsl(var(--cc-surface-muted))] hover:text-[hsl(var(--cc-text))]'
             >
               {isMobileMenuOpen ? (
                 <XMarkIcon className='h-6 w-6' />
@@ -84,40 +92,37 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
                 <MenuIcon className='h-6 w-6' />
               )}
             </button>
-            <h1 className='ml-3 text-lg font-semibold text-gray-900'>Dashboard Link</h1>
+            <h1 className='ml-3 text-lg font-semibold text-[hsl(var(--cc-text))]'>
+              Dashboard Link
+            </h1>
           </div>
-          <Button variant='ghost' size='sm' onClick={handleLogout} className='text-gray-500'>
+          <Button
+            variant='ghost'
+            size='sm'
+            onClick={handleLogout}
+            className='text-[hsl(var(--cc-text-muted))]'
+          >
             <ArrowRightOnRectangleIcon className='h-5 w-5' />
           </Button>
         </div>
       </div>
 
       {isMobileMenuOpen && (
-        <div className='lg:hidden fixed inset-0 z-50 flex'>
-          <div className='fixed inset-0 bg-black bg-opacity-25' onClick={handleMobileMenuToggle} />
-          <div className='relative flex-1 flex flex-col max-w-xs w-full bg-white'>
-            <div className='absolute top-0 right-0 -mr-12 pt-2'>
-              <button
-                onClick={handleMobileMenuToggle}
-                className='ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white'
-              >
-                <XMarkIcon className='h-6 w-6 text-white' />
-              </button>
-            </div>
-            <div className='flex-1 h-0 pt-5 pb-4 overflow-y-auto'>
-              <div className='flex-shrink-0 flex items-center px-4'>
-                <h1 className='text-xl font-bold text-gray-900'>Dashboard Link</h1>
+        <div className='fixed inset-0 z-50 flex lg:hidden'>
+          <div className='fixed inset-0 bg-black/25' onClick={() => setIsMobileMenuOpen(false)} />
+          <div className='relative flex w-full max-w-xs flex-1 flex-col bg-[hsl(var(--cc-surface))]'>
+            <div className='flex-1 overflow-y-auto pt-5 pb-4'>
+              <div className='px-4'>
+                <h1 className='text-xl font-bold text-[hsl(var(--cc-text))]'>Dashboard Link</h1>
               </div>
-              <nav className='mt-8 px-2 space-y-1'>
+              <nav className='mt-8 space-y-1 px-2'>
                 {navigation.map((item) => (
                   <NavLink
                     key={item.name}
                     to={item.href}
                     className={({ isActive }) =>
-                      `group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                        isActive
-                          ? 'bg-blue-100 text-blue-900'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      `group flex items-center rounded-md px-2 py-2 text-sm font-medium ${
+                        isActive ? 'cc-nav-item-active' : 'cc-nav-item'
                       }`
                     }
                   >
@@ -125,7 +130,9 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
                       <>
                         <item.icon
                           className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                            isActive ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                            isActive
+                              ? 'text-[hsl(var(--cc-primary))]'
+                              : 'text-[hsl(var(--cc-text-muted))]'
                           }`}
                         />
                         {item.name}
@@ -135,37 +142,31 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
                 ))}
               </nav>
             </div>
-            <div className='flex-shrink-0 flex border-t border-gray-200 p-4'>
-              <div className='flex-shrink-0 w-full group block'>
-                <div className='flex items-center'>
-                  <div>
-                    <p className='text-sm font-medium text-gray-700'>{user?.email}</p>
-                    <p className='text-xs font-medium text-gray-500 group-hover:text-gray-700'>
-                      {user?.organization_id || 'Demo Organization'}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  onClick={handleLogout}
-                  className='mt-3 w-full justify-start text-gray-500'
-                >
-                  <ArrowRightOnRectangleIcon className='h-5 w-5 mr-2' />
-                  Sign out
-                </Button>
-              </div>
+            <div className='border-t border-[hsl(var(--cc-border))] p-4'>
+              <p className='text-sm font-medium text-[hsl(var(--cc-text))]'>{user?.email}</p>
+              <p className='mt-1 text-xs font-medium text-[hsl(var(--cc-text-muted))]'>
+                {user?.organization_id || 'Demo Organization'}
+              </p>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={handleLogout}
+                className='mt-3 w-full justify-start text-[hsl(var(--cc-text-muted))]'
+              >
+                <ArrowRightOnRectangleIcon className='mr-2 h-5 w-5' />
+                Sign out
+              </Button>
             </div>
           </div>
         </div>
       )}
 
       <div className='hidden lg:flex lg:flex-shrink-0'>
-        <div className='flex flex-col w-64'>
-          <div className='flex flex-col flex-grow bg-white border-r border-gray-200 pt-5 pb-4 overflow-y-auto'>
-            <div className='flex items-center justify-between flex-shrink-0 px-4'>
+        <div className='flex w-64 flex-col'>
+          <div className='flex flex-grow flex-col overflow-y-auto border-r border-[hsl(var(--cc-border))] bg-[hsl(var(--cc-surface))] pt-5 pb-4'>
+            <div className='flex flex-shrink-0 items-center justify-between px-4'>
               <h1
-                className={`text-xl font-bold text-gray-900 transition-all duration-200 ${
+                className={`text-xl font-bold text-[hsl(var(--cc-text))] transition-all duration-200 ${
                   currentIsCollapsed ? 'hidden' : 'block'
                 }`}
               >
@@ -173,25 +174,23 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
               </h1>
               <button
                 onClick={handleToggle}
-                className='p-1.5 rounded-lg hover:bg-gray-100 transition-colors'
+                className='rounded-lg p-1.5 transition-colors hover:bg-[hsl(var(--cc-surface-muted))]'
               >
                 {currentIsCollapsed ? (
-                  <ChevronRightIcon className='h-5 w-5 text-gray-500' />
+                  <ChevronRightIcon className='h-5 w-5 text-[hsl(var(--cc-text-muted))]' />
                 ) : (
-                  <ChevronLeftIcon className='h-5 w-5 text-gray-500' />
+                  <ChevronLeftIcon className='h-5 w-5 text-[hsl(var(--cc-text-muted))]' />
                 )}
               </button>
             </div>
-            <nav className='mt-8 flex-1 px-2 space-y-1'>
+            <nav className='mt-8 flex-1 space-y-1 px-2'>
               {navigation.map((item) => (
                 <NavLink
                   key={item.name}
                   to={item.href}
                   className={({ isActive }) =>
-                    `group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
-                      isActive
-                        ? 'bg-blue-100 text-blue-900'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    `group flex items-center rounded-md px-2 py-2 text-sm font-medium transition-colors ${
+                      isActive ? 'cc-nav-item-active' : 'cc-nav-item'
                     }`
                   }
                   title={currentIsCollapsed ? item.name : undefined}
@@ -199,49 +198,47 @@ export function Navigation({ isCollapsed: propIsCollapsed, onToggle }: Navigatio
                   {({ isActive }) => (
                     <>
                       <item.icon
-                        className={`flex-shrink-0 h-5 w-5 transition-colors ${
-                          isActive ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                        className={`h-5 w-5 flex-shrink-0 ${
+                          isActive
+                            ? 'text-[hsl(var(--cc-primary))]'
+                            : 'text-[hsl(var(--cc-text-muted))]'
                         }`}
                       />
-                      {!currentIsCollapsed && (
-                        <span className='ml-3 transition-opacity'>{item.name}</span>
-                      )}
+                      {!currentIsCollapsed && <span className='ml-3'>{item.name}</span>}
                     </>
                   )}
                 </NavLink>
               ))}
             </nav>
-            <div className='flex-shrink-0 flex border-t border-gray-200 p-4'>
-              <div className='flex-shrink-0 w-full group block'>
-                <div className='flex items-center'>
-                  <div className='flex-shrink-0'>
-                    <div className='h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center'>
-                      <span className='text-sm font-medium text-white'>
-                        {user?.email?.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-                  {!currentIsCollapsed && (
-                    <div className='ml-3'>
-                      <p className='text-sm font-medium text-gray-700 truncate'>{user?.email}</p>
-                      <p className='text-xs font-medium text-gray-500 group-hover:text-gray-700'>
-                        {user?.organization_id || 'Demo Organization'}
-                      </p>
-                    </div>
-                  )}
+            <div className='border-t border-[hsl(var(--cc-border))] p-4'>
+              <div className='flex items-center'>
+                <div className='flex h-8 w-8 items-center justify-center rounded-full bg-[hsl(var(--cc-primary))]'>
+                  <span className='text-sm font-medium text-white'>
+                    {user?.email?.charAt(0).toUpperCase()}
+                  </span>
                 </div>
                 {!currentIsCollapsed && (
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={handleLogout}
-                    className='mt-3 w-full justify-start text-gray-500'
-                  >
-                    <ArrowRightOnRectangleIcon className='h-5 w-5 mr-2' />
-                    Sign out
-                  </Button>
+                  <div className='ml-3'>
+                    <p className='truncate text-sm font-medium text-[hsl(var(--cc-text))]'>
+                      {user?.email}
+                    </p>
+                    <p className='text-xs font-medium text-[hsl(var(--cc-text-muted))]'>
+                      {user?.organization_id || 'Demo Organization'}
+                    </p>
+                  </div>
                 )}
               </div>
+              {!currentIsCollapsed && (
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={handleLogout}
+                  className='mt-3 w-full justify-start text-[hsl(var(--cc-text-muted))]'
+                >
+                  <ArrowRightOnRectangleIcon className='mr-2 h-5 w-5' />
+                  Sign out
+                </Button>
+              )}
             </div>
           </div>
         </div>

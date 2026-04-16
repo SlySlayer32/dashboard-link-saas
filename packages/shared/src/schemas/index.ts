@@ -80,7 +80,7 @@ export const SmsMessageSchema = z.object({
   message: z.string().min(1).max(1600),
   status: z.enum(['pending', 'sent', 'delivered', 'failed']),
   cost: z.number(),
-  provider_message_id: z.string().optional(),
+  message_id: z.string().optional(),
   error_message: z.string().optional(),
   created_at: z.string().datetime({ offset: true }),
   updated_at: z.string().datetime({ offset: true }),

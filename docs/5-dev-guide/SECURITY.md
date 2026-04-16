@@ -435,7 +435,7 @@ const { register, handleSubmit, formState: { errors } } = useForm({
 5. API validates JWT signature using Supabase JWT secret
 6. API extracts `user_id` and `organization_id` from JWT payload
 
-**Note:** JWT expiry durations are configured in Supabase Auth settings (not in ENV.example). Default Supabase values: 1 hour access token, 7 days refresh token.
+**Note:** JWT expiry durations are configured in Supabase Auth settings (not in `.env.example`). Default Supabase values: 1 hour access token, 7 days refresh token.
 
 **Workers (Token-based):**
 1. Manager generates time-limited dashboard token (1-24 hours) ✅ Verified in database schema

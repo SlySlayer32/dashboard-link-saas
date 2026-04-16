@@ -156,11 +156,69 @@ export interface SMSDashboardLinkRequest {
   workerId: string
   expiresIn: string
   customMessage?: string
+  templateId?: string
 }
 
 export interface SMSDashboardLinkResponse {
   success: boolean
   message?: string
+  data?: {
+    smsId: string
+    token: string
+    dashboardUrl: string
+    expiresAt: string
+    renderedMessage: string
+    templateId: string | null
+  }
+}
+
+export type SMSTemplateCategory = 'dashboard_link'
+
+export interface SMSTemplate {
+  id: string
+  organizationId: string
+  name: string
+  body: string
+  category: SMSTemplateCategory
+  isDefault: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SMSTemplateCreateRequest {
+  name: string
+  body: string
+  category: SMSTemplateCategory
+  isDefault?: boolean
+}
+
+export interface SMSTemplateUpdateRequest {
+  name?: string
+  body?: string
+  isDefault?: boolean
+}
+
+export interface SMSTemplatePreviewRequest {
+  workerId: string
+  expiryHours: number
+  templateId?: string
+  body?: string
+}
+
+export interface SMSTemplatePreviewResponse {
+  success: boolean
+  data?: {
+    body: string
+    dashboardLinkPreview: string
+    templateId: string | null
+    placeholders: Record<'worker_name' | 'dashboard_link' | 'expiry_hours', string>
+  }
+  error?: string
+}
+
+export interface SMSTemplateListResponse {
+  success: boolean
+  data: SMSTemplate[]
 }
 
 // Error types for better error handling

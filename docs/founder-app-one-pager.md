@@ -6,12 +6,12 @@ Dashboard Link is a multi-tenant SaaS product for field-service teams. Managers 
 - Solves the "where do I go, what do I do, and what is the access code?" problem for deskless workers.
 - Uses SMS instead of app installs, logins, or chat threads, so casual and rotating staff can open their day plan in one tap.
 - Keeps the manager in control: workers, schedules, tasks, tokens, plugins, SMS history, and dashboard-open tracking all sit in one admin flow.
-- Current MVP launch path is manual data entry first, with plugin integrations available in the repo for Google Calendar, Airtable, Notion, and manual sync.
+- Current MVP launch path is the Scheduling workspace first, with plugin integrations available in the repo for Google Calendar, Airtable, Notion, and manual sync.
 
 ## Core Product Flow
 - 1. Manager logs into the admin portal.
 - 2. Manager creates or updates workers.
-- 3. Manager adds schedule items and task items, mainly through Manual Data.
+- 3. Manager adds schedule items and task items, mainly through Scheduling.
 - 4. Manager sends a secure dashboard link by SMS.
 - 5. Worker opens the mobile dashboard from the SMS, sees today's schedule and tasks, and can refresh to get updates.
 - 6. Manager checks SMS delivery and dashboard-open history to confirm the message was actually received and opened.
@@ -33,7 +33,7 @@ Dashboard Link is a multi-tenant SaaS product for field-service teams. Managers 
 - `/` DashboardPage: overview screen with quick actions, KPI cards (`DashboardStats`), recent activity (`RecentActivity`), and an MVP workflow checklist.
 - `/workers` WorkersPage: searchable/filterable worker roster with `WorkerList` plus modal-based `WorkerForm` for create and edit.
 - `/workers/:id` WorkerDetailPage: three-tab worker record with `WorkerProfile`, `WorkerActions`, `SmsHistory`, and `AccessLogHistory`.
-- `/manual-data` ManualDataPage: worker selector, date-range filter, tabs for schedule vs tasks, list view, and add/edit forms for both item types.
+- `/manual-data` Scheduling workspace: date-range-led planner, worker selector, assignment counts, tabs for schedule vs tasks, direct send-dashboard-link action, and add/edit forms for both item types.
 - `/tokens` TokensPage: token stats, filters, token table, revoke/regenerate controls, and bulk cleanup for expired tokens.
 - `/sms-logs` SMSLogsPage: delivery log table, resend action, and filters by worker, status, date, and search term.
 - `/plugins` PluginsPage: plugin cards, enable/disable controls, configuration modal, and connection test action.

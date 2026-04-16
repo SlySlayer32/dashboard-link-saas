@@ -21,6 +21,12 @@ export interface CreateTokenOptions {
   expiresInHours: number
 }
 
+export interface CreateTokenResult {
+  rawToken: string
+  tokenId: string
+  expiresAt: string
+}
+
 function getSupabaseAdmin() {
   return createClient(process.env.SUPABASE_URL || '', process.env.SUPABASE_SERVICE_KEY || '')
 }
@@ -55,7 +61,7 @@ export class TokenService {
     // Fetch worker
     const { data: worker, error: workerError } = await supabase
       .from('workers')
-      .select('id, full_name')
+      .select('id, name')
       .eq('id', tokenRow.worker_id)
       .single()
 
@@ -75,7 +81,7 @@ export class TokenService {
       workerId: tokenRow.worker_id,
       orgId: tokenRow.organization_id,
       dashboardId: tokenRow.id,
-      workerName: worker.full_name,
+      workerName: worker.name,
     }
   }
 
@@ -83,14 +89,16 @@ export class TokenService {
    * Create a new dashboard token for a worker.
    * Returns the raw (unhashed) token string — only shown once.
    */
-  async createToken(options: CreateTokenOptions): Promise<string> {
+  async createToken(options: CreateTokenOptions): Promise<CreateTokenResult> {
     const rawToken = crypto.randomBytes(32).toString('hex')
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
     const expiresAt = new Date(Date.now() + options.expiresInHours * 60 * 60 * 1000).toISOString()
 
     const supabase = getSupabaseAdmin()
 
+    const tokenId = crypto.randomUUID()
     const { error } = await supabase.from('dashboard_tokens').insert({
+      id: tokenId,
       token_hash: tokenHash,
       worker_id: options.workerId,
       organization_id: options.orgId,
@@ -101,6 +109,10 @@ export class TokenService {
       throw new Error(`Failed to create token: ${error.message}`)
     }
 
-    return rawToken
+    return {
+      rawToken,
+      tokenId,
+      expiresAt,
+    }
   }
 }

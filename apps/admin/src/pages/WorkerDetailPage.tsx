@@ -127,8 +127,10 @@ export function WorkerDetailPage() {
               <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
                 <h3 className='text-lg font-semibold text-gray-900 mb-3'>MVP Delivery Check</h3>
                 <div className='space-y-3 text-sm text-gray-600'>
-                  <p>Use manual data to prepare the worker dashboard for the next shift.</p>
-                  <p>Send the dashboard link from the action panel once the worker data is ready.</p>
+                  <p>Use Scheduling to prepare the worker dashboard for the next shift.</p>
+                  <p>
+                    Send the dashboard link from the action panel once the worker data is ready.
+                  </p>
                   <p>Confirm delivery and dashboard opens from the SMS and Access History tabs.</p>
                 </div>
               </div>

@@ -54,7 +54,13 @@ export * from './schedule.js'
 // export * from './worker'  // Already exported via repository.types
 
 // Legacy simple types (avoid conflicts with .types.ts files)
-export type { DashboardWidget } from './dashboard.js'
+export type {
+  AdminDashboardResponse,
+  AdminDashboardStats,
+  DashboardActivityItem,
+  DashboardWidget,
+  NonOpenerItem,
+} from './dashboard.js'
 
 // Utility types with conflict resolution
 export {
@@ -68,6 +74,7 @@ export {
 } from './errors.js'
 
 export * from './hono.js'
+export * from './admin-workspace.js'
 
 // Additional utility types needed by plugins
 export interface DateRange {

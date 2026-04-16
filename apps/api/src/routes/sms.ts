@@ -11,6 +11,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 
 import { SMSService } from '../services/SMSService.js'
+import { SMSTemplateService } from '../services/sms-template-service.js'
 import type { AppContextVariables } from '../types'
 
 function getSupabaseAdmin() {
@@ -27,6 +28,27 @@ const sendSmsSchema = z
     message: 'Either workerId or to is required',
     path: ['to'],
   })
+
+const smsTemplateSchema = z.object({
+  name: z.string().trim().min(1, 'Template name is required').max(80),
+  body: z.string().trim().min(1, 'Template body is required').max(1600),
+  category: z.literal('dashboard_link'),
+  isDefault: z.boolean().optional(),
+})
+
+const updateSmsTemplateSchema = smsTemplateSchema
+  .omit({ category: true })
+  .partial()
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'At least one field is required',
+  })
+
+const smsTemplatePreviewSchema = z.object({
+  workerId: z.string().uuid('Invalid worker ID'),
+  expiryHours: z.number().min(1).max(24).default(24),
+  templateId: z.string().uuid('Invalid template ID').optional(),
+  body: z.string().max(1600).optional(),
+})
 
 const sms = new Hono<{
   Variables: AppContextVariables & {
@@ -81,6 +103,7 @@ sms.get('/logs', async (c) => {
 
 sms.post('/send', zValidator('json', sendSmsSchema), async (c) => {
   const organizationId = c.get('organizationId')
+  const userId = c.get('userId')
   const { workerId, to, message } = c.req.valid('json')
   const supabase = getSupabaseAdmin()
 
@@ -112,6 +135,8 @@ sms.post('/send', zValidator('json', sendSmsSchema), async (c) => {
       message,
       orgId: organizationId,
       type: 'manual',
+      workerId,
+      sentBy: userId,
     })
 
     return c.json({ success: true, data: result }, 201)
@@ -123,6 +148,122 @@ sms.post('/send', zValidator('json', sendSmsSchema), async (c) => {
   }
 })
 
+sms.get('/templates', async (c) => {
+  const organizationId = c.get('organizationId')
+
+  try {
+    const templateService = new SMSTemplateService()
+    const templates = await templateService.listTemplates(organizationId)
+
+    return c.json({ success: true, data: templates })
+  } catch (error) {
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to load templates',
+      },
+      500
+    )
+  }
+})
+
+sms.post('/templates', zValidator('json', smsTemplateSchema), async (c) => {
+  const organizationId = c.get('organizationId')
+  const input = c.req.valid('json')
+
+  try {
+    const templateService = new SMSTemplateService()
+    const template = await templateService.createTemplate(organizationId, input)
+
+    return c.json({ success: true, data: template }, 201)
+  } catch (error) {
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create template',
+      },
+      500
+    )
+  }
+})
+
+sms.post('/templates/preview', zValidator('json', smsTemplatePreviewSchema), async (c) => {
+  const organizationId = c.get('organizationId')
+  const input = c.req.valid('json')
+
+  try {
+    const templateService = new SMSTemplateService()
+    const preview = await templateService.previewTemplate(
+      organizationId,
+      input.workerId,
+      input.expiryHours,
+      input.templateId,
+      input.body
+    )
+
+    return c.json({ success: true, data: preview })
+  } catch (error) {
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to preview template',
+      },
+      500
+    )
+  }
+})
+
+sms.put('/templates/:id', zValidator('json', updateSmsTemplateSchema), async (c) => {
+  const organizationId = c.get('organizationId')
+  const templateId = c.req.param('id')
+  const input = c.req.valid('json')
+
+  try {
+    const templateService = new SMSTemplateService()
+    const template = await templateService.updateTemplate(organizationId, templateId, input)
+
+    return c.json({ success: true, data: template })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to update template'
+    return c.json({ success: false, error: message }, message.includes('not found') ? 404 : 500)
+  }
+})
+
+sms.delete('/templates/:id', async (c) => {
+  const organizationId = c.get('organizationId')
+  const templateId = c.req.param('id')
+
+  try {
+    const templateService = new SMSTemplateService()
+    await templateService.deleteTemplate(organizationId, templateId)
+
+    return c.json({ success: true })
+  } catch (error) {
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to delete template',
+      },
+      500
+    )
+  }
+})
+
+sms.post('/templates/:id/set-default', async (c) => {
+  const organizationId = c.get('organizationId')
+  const templateId = c.req.param('id')
+
+  try {
+    const templateService = new SMSTemplateService()
+    const template = await templateService.setDefaultTemplate(organizationId, templateId)
+
+    return c.json({ success: true, data: template })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to set default template'
+    return c.json({ success: false, error: message }, message.includes('not found') ? 404 : 500)
+  }
+})
+
 sms.post(
   '/send-dashboard-link',
   zValidator(
@@ -131,17 +272,19 @@ sms.post(
       workerId: z.string().uuid('Invalid worker ID'),
       expiryHours: z.number().min(1).max(24).optional().default(24),
       message: z.string().optional(),
+      templateId: z.string().uuid('Invalid template ID').optional(),
     })
   ),
   async (c) => {
     const organizationId = c.get('organizationId')
-    const { workerId, expiryHours, message } = c.req.valid('json')
+    const userId = c.get('userId')
+    const { workerId, expiryHours, message, templateId } = c.req.valid('json')
 
     const supabase = getSupabaseAdmin()
 
     const { data: worker, error: workerError } = await supabase
       .from('workers')
-      .select('id, full_name, phone')
+      .select('id, name, phone')
       .eq('id', workerId)
       .eq('organization_id', organizationId)
       .single()
@@ -153,7 +296,7 @@ sms.post(
     try {
       const { TokenService } = await import('../services/TokenService')
       const tokenService = new TokenService()
-      const rawToken = await tokenService.createToken({
+      const token = await tokenService.createToken({
         workerId,
         orgId: organizationId,
         dashboardId: workerId,
@@ -161,15 +304,26 @@ sms.post(
       })
 
       const appUrl = process.env.WORKER_APP_URL || process.env.APP_URL || 'http://localhost:5174'
-      const dashboardUrl = `${appUrl}/dashboard/${rawToken}`
-      const smsBody = message || `Hi ${worker.full_name}, your dashboard is ready: ${dashboardUrl}`
+      const dashboardUrl = `${appUrl}/dashboard/${token.rawToken}`
+      const templateService = new SMSTemplateService()
+      const renderedMessage = await templateService.resolveDashboardLinkMessage({
+        organizationId,
+        workerId,
+        expiryHours,
+        dashboardLink: dashboardUrl,
+        templateId,
+        customMessage: message,
+      })
 
       const smsService = new SMSService()
       const smsResult = await smsService.enqueueSMS({
         to: worker.phone,
-        message: smsBody,
+        message: renderedMessage.body,
         orgId: organizationId,
         type: 'dashboard_link',
+        workerId,
+        tokenId: token.tokenId,
+        sentBy: userId,
       })
 
       return c.json(
@@ -177,9 +331,11 @@ sms.post(
           success: true,
           data: {
             smsId: smsResult.id,
-            token: rawToken,
+            token: token.rawToken,
             dashboardUrl,
-            expiresAt: new Date(Date.now() + expiryHours * 60 * 60 * 1000).toISOString(),
+            expiresAt: token.expiresAt,
+            renderedMessage: renderedMessage.body,
+            templateId: renderedMessage.templateId,
           },
         },
         201

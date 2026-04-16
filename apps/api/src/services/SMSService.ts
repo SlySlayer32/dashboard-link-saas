@@ -12,6 +12,9 @@ export interface EnqueueSMSOptions {
   message: string
   orgId: string
   type: string
+  workerId?: string
+  tokenId?: string
+  sentBy?: string
 }
 
 function getSupabaseAdmin() {
@@ -62,11 +65,14 @@ export class SMSService {
     await supabase.from('sms_logs').insert({
       id: logId,
       organization_id: options.orgId,
+      worker_id: options.workerId,
       phone_number: options.to,
       message_content: options.message.slice(0, 320),
+      token_id: options.tokenId,
       status,
-      provider_message_id: providerMessageId,
+      message_id: providerMessageId,
       error_reason: errorReason,
+      sent_by: options.sentBy,
     })
 
     return { id: logId }

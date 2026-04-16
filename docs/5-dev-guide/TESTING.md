@@ -39,10 +39,10 @@ pnpm --filter @dashboard-link/ui test
 ## Manual MVP Regression Checklist
 
 1. Log in to admin and confirm the real dashboard loads.
-2. Navigate to Workers, Manual Data, Tokens, SMS Logs, Plugins, and Settings.
+2. Navigate to Workers, Scheduling (`/manual-data`), Tokens, SMS Logs, Plugins, and Settings.
 3. Create a worker.
-4. Add schedule items and task items through Manual Data.
-5. Send a dashboard link from worker detail.
+4. Add schedule items and task items through Scheduling.
+5. Send a dashboard link from worker detail and from the Scheduling planner.
 6. Open the worker dashboard on the public link.
 7. Confirm the worker dashboard shows schedule, tasks, and refresh.
 8. Confirm SMS history and dashboard access history appear in admin.

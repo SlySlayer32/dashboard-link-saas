@@ -20,6 +20,7 @@ export function LoginPage() {
   const [resetPasswordSuccess, setResetPasswordSuccess] = useState(false)
 
   const { login, clearError } = useAuthActions()
+  const user = useAuthStore((state) => state.user)
   const isAuthenticated = useAuthIsAuthenticated()
   const isLoading = useAuthIsLoading()
   const error = useAuthError()
@@ -27,11 +28,13 @@ export function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      const intendedDestination = sessionStorage.getItem('intendedDestination') || '/'
+      const intendedDestination =
+        sessionStorage.getItem('intendedDestination') ||
+        (user?.workspace_preferences?.completedAt ? user.workspace_preferences.defaultRoute : '/')
       sessionStorage.removeItem('intendedDestination')
       navigate(intendedDestination, { replace: true })
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, navigate, user])
 
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {

@@ -225,9 +225,7 @@ describe('Auth Store', () => {
       error: { message: 'Token refresh failed' },
     })
 
-    await expect(useAuthStore.getState().refreshAuthToken()).rejects.toThrow(
-      'Token refresh failed'
-    )
+    await expect(useAuthStore.getState().refreshAuthToken()).rejects.toThrow('Token refresh failed')
 
     const currentState = useAuthStore.getState()
     expect(currentState.user).toBeNull()
@@ -243,5 +241,66 @@ describe('Auth Store', () => {
 
     expect(useAuthStore.getState().error).toBeNull()
     expect(useAuthStore.getState().isLoading).toBe(false)
+  })
+
+  it('should clear stale local auth when no Supabase session exists during startup', async () => {
+    useAuthStore.setState({
+      user: {
+        id: mockUser.id,
+        email: mockUser.email,
+        name: 'Test User',
+        organization_id: 'org-123',
+        role: 'admin',
+      },
+      token: 'stale-token',
+      refreshToken: 'stale-refresh-token',
+      expiresAt: new Date().toISOString(),
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
+    })
+
+    authMocks.getSession.mockResolvedValueOnce({
+      data: { session: null },
+      error: null,
+    })
+
+    await expect(useAuthStore.getState().checkAuth()).resolves.toBeUndefined()
+
+    const currentState = useAuthStore.getState()
+    expect(currentState.user).toBeNull()
+    expect(currentState.token).toBeNull()
+    expect(currentState.refreshToken).toBeNull()
+    expect(currentState.isAuthenticated).toBe(false)
+    expect(currentState.isLoading).toBe(false)
+    expect(localStorage.removeItem).toHaveBeenCalledWith('auth_token')
+    expect(localStorage.removeItem).toHaveBeenCalledWith('sb-access-token')
+  })
+
+  it('should restore auth state from the active Supabase session during startup', async () => {
+    authMocks.getSession.mockResolvedValueOnce({
+      data: {
+        session: {
+          ...mockSession,
+          user: mockUser,
+        },
+      },
+      error: null,
+    })
+
+    await expect(useAuthStore.getState().checkAuth()).resolves.toBeUndefined()
+
+    const currentState = useAuthStore.getState()
+    expect(currentState.user).toEqual({
+      id: mockUser.id,
+      email: mockUser.email,
+      name: 'Test User',
+      organization_id: 'org-123',
+      role: 'admin',
+    })
+    expect(currentState.token).toBe('test-token')
+    expect(currentState.refreshToken).toBe('refresh-token')
+    expect(currentState.isAuthenticated).toBe(true)
+    expect(currentState.isLoading).toBe(false)
   })
 })

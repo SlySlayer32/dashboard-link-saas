@@ -15,7 +15,7 @@ pnpm install
 
 ## Configure Environment Variables
 
-Create local environment files from the documented keys in [ENV-VARIABLES.md](/E:/CleanConnect/docs/5-dev-guide/ENV-VARIABLES.md).
+Create local environment files from [.env.example](/E:/CleanConnect/.env.example) and the documented keys in [ENV-VARIABLES.md](/E:/CleanConnect/docs/5-dev-guide/ENV-VARIABLES.md).
 
 At minimum you need:
 
@@ -32,12 +32,14 @@ At minimum you need:
 
 ## Start Local Infrastructure
 
-If you are using local Supabase:
+For normal development, use local Supabase:
 
 ```bash
 pnpm db:start
 pnpm db:migrate
 ```
+
+Do not keep the repo linked to a hosted Supabase project by default. Only link intentionally for hosted admin tasks.
 
 ## Start the Workspace
 

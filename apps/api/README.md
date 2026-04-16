@@ -63,7 +63,7 @@ A Hono.js-based API gateway implementing multi-tenant architecture with JWT auth
 
 ## Environment Variables
 
-Create a `.env` file in the API root:
+Create a local `.env` file for the API:
 
 ```env
 # API Configuration
@@ -72,9 +72,11 @@ NODE_ENV=development
 APP_URL=http://localhost:5173
 
 # Supabase Configuration
-SUPABASE_URL=your_supabase_url
-SUPABASE_JWT_SECRET=your_jwt_secret
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+# For local development, use the local stack values from `supabase status`
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_KEY=your_supabase_service_key
+JWT_SECRET=replace-with-32+char-secret
 
 # Redis Configuration
 REDIS_URL=redis://localhost:6379
@@ -96,11 +98,19 @@ LOG_LEVEL=info
 LOG_FORMAT=json
 ```
 
+Do not commit real values, and do not keep this repo permanently linked to a hosted Supabase project.
+
 ## Installation
 
 ```bash
 # Install dependencies
 pnpm install
+
+# Start local Supabase
+pnpm db:start
+
+# Apply local migrations
+pnpm db:migrate
 
 # Run in development
 pnpm dev

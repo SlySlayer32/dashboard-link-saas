@@ -19,7 +19,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ### API App (.env)
 ```env
-SUPABASE_URL=your_supabase_url
+SUPABASE_URL=http://127.0.0.1:54321
 SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_KEY=your_supabase_service_key
 ```
@@ -105,12 +105,12 @@ const createResponse = await apiClient.post('/items', { name: 'New Item' })
 The auth system expects these tables in Supabase:
 - `auth.users` (Supabase managed)
 - `organizations` - Company/organization data
-- `admins` - Admin profiles linked to auth users
+- `users` - Admin profiles linked to auth users
 
 ## Troubleshooting
 
 ### Login Fails
-- Check Supabase credentials in the admin app environment
+- Check local Supabase credentials in the admin app environment
 - Verify CORS settings in Supabase
 - Check network requests in browser dev tools
 

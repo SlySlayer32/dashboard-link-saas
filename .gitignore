@@ -2,6 +2,7 @@
 node_modules
 .pnp
 .pnp.js
+.npm-cache
 
 # Testing
 coverage
@@ -25,11 +26,16 @@ lerna-debug.log*
 
 # Local env files
 .env
-.env*.local
-.env.production
+.env.*
+!.env.example
+!*.example
 
 # Vercel
 .vercel
+
+# Supabase repo-local link artifacts stay local and uncommitted
+supabase/.temp/project-ref
+supabase/.temp/pooler-url
 
 # Turbo
 .turbo

@@ -21,25 +21,13 @@ import { cacheMiddleware, createCacheConfig } from './middleware/cache.js'
 import { tenantContextMiddleware } from './middleware/tenant.js'
 
 // Import services
+import { DashboardService } from './services/dashboard-service.js'
 import { SMSService } from './services/SMSService.js'
+import { SMSTemplateService } from './services/sms-template-service.js'
 import { TokenService } from './services/TokenService.js'
 import { WebhookService } from './services/webhook-service.js'
 
 import type { AppContextVariables } from './types'
-
-function getRelatedWorker(
-  workerRecord:
-    | { name?: string | null; phone?: string | null }
-    | Array<{ name?: string | null; phone?: string | null }>
-    | null
-    | undefined
-) {
-  if (!workerRecord) {
-    return null
-  }
-
-  return Array.isArray(workerRecord) ? workerRecord[0] ?? null : workerRecord
-}
 
 // Create v1 API with tenant isolation
 const v1 = new Hono<{
@@ -176,7 +164,7 @@ v1.get('/dashboards/:token', async (c) => {
         .select('*')
         .eq('worker_id', result.workerId)
         .or(`due_date.eq.${today},due_date.is.null`)
-        .order('due_date', { ascending: true })
+        .order('due_date', { ascending: true }),
     ])
 
     return c.json({
@@ -339,120 +327,20 @@ v1.get('/organizations', async (c) => {
 // Dashboard stats (protected - admin app)
 v1.get('/dashboard/stats', async (c) => {
   const organizationId = c.get('organizationId')
+  if (!organizationId) {
+    return c.json(
+      { success: false, error: { code: 'UNAUTHORIZED', message: 'Missing organization context' } },
+      401
+    )
+  }
 
   try {
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabase = createClient(
-      process.env.SUPABASE_URL || '',
-      process.env.SUPABASE_SERVICE_KEY || ''
-    )
-
-    const now = new Date()
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
-    const weekStart = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() - now.getDay()
-    ).toISOString()
-
-    const [workersResult, activeResult, smsToday, smsWeek, todaysAccessLogs, recentSms, recentAccess] =
-      await Promise.all([
-      supabase
-        .from('workers')
-        .select('id', { count: 'exact' })
-        .eq('organization_id', organizationId)
-        .is('deleted_at', null),
-      supabase
-        .from('workers')
-        .select('id', { count: 'exact' })
-        .eq('organization_id', organizationId)
-        .eq('status', 'active')
-        .is('deleted_at', null),
-      supabase
-        .from('sms_logs')
-        .select('id', { count: 'exact' })
-        .eq('organization_id', organizationId)
-        .gte('created_at', todayStart),
-      supabase
-        .from('sms_logs')
-        .select('id', { count: 'exact' })
-        .eq('organization_id', organizationId)
-        .gte('created_at', weekStart),
-      supabase
-        .from('access_logs')
-        .select('id, worker_id')
-        .eq('organization_id', organizationId)
-        .eq('validation_status', 'success')
-        .gte('accessed_at', todayStart),
-      supabase
-        .from('sms_logs')
-        .select('id, status, created_at, phone_number, worker_id, workers(name, phone)')
-        .eq('organization_id', organizationId)
-        .order('created_at', { ascending: false })
-        .limit(10),
-      supabase
-        .from('access_logs')
-        .select('id, validation_status, accessed_at, worker_id, workers(name, phone)')
-        .eq('organization_id', organizationId)
-        .eq('validation_status', 'success')
-        .order('accessed_at', { ascending: false })
-        .limit(10),
-    ])
-
-    const totalWorkers = workersResult.count || 0
-    const activeWorkers = activeResult.count || 0
-    const uniqueWorkersOpenedToday = new Set(
-      (todaysAccessLogs.data || []).map((log) => log.worker_id).filter(Boolean)
-    ).size
-
-    const smsActivity = (recentSms.data || []).map((s) => {
-      const worker = getRelatedWorker(s.workers)
-
-      return {
-        id: `sms-${s.id}`,
-        type: 'sms' as const,
-        status: s.status,
-        createdAt: s.created_at,
-        workerId: s.worker_id,
-        workerName: worker?.name || 'Unknown worker',
-        workerPhone: worker?.phone || s.phone_number,
-        message: 'Dashboard link sent',
-      }
-    })
-
-    const accessActivity = (recentAccess.data || []).map((entry) => {
-      const worker = getRelatedWorker(entry.workers)
-
-      return {
-        id: `access-${entry.id}`,
-        type: 'dashboard_open' as const,
-        status: entry.validation_status,
-        createdAt: entry.accessed_at,
-        workerId: entry.worker_id,
-        workerName: worker?.name || 'Unknown worker',
-        workerPhone: worker?.phone || '',
-        message: 'Dashboard opened',
-      }
-    })
-
-    const recentActivity = [...smsActivity, ...accessActivity]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 10)
+    const dashboardService = new DashboardService()
+    const dashboardData = await dashboardService.getDashboardStats(organizationId)
 
     return c.json({
       success: true,
-      data: {
-        stats: {
-          totalWorkers,
-          activeWorkers,
-          inactiveWorkers: totalWorkers - activeWorkers,
-          smsToday: smsToday.count || 0,
-          smsThisWeek: smsWeek.count || 0,
-          dashboardOpensToday: todaysAccessLogs.data?.length || 0,
-          uniqueWorkersOpenedToday,
-        },
-        recentActivity,
-      },
+      data: dashboardData,
     })
   } catch (error) {
     return c.json(
@@ -551,6 +439,7 @@ v1.post(
   ),
   async (c) => {
     const organizationId = c.get('organizationId')
+    const userId = c.get('userId')
     const dashboardId = c.req.param('id')
     const { message, expires_in_hours } = c.req.valid('json')
 
@@ -597,16 +486,27 @@ v1.post(
         dashboardId: dashboardId,
         expiresInHours: expires_in_hours,
       })
+      const appUrl = process.env.WORKER_APP_URL || process.env.APP_URL || 'http://localhost:5174'
+      const dashboardUrl = `${appUrl}/dashboard/${token.rawToken}`
+      const templateService = new SMSTemplateService()
+      const renderedMessage = await templateService.resolveDashboardLinkMessage({
+        organizationId,
+        workerId: dashboard.workerId,
+        expiryHours: expires_in_hours,
+        dashboardLink: dashboardUrl,
+        customMessage: message,
+      })
 
       // Enqueue SMS job
       const smsService = new SMSService()
       const smsJob = await smsService.enqueueSMS({
         to: worker.phone,
-        message:
-          message ||
-          `Your dashboard is ready: ${process.env.APP_URL || 'http://localhost:5173'}/dashboard/${token}`,
+        message: renderedMessage.body,
         orgId: organizationId,
         type: 'dashboard_link',
+        workerId: dashboard.workerId,
+        tokenId: token.tokenId,
+        sentBy: userId,
       })
 
       return c.json(
@@ -614,8 +514,10 @@ v1.post(
           success: true,
           data: {
             jobId: smsJob.id,
-            token: token,
-            expiresAt: new Date(Date.now() + expires_in_hours * 60 * 60 * 1000).toISOString(),
+            token: token.rawToken,
+            expiresAt: token.expiresAt,
+            dashboardUrl,
+            renderedMessage: renderedMessage.body,
           },
           meta: {
             requestId: crypto.randomUUID(),

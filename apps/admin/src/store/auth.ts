@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { AdminWorkspacePreferences } from '@dashboard-link/shared'
+import { parseAdminWorkspacePreferences } from '@dashboard-link/shared'
 import { setPreviewMode } from '../lib/preview'
 import { supabase } from '../lib/supabase'
 
@@ -10,6 +12,7 @@ interface User {
   name: string
   organization_id?: string
   role?: 'admin' | 'owner'
+  workspace_preferences?: AdminWorkspacePreferences
 }
 
 // Auth state interface
@@ -39,6 +42,26 @@ interface AuthState {
   refreshAuthToken: () => Promise<void>
   setLoading: (loading: boolean) => void
   devBypass: () => void
+  setWorkspacePreferences: (preferences?: AdminWorkspacePreferences) => void
+}
+
+function createUserFromSessionUser(sessionUser: {
+  id: string
+  email?: string | null
+  user_metadata?: Record<string, unknown>
+}): User {
+  const workspacePreferences = parseAdminWorkspacePreferences(
+    sessionUser.user_metadata?.workspace_preferences
+  )
+
+  return {
+    id: sessionUser.id,
+    email: sessionUser.email || '',
+    name: (sessionUser.user_metadata?.name as string | undefined) || sessionUser.email || '',
+    organization_id: sessionUser.user_metadata?.organization_id as string | undefined,
+    role: (sessionUser.user_metadata?.role as 'admin' | 'owner' | undefined) || 'admin',
+    ...(workspacePreferences ? { workspace_preferences: workspacePreferences } : {}),
+  }
 }
 
 // Create Zustand store
@@ -76,13 +99,7 @@ export const useAuthStore = create<AuthState>()(
           }
 
           if (data.user && data.session) {
-            const user: User = {
-              id: data.user.id,
-              email: data.user.email || '',
-              name: data.user.user_metadata?.name || data.user.email || '',
-              organization_id: data.user.user_metadata?.organization_id,
-              role: data.user.user_metadata?.role || 'admin',
-            }
+            const user = createUserFromSessionUser(data.user)
 
             set({
               user,
@@ -148,10 +165,8 @@ export const useAuthStore = create<AuthState>()(
 
           if (data.user && data.session) {
             const user: User = {
-              id: data.user.id,
-              email: data.user.email || '',
+              ...createUserFromSessionUser(data.user),
               name: userData.name,
-              organization_id: data.user.user_metadata?.organization_id,
               role: 'admin',
             }
 
@@ -229,6 +244,7 @@ export const useAuthStore = create<AuthState>()(
         localStorage.setItem('sb-access-token', data.session.access_token)
 
         set({
+          ...(data.session.user ? { user: createUserFromSessionUser(data.session.user) } : {}),
           token: data.session.access_token,
           refreshToken: data.session.refresh_token,
           expiresAt: data.session.expires_at
@@ -239,6 +255,23 @@ export const useAuthStore = create<AuthState>()(
 
       setLoading: (loading: boolean) => {
         set({ isLoading: loading })
+      },
+
+      setWorkspacePreferences: (preferences) => {
+        set((state) => {
+          if (!state.user) {
+            return {}
+          }
+
+          return {
+            user: {
+              ...state.user,
+              ...(preferences
+                ? { workspace_preferences: preferences }
+                : { workspace_preferences: undefined }),
+            },
+          }
+        })
       },
 
       devBypass: () => {
@@ -266,15 +299,27 @@ export const useAuthStore = create<AuthState>()(
       },
 
       checkAuth: async () => {
-        const { data } = await supabase.auth.getSession()
-        if (data.session) {
-          const user: User = {
-            id: data.session.user.id,
-            email: data.session.user.email || '',
-            name: data.session.user.user_metadata?.name || data.session.user.email || '',
-            organization_id: data.session.user.user_metadata?.organization_id,
-            role: data.session.user.user_metadata?.role || 'admin',
+        set({ isLoading: true })
+
+        try {
+          const { data, error } = await supabase.auth.getSession()
+
+          if (error || !data.session) {
+            localStorage.removeItem('auth_token')
+            localStorage.removeItem('sb-access-token')
+
+            set({
+              user: null,
+              token: null,
+              refreshToken: null,
+              expiresAt: null,
+              isAuthenticated: false,
+              isLoading: false,
+            })
+            return
           }
+
+          const user = createUserFromSessionUser(data.session.user)
 
           localStorage.setItem('auth_token', data.session.access_token)
           localStorage.setItem('sb-access-token', data.session.access_token)
@@ -287,6 +332,20 @@ export const useAuthStore = create<AuthState>()(
               ? new Date(data.session.expires_at * 1000).toISOString()
               : null,
             isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          })
+        } catch {
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('sb-access-token')
+
+          set({
+            user: null,
+            token: null,
+            refreshToken: null,
+            expiresAt: null,
+            isAuthenticated: false,
+            isLoading: false,
           })
         }
       },

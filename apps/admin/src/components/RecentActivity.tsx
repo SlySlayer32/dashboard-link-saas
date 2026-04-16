@@ -74,8 +74,8 @@ function formatTime(dateString: string) {
 export function RecentActivity({ activities, isLoading }: RecentActivityProps) {
   if (isLoading) {
     return (
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 mb-4'>Recent Activity</h3>
+      <div className='cc-panel rounded-[28px] p-6'>
+        <h3 className='mb-4 text-lg font-semibold text-[hsl(var(--cc-text))]'>Recent Activity</h3>
         <div className='space-y-4'>
           {[...Array(5)].map((_, i) => (
             <div key={i} className='animate-pulse'>
@@ -95,12 +95,12 @@ export function RecentActivity({ activities, isLoading }: RecentActivityProps) {
 
   if (activities.length === 0) {
     return (
-      <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 mb-4'>Recent Activity</h3>
+      <div className='cc-panel rounded-[28px] p-6'>
+        <h3 className='mb-4 text-lg font-semibold text-[hsl(var(--cc-text))]'>Recent Activity</h3>
         <div className='text-center py-8'>
           <MessageCircle className='h-12 w-12 text-gray-400 mx-auto mb-3' />
-          <p className='text-gray-500'>No recent worker activity</p>
-          <p className='text-sm text-gray-400 mt-1'>
+          <p className='cc-text-muted'>No recent worker activity</p>
+          <p className='cc-text-muted mt-1 text-sm'>
             Sent messages and dashboard opens will appear here
           </p>
         </div>
@@ -109,24 +109,38 @@ export function RecentActivity({ activities, isLoading }: RecentActivityProps) {
   }
 
   return (
-    <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-      <h3 className='text-lg font-semibold text-gray-900 mb-4'>Recent Activity</h3>
+    <div className='cc-panel rounded-[28px] p-6'>
+      <div className='flex items-center justify-between gap-3'>
+        <h3 className='text-lg font-semibold text-[hsl(var(--cc-text))]'>Recent Activity</h3>
+        <span className='cc-badge'>{activities.length} latest events</span>
+      </div>
       <div className='space-y-4'>
         {activities.map((activity) => (
-          <div key={activity.id} className='flex items-start space-x-3'>
-            <div className='flex-shrink-0 mt-1'>{getStatusIcon(activity)}</div>
+          <div
+            key={activity.id}
+            className='mt-4 flex items-start space-x-3 rounded-[22px] border border-[hsl(var(--cc-border))] bg-[hsl(var(--cc-surface-muted))] px-4 py-4'
+          >
+            <div className='mt-1 flex-shrink-0'>{getStatusIcon(activity)}</div>
             <div className='flex-1 min-w-0'>
               <div className='flex items-center space-x-2 mb-1'>
-                <p className='text-sm font-medium text-gray-900 truncate'>{activity.workerName}</p>
+                <p className='truncate text-sm font-medium text-[hsl(var(--cc-text))]'>
+                  {activity.workerName}
+                </p>
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity)}`}
                 >
                   {activity.type === 'dashboard_open' ? 'opened' : activity.status}
                 </span>
               </div>
-              <p className='text-sm text-gray-600 mb-1'>{formatMessage(activity.message)}</p>
-              {activity.workerPhone && <p className='text-xs text-gray-500 mb-1'>{activity.workerPhone}</p>}
-              <p className='text-xs text-gray-500 flex items-center'>
+              <p className='mb-1 text-sm text-[hsl(var(--cc-text-muted))]'>
+                {formatMessage(activity.message)}
+              </p>
+              {activity.workerPhone && (
+                <p className='mb-1 text-xs text-[hsl(var(--cc-text-muted))]'>
+                  {activity.workerPhone}
+                </p>
+              )}
+              <p className='flex items-center text-xs text-[hsl(var(--cc-text-muted))]'>
                 <Clock className='h-3 w-3 mr-1' />
                 {formatTime(activity.createdAt)}
               </p>

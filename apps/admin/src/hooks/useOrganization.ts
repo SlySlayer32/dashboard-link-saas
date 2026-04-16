@@ -33,7 +33,7 @@ async function fetchOrganization(token: string): Promise<Organization> {
   }
 
   const data = await response.json()
-  return data.data
+  return Array.isArray(data.data) ? data.data[0] : data.data
 }
 
 async function updateOrganization(

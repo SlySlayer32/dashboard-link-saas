@@ -28,20 +28,33 @@
    ```
    Edit `.env` and fill in required values (see ENV-VARIABLES.md)
 
-4. **Link Supabase project:**
+4. **Start local Supabase:**
    ```bash
-   npx supabase link --project-ref <your-project-ref>
+   pnpm db:start
    ```
 
-5. **Apply database migrations:**
+5. **Apply local database migrations:**
    ```bash
-   npx supabase db push
+   pnpm db:migrate
    ```
 
-6. **(Optional) Seed database:**
+6. **(Optional) Seed local database:**
    ```bash
-   npx supabase db reset
+   pnpm db:reset
    ```
+
+### Hosted Supabase Is An Explicit Step, Not The Default
+
+Do not keep the repo persistently linked to a hosted Supabase project during normal development.
+
+Only link intentionally when you are performing a controlled hosted operation such as `db push`, `db pull`, or `db dump`, and prefer passing credentials through environment variables for that one command:
+
+```bash
+$env:SUPABASE_DB_PASSWORD='<database-password>'
+npx supabase link --project-ref <project-ref>
+```
+
+After the hosted task, remove the repo-local link artifacts from `supabase/.temp/` so the local project stays environment-neutral.
 
 ## Running the App
 
@@ -93,9 +106,14 @@ export PATH=~/.npm-global/bin:$PATH
 ```
 
 ### Issue: Supabase CLI can't connect
-**Solution:** Check project ref is correct:
+**Solution:** If you are working locally, make sure the local stack is running:
 ```bash
-npx supabase projects list
+pnpm db:start
+```
+
+If you are intentionally working against a hosted project, link only for that task:
+```bash
+$env:SUPABASE_DB_PASSWORD='<database-password>'
 npx supabase link --project-ref <correct-ref>
 ```
 
@@ -124,8 +142,8 @@ pnpm install
 ```
 
 ### Issue: Supabase Auth not working locally
-**Solution:** Check `.env` has correct Supabase URL and anon key:
+**Solution:** Check `.env` has the local Supabase URL and anon key:
 ```bash
-VITE_SUPABASE_URL=https://<project-ref>.supabase.co
-VITE_SUPABASE_ANON_KEY=<your-anon-key>
+VITE_SUPABASE_URL=http://127.0.0.1:54321
+VITE_SUPABASE_ANON_KEY=<local-anon-key>
 ```

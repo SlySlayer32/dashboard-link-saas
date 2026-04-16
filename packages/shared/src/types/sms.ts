@@ -6,7 +6,7 @@ export interface SMSLog {
   message_content: string
   token_id?: string
   status: 'sent' | 'delivered' | 'failed'
-  provider_message_id?: string
+  message_id?: string
   error_reason?: string
   sent_by?: string
   sent_at: string
